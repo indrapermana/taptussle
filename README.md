@@ -4,6 +4,13 @@ Offline, same-device mini-games for two players, built with Flutter and Flame.
 The first increment includes **Paddle Duel only**. Android and iOS are the mobile
 targets; web is included for quick desktop previews.
 
+## Development roadmap
+
+See [the development plan](docs/DEVELOPMENT_PLAN.md) for milestone checklists,
+remaining games, friend/bot modes, favourites, difficulty, expanded settings,
+and the live resolution/FPS comparison preview. Initial iPhone debugging has
+now been confirmed by the user; full device acceptance is tracked in that plan.
+
 ## Run
 
 The project was created with Flutter 3.35.4 / Dart 3.9.2. Dependency resolution
