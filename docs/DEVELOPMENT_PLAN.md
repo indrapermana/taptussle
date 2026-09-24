@@ -161,12 +161,12 @@ automation tool because it can drive app widgets and run on physical devices and
 emulators. Playwright may be added later for optional web-build smoke tests, but
 it is not evidence for iPhone/Android behavior.
 
-- [ ] M2.6 Add `integration_test` as a development dependency and an iOS/Android
+- [x] M2.6 Add `integration_test` as a development dependency and an iOS/Android
   runner path. Keep tests offline and deterministic; do not depend on a simulator
   or a network service.
-- [ ] M2.7 Add stable semantic labels/keys only where needed for automation. Do not
+- [x] M2.7 Add stable semantic labels/keys only where needed for automation. Do not
   test rendering implementation details or brittle widget-tree positions.
-- [ ] M2.8 Automate the critical M1 journey: grid → favourite → participant page →
+- [x] M2.8 Automate the critical M1 journey: grid → favourite → participant page →
   friend match; grid → bot → each slider position → match; pause/background →
   resume; result → rematch/change options; restart → saved favourites/options.
 - [ ] M2.9 Run the suite on a physical iPhone and Android device. Record device,
@@ -186,6 +186,22 @@ Acceptance:
   with the new `Info.plist`; record if the OS chooses not to show a notification.
 - [ ] Native integration tests pass on iPhone and Android. Playwright results, if
   added, are reported separately as web-only coverage.
+
+### Running the native suite
+
+The suite is [integration_test/app_test.dart](../integration_test/app_test.dart).
+With a USB-attached, unlocked device that has accepted this Mac's development
+certificate, run:
+
+```sh
+flutter devices
+flutter test integration_test/app_test.dart -d <device-id>
+```
+
+It clears TapTussle's local preferences before each journey so the result is
+deterministic. Do not use it on an installation whose local preferences you need
+to retain. The suite has no network dependency. Record the device model, OS,
+Flutter version, build number, command, and result under M2.9.
 
 ## M3 — Settings and live graphics comparison
 
@@ -420,6 +436,14 @@ confirmed Friend mode and each bot difficulty on an iPhone, so M1 is complete.
 game grid, participant-first setup, a separate slider-based bot difficulty page,
 bottom-screen Paddle Duel control, and the iOS Game Mode opt-in. Native UI
 automation remains the next M2 task.
+
+2026-09-24 — M2.6–M2.8 implemented. Added Flutter `integration_test` coverage
+for the persisted favourite, Friend match, background/resume, result/rematch,
+change-options flow, and Easy/Normal/Hard bot selections. `flutter analyze` and
+the 32 unit/widget tests pass. An iPhone build completed, but its current wireless
+tethering connection cannot launch Flutter integration tests because the tool
+requests an unavailable `--publish-port` option. M2.9 remains open for a USB
+iPhone run and an Android-device run; M2.10 remains intentionally deferred.
 
 ## Technical references
 

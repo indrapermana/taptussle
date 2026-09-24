@@ -127,52 +127,56 @@ class _GameTile extends StatelessWidget {
     key: ValueKey('game-card-${game.id}'),
     clipBehavior: Clip.antiAlias,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-    child: InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => GameSetupScreen(game: game, settings: settings),
-        ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          game.preview?.call(context) ??
-              Center(child: Icon(game.icon, size: 64)),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: .86),
-                ],
-                stops: const [.42, 1],
-              ),
-            ),
+    child: Semantics(
+      button: true,
+      label: 'Open ${game.title}',
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => GameSetupScreen(game: game, settings: settings),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Text(
-                game.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            game.preview?.call(context) ??
+                Center(child: Icon(game.icon, size: 64)),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: .86),
+                  ],
+                  stops: const [.42, 1],
                 ),
               ),
             ),
-          ),
-          if (settings.isFavourite(game.id))
-            const Positioned(
-              top: 10,
-              right: 10,
-              child: Icon(Icons.favorite_rounded, color: Color(0xFFFF968A)),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  game.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ),
-        ],
+            if (settings.isFavourite(game.id))
+              const Positioned(
+                top: 10,
+                right: 10,
+                child: Icon(Icons.favorite_rounded, color: Color(0xFFFF968A)),
+              ),
+          ],
+        ),
       ),
     ),
   );

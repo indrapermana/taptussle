@@ -95,6 +95,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     ),
                   const SizedBox(height: 28),
                   OutlinedButton.icon(
+                    key: const ValueKey('favourite-toggle'),
                     onPressed: saving
                         ? null
                         : () => _save(
@@ -245,6 +246,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
               ),
               const SizedBox(height: 28),
               Slider(
+                key: const ValueKey('bot-difficulty-slider'),
                 value: difficulty.index.toDouble(),
                 min: 0,
                 max: 2,
@@ -258,6 +260,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
               ),
               const SizedBox(height: 48),
               FilledButton.icon(
+                key: const ValueKey('start-bot-match'),
                 onPressed: saving ? null : _play,
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: Text('Play ${difficulty.label}'),

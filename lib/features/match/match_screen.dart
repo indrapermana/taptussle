@@ -205,6 +205,12 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                     SizedBox(
                                       width: double.infinity,
                                       child: FilledButton(
+                                        key: ValueKey(switch (session.phase) {
+                                          MatchPhase.ready => 'start-match',
+                                          MatchPhase.paused => 'resume-match',
+                                          MatchPhase.finished => 'play-again',
+                                          MatchPhase.playing => 'match-action',
+                                        }),
                                         onPressed:
                                             session.phase == MatchPhase.paused
                                             ? session.resume
@@ -230,11 +236,13 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                         ),
                                       ),
                                     TextButton(
+                                      key: const ValueKey('change-options'),
                                       onPressed: () =>
                                           Navigator.of(context).pop(),
                                       child: const Text('Change options'),
                                     ),
                                     TextButton(
+                                      key: const ValueKey('back-to-games'),
                                       onPressed: () => Navigator.of(
                                         context,
                                       ).popUntil((route) => route.isFirst),
