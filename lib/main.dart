@@ -4,10 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/tap_tussle_app.dart';
 import 'core/app_settings.dart';
+import 'core/sound_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   final preferences = await SharedPreferences.getInstance();
-  runApp(TapTussleApp(settings: AppSettings(preferences)));
+  final settings = AppSettings(preferences);
+  final sounds = SoundService();
+  SoundEffects.configure(sounds);
+  sounds.setVolume(settings.effectsVolume);
+  settings.addListener(() => sounds.setVolume(settings.effectsVolume));
+  runApp(TapTussleApp(settings: settings));
 }

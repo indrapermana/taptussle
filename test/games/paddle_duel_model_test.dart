@@ -42,12 +42,14 @@ void main() {
     model.update(.1);
     expect(model.velocityY, lessThan(0));
     expect(model.scores, [0, 0]);
+    expect(model.paddleHitCount, 1);
     model
       ..ballY = 60
       ..velocityY = -500;
     model.update(.1);
     expect(model.velocityY, greaterThan(0));
     expect(model.scores, [0, 0]);
+    expect(model.paddleHitCount, 2);
   });
 
   test('off-center paddle hit deflects toward the edge', () {

@@ -5,6 +5,7 @@ import 'package:flutter/painting.dart';
 
 import '../../core/match_session.dart';
 import '../../core/match_options.dart';
+import '../../core/sound_service.dart';
 import 'paddle_duel_bot.dart';
 import 'paddle_duel_model.dart';
 
@@ -49,11 +50,18 @@ class PaddleDuelGame extends Game {
     while (remaining > .000001) {
       final step = math.min(remaining, 1 / 120);
       final oldTotal = model.scores[0] + model.scores[1];
+      final oldPaddleHits = model.paddleHitCount;
       bot?.update(model, step);
       model.update(step);
       remaining -= step;
+      if (oldPaddleHits != model.paddleHitCount) {
+        SoundEffects.play(SoundEffect.paddleHit);
+      }
       if (oldTotal != model.scores[0] + model.scores[1]) {
         bot?.reset();
+        SoundEffects.play(
+          model.winner == null ? SoundEffect.score : SoundEffect.result,
+        );
         session.reportScore(
           model.scores[0],
           model.scores[1],

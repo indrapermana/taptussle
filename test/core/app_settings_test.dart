@@ -10,11 +10,16 @@ void main() {
     final settings = AppSettings(prefs);
     addTearDown(settings.dispose);
     expect(settings.winningScore, 7);
+    expect(settings.effectsVolume, .7);
     await settings.setWinningScore(5);
+    await settings.setEffectsVolume(.35);
     final restored = AppSettings(prefs);
     addTearDown(restored.dispose);
     expect(restored.winningScore, 5);
+    expect(restored.effectsVolume, .35);
     await settings.setWinningScore(-1);
     expect(settings.winningScore, 5);
+    await settings.setEffectsVolume(2);
+    expect(settings.effectsVolume, 1);
   });
 }

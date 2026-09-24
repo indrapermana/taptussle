@@ -21,12 +21,14 @@ class PaddleDuelModel {
   double velocityY = 0;
   double serveRemaining = 1.5;
   int? winner;
+  int paddleHitCount = 0;
   int _serveDirection = 1;
 
   void reset() {
     scores.fillRange(0, 2, 0);
     paddles.fillRange(0, 2, width / 2);
     winner = null;
+    paddleHitCount = 0;
     _serveDirection = 1;
     _serve();
   }
@@ -79,12 +81,14 @@ class PaddleDuelModel {
         ballY >= bottomFace &&
         (ballX - paddles[0]).abs() <= paddleWidth / 2 + radius) {
       ballY = bottomFace;
+      paddleHitCount++;
       _bounce(0, -1);
     } else if (velocityY < 0 &&
         previousY >= topFace &&
         ballY <= topFace &&
         (ballX - paddles[1]).abs() <= paddleWidth / 2 + radius) {
       ballY = topFace;
+      paddleHitCount++;
       _bounce(1, 1);
     }
 

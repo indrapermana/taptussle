@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_settings.dart';
 import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
+import '../../core/sound_service.dart';
 import '../match/match_screen.dart';
 
 class GameSetupScreen extends StatefulWidget {
@@ -98,12 +99,15 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     key: const ValueKey('favourite-toggle'),
                     onPressed: saving
                         ? null
-                        : () => _save(
-                            () => widget.settings.setFavourite(
-                              widget.game.id,
-                              !favourite,
-                            ),
-                          ),
+                        : () {
+                            SoundEffects.play(SoundEffect.click);
+                            _save(
+                              () => widget.settings.setFavourite(
+                                widget.game.id,
+                                !favourite,
+                              ),
+                            );
+                          },
                     icon: Icon(
                       favourite
                           ? Icons.favorite_rounded
@@ -124,7 +128,12 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     icon: Icons.people_alt_outlined,
                     title: 'Play vs Friend',
                     subtitle: 'Two players, one phone',
-                    onPressed: saving ? null : _startFriend,
+                    onPressed: saving
+                        ? null
+                        : () {
+                            SoundEffects.play(SoundEffect.click);
+                            _startFriend();
+                          },
                   ),
                   if (widget.game.supportedModes.contains(PlayMode.bot)) ...[
                     const SizedBox(height: 12),
@@ -135,14 +144,17 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       subtitle: 'Choose a difficulty next',
                       onPressed: saving
                           ? null
-                          : () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => BotDifficultyScreen(
-                                  game: widget.game,
-                                  settings: widget.settings,
+                          : () {
+                              SoundEffects.play(SoundEffect.click);
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => BotDifficultyScreen(
+                                    game: widget.game,
+                                    settings: widget.settings,
+                                  ),
                                 ),
-                              ),
-                            ),
+                              );
+                            },
                     ),
                   ],
                 ],
@@ -261,7 +273,12 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
               const SizedBox(height: 48),
               FilledButton.icon(
                 key: const ValueKey('start-bot-match'),
-                onPressed: saving ? null : _play,
+                onPressed: saving
+                    ? null
+                    : () {
+                        SoundEffects.play(SoundEffect.click);
+                        _play();
+                      },
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: Text('Play ${difficulty.label}'),
               ),

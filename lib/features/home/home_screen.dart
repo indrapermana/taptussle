@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_settings.dart';
+import '../../core/sound_service.dart';
 import '../../core/mini_game.dart';
 import '../game_setup/game_setup_screen.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({required this.settings, required this.games, super.key});
@@ -45,13 +47,15 @@ class HomeScreen extends StatelessWidget {
                             const Spacer(),
                             IconButton(
                               tooltip: 'Settings',
-                              onPressed: () => showModalBottomSheet<void>(
-                                context: context,
-                                showDragHandle: true,
-                                isScrollControlled: true,
-                                builder: (_) =>
-                                    _SettingsSheet(settings: settings),
-                              ),
+                              onPressed: () {
+                                SoundEffects.play(SoundEffect.click);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        SettingsScreen(settings: settings),
+                                  ),
+                                );
+                              },
                               icon: const Icon(Icons.tune_rounded),
                             ),
                           ],
@@ -131,11 +135,14 @@ class _GameTile extends StatelessWidget {
       button: true,
       label: 'Open ${game.title}',
       child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => GameSetupScreen(game: game, settings: settings),
-          ),
-        ),
+        onTap: () {
+          SoundEffects.play(SoundEffect.click);
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => GameSetupScreen(game: game, settings: settings),
+            ),
+          );
+        },
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -177,69 +184,6 @@ class _GameTile extends StatelessWidget {
               ),
           ],
         ),
-      ),
-    ),
-  );
-}
-
-class _SettingsSheet extends StatefulWidget {
-  const _SettingsSheet({required this.settings});
-
-  final AppSettings settings;
-
-  @override
-  State<_SettingsSheet> createState() => _SettingsSheetState();
-}
-
-class _SettingsSheetState extends State<_SettingsSheet> {
-  bool saving = false;
-
-  @override
-  Widget build(BuildContext context) => SafeArea(
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Make it your match',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          const Text('Paddle Duel • points to win'),
-          const SizedBox(height: 16),
-          SegmentedButton<int>(
-            segments: [
-              for (final score in AppSettings.allowedScores)
-                ButtonSegment(value: score, label: Text('$score')),
-            ],
-            selected: {widget.settings.winningScore},
-            onSelectionChanged: saving
-                ? null
-                : (selection) async {
-                    setState(() => saving = true);
-                    try {
-                      await widget.settings.setWinningScore(selection.single);
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Could not save. Please try again.'),
-                          ),
-                        );
-                      }
-                    } finally {
-                      if (mounted) setState(() => saving = false);
-                    }
-                  },
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Saved on this device. Applies to your next match.',
-            style: TextStyle(color: Colors.white60),
-          ),
-        ],
       ),
     ),
   );

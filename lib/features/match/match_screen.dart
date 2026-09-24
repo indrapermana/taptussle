@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/match_session.dart';
 import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
+import '../../core/sound_service.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -57,6 +58,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
             tooltip: 'Change options',
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () {
+              SoundEffects.play(SoundEffect.click);
               if (session.phase == MatchPhase.playing) {
                 session.pause();
               } else {
@@ -72,7 +74,10 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
             if (session.phase == MatchPhase.playing)
               IconButton(
                 tooltip: 'Pause match',
-                onPressed: session.pause,
+                onPressed: () {
+                  SoundEffects.play(SoundEffect.click);
+                  session.pause();
+                },
                 icon: const Icon(Icons.pause_rounded),
               ),
           ],
@@ -211,10 +216,15 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                           MatchPhase.finished => 'play-again',
                                           MatchPhase.playing => 'match-action',
                                         }),
-                                        onPressed:
-                                            session.phase == MatchPhase.paused
-                                            ? session.resume
-                                            : session.start,
+                                        onPressed: () {
+                                          SoundEffects.play(SoundEffect.click);
+                                          if (session.phase ==
+                                              MatchPhase.paused) {
+                                            session.resume();
+                                          } else {
+                                            session.start();
+                                          }
+                                        },
                                         child: Text(switch (session.phase) {
                                           MatchPhase.ready => 'Start match',
                                           MatchPhase.paused => 'Resume match',
@@ -237,15 +247,20 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                       ),
                                     TextButton(
                                       key: const ValueKey('change-options'),
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
+                                      onPressed: () {
+                                        SoundEffects.play(SoundEffect.click);
+                                        Navigator.of(context).pop();
+                                      },
                                       child: const Text('Change options'),
                                     ),
                                     TextButton(
                                       key: const ValueKey('back-to-games'),
-                                      onPressed: () => Navigator.of(
-                                        context,
-                                      ).popUntil((route) => route.isFirst),
+                                      onPressed: () {
+                                        SoundEffects.play(SoundEffect.click);
+                                        Navigator.of(
+                                          context,
+                                        ).popUntil((route) => route.isFirst);
+                                      },
                                       child: const Text('Back to games'),
                                     ),
                                   ],

@@ -13,6 +13,10 @@ class AppSettings extends ChangeNotifier {
     _favouriteIds = favourites is List
         ? favourites.whereType<String>().toSet()
         : <String>{};
+    final savedVolume = _preferences.get('effectsVolume');
+    _effectsVolume = savedVolume is num && savedVolume >= 0 && savedVolume <= 1
+        ? savedVolume.toDouble()
+        : .7;
   }
 
   static const allowedScores = [5, 7, 11];
@@ -23,6 +27,8 @@ class AppSettings extends ChangeNotifier {
   Set<String> get favouriteIds => Set.unmodifiable(_favouriteIds);
   bool isFavourite(String id) => _favouriteIds.contains(id);
   Future<void> _pendingWrite = Future.value();
+  late double _effectsVolume;
+  double get effectsVolume => _effectsVolume;
 
   // Serialize writes so rapid callers cannot overwrite each other's favourites.
   Future<void> _write(Future<void> Function() action) {
@@ -47,6 +53,15 @@ class AppSettings extends ChangeNotifier {
       throw StateError('Could not save favourite');
     }
     _favouriteIds = next;
+    notifyListeners();
+  });
+
+  Future<void> setEffectsVolume(double value) => _write(() async {
+    final next = value.clamp(0.0, 1.0).toDouble();
+    if (!await _preferences.setDouble('effectsVolume', next)) {
+      throw StateError('Could not save effects volume');
+    }
+    _effectsVolume = next;
     notifyListeners();
   });
 

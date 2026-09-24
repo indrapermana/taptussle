@@ -25,11 +25,11 @@ void main() {
       expect(find.text('Paddle Duel'), findsOneWidget);
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
+      expect(find.text('Settings'), findsOneWidget);
       await tester.tap(find.text('5'));
       await tester.pumpAndSettle();
       expect(settings.winningScore, 5);
-      // Dismiss the settings sheet using the modal barrier.
-      await tester.tapAt(const Offset(10, 20));
+      await tester.pageBack();
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('game-card-paddle-duel')));
       await tester.pumpAndSettle();
