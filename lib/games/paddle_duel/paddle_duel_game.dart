@@ -5,6 +5,7 @@ import 'package:flutter/painting.dart';
 
 import '../../core/match_session.dart';
 import '../../core/match_options.dart';
+import '../../core/haptic_service.dart';
 import '../../core/sound_service.dart';
 import 'paddle_duel_bot.dart';
 import 'paddle_duel_model.dart';
@@ -56,6 +57,7 @@ class PaddleDuelGame extends Game {
       remaining -= step;
       if (oldPaddleHits != model.paddleHitCount) {
         SoundEffects.play(SoundEffect.paddleHit);
+        HapticEffects.paddleHit();
       }
       if (oldTotal != model.scores[0] + model.scores[1]) {
         bot?.reset();

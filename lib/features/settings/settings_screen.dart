@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/app_settings.dart';
+import '../../core/haptic_service.dart';
 import '../../core/sound_service.dart';
+import 'legal_document_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({required this.settings, super.key});
@@ -14,13 +17,36 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late double volume;
+  late bool vibrationEnabled;
   bool saving = false;
 
   @override
   void initState() {
     super.initState();
     volume = widget.settings.effectsVolume;
+    vibrationEnabled = widget.settings.vibrationEnabled;
   }
+
+  Future<void> _saveVibration(bool value) async {
+    setState(() => saving = true);
+    try {
+      await widget.settings.setVibrationEnabled(value);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save vibration setting.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  void _openLegal(LegalDocument document) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => LegalDocumentScreen(document: document),
+    ),
+  );
 
   Future<void> _saveVolume(double value) async {
     setState(() => saving = true);
@@ -78,6 +104,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 36),
           const Text(
+            'Vibration',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Vibration feedback'),
+            subtitle: const Text('Feel paddle hits during Paddle Duel.'),
+            value: vibrationEnabled,
+            onChanged: saving
+                ? null
+                : (value) {
+                    setState(() => vibrationEnabled = value);
+                    HapticEffects.setEnabled(value);
+                    _saveVibration(value);
+                  },
+          ),
+          OutlinedButton.icon(
+            key: const ValueKey('preview-vibration'),
+            onPressed: vibrationEnabled ? HapticEffects.preview : null,
+            icon: const Icon(Icons.vibration_rounded),
+            label: const Text('Test vibration'),
+          ),
+          const SizedBox(height: 36),
+          const Text(
             'Paddle Duel',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
@@ -98,6 +148,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       SoundEffects.play(SoundEffect.click);
                       await widget.settings.setWinningScore(selection.single);
                     },
+            ),
+          ),
+          const SizedBox(height: 36),
+          const Text(
+            'Legal',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Terms of Use'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _openLegal(LegalDocument.terms),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Privacy Policy'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _openLegal(LegalDocument.privacy),
+          ),
+          const SizedBox(height: 28),
+          Center(
+            child: FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                if (info == null) {
+                  return const Text(
+                    'Version',
+                    style: TextStyle(color: Colors.white60),
+                  );
+                }
+                return Text(
+                  info.buildSignature.isEmpty
+                      ? info.version
+                      : '${info.version} ${info.buildSignature}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white60, height: 1.5),
+                );
+              },
             ),
           ),
         ],

@@ -11,6 +11,7 @@ void main() {
     addTearDown(settings.dispose);
     expect(settings.winningScore, 7);
     expect(settings.effectsVolume, .7);
+    expect(settings.vibrationEnabled, isTrue);
     await settings.setWinningScore(5);
     await settings.setEffectsVolume(.35);
     final restored = AppSettings(prefs);
@@ -21,5 +22,7 @@ void main() {
     expect(settings.winningScore, 5);
     await settings.setEffectsVolume(2);
     expect(settings.effectsVolume, 1);
+    await settings.setVibrationEnabled(false);
+    expect(settings.vibrationEnabled, isFalse);
   });
 }

@@ -17,6 +17,7 @@ class AppSettings extends ChangeNotifier {
     _effectsVolume = savedVolume is num && savedVolume >= 0 && savedVolume <= 1
         ? savedVolume.toDouble()
         : .7;
+    _vibrationEnabled = _preferences.getBool('vibrationEnabled') ?? true;
   }
 
   static const allowedScores = [5, 7, 11];
@@ -29,6 +30,8 @@ class AppSettings extends ChangeNotifier {
   Future<void> _pendingWrite = Future.value();
   late double _effectsVolume;
   double get effectsVolume => _effectsVolume;
+  late bool _vibrationEnabled;
+  bool get vibrationEnabled => _vibrationEnabled;
 
   // Serialize writes so rapid callers cannot overwrite each other's favourites.
   Future<void> _write(Future<void> Function() action) {
@@ -62,6 +65,14 @@ class AppSettings extends ChangeNotifier {
       throw StateError('Could not save effects volume');
     }
     _effectsVolume = next;
+    notifyListeners();
+  });
+
+  Future<void> setVibrationEnabled(bool value) => _write(() async {
+    if (!await _preferences.setBool('vibrationEnabled', value)) {
+      throw StateError('Could not save vibration setting');
+    }
+    _vibrationEnabled = value;
     notifyListeners();
   });
 

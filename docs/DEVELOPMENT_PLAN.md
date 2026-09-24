@@ -223,10 +223,10 @@ control. Store choices locally and handle missing, invalid, or failed writes.
   does not satisfy this feature. Background music is outside this increment.
 - [x] M3.3 Route sound through one service, respecting volume across all games,
   limiting overlapping sounds, and stopping/suspending playback on backgrounding.
-- [ ] M3.4 Add vibration On / Off plus a test action. Use brief, rate-limited
+- [x] M3.4 Add vibration On / Off plus a test action. Use brief, rate-limited
   feedback on selected events, with no failure on unsupported hardware. For a
   shared phone, feedback is device-wide, not private feedback to one player.
-- [ ] M3.5 Show the installed app's version and build number at the bottom, e.g.
+- [x] M3.5 Show the installed app's version and build number at the bottom, e.g.
   `Version 1.0.0 (1)`, using runtime package metadata rather than hard-coded text.
 
 ### Resolution and FPS
@@ -460,6 +460,12 @@ and stop on backgrounding.
 
 2026-09-24 — Added a distinct Paddle Duel paddle-hit effect and changed the
 effects-volume slider to 20% intervals (0%, 20%, 40%, 60%, 80%, 100%).
+
+2026-09-24 — M3.4–M3.5 implemented: added a persisted vibration setting, test
+action, and rate-limited Paddle Duel paddle-hit feedback. Added a runtime
+`Version <version> (<build number>)` footer and the runtime package build
+signature. Settings now also contains local Terms of Use and Privacy Policy
+pages describing the current offline/no-data-collection app.
 `flutter analyze`, 32 unit/widget tests, and an unsigned iOS build passed.
 
 ## Technical references
