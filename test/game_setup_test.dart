@@ -192,7 +192,10 @@ void main() {
     addTearDown(restored.dispose);
     await tester.pumpWidget(
       MaterialApp(
-        home: GameSetupScreen(game: gameCatalog.single, settings: restored),
+        home: GameSetupScreen(
+          game: gameCatalog.firstWhere((game) => game.id == 'paddle-duel'),
+          settings: restored,
+        ),
       ),
     );
     expect(find.text('Remove favourite'), findsOneWidget);
@@ -215,7 +218,10 @@ void main() {
           textScaler: TextScaler.linear(1.5),
         ),
         child: MaterialApp(
-          home: GameSetupScreen(game: gameCatalog.single, settings: settings),
+          home: GameSetupScreen(
+            game: gameCatalog.firstWhere((game) => game.id == 'paddle-duel'),
+            settings: settings,
+          ),
         ),
       ),
     );
@@ -230,7 +236,7 @@ void main() {
         ),
         child: MaterialApp(
           home: BotDifficultyScreen(
-            game: gameCatalog.single,
+            game: gameCatalog.firstWhere((game) => game.id == 'paddle-duel'),
             settings: settings,
           ),
         ),

@@ -328,15 +328,20 @@ the opponent a point. First to 5 wins. Use a monotonic clock, not rendered frame
 to timestamp taps; define a small simultaneous-tap tolerance and replay tied
 rounds without awarding points.
 
-- [ ] M4.1 Build a testable waiting/signal/result round state machine and seedable
+- [x] M4.1 Build a testable waiting/signal/result round state machine and seedable
   delay source, with clear visual instructions and large mirrored touch zones.
-- [ ] M4.2 Implement friend mode, false starts, simultaneous taps, and score rules.
-- [ ] M4.3 Implement bots using calibrated, variable reaction delays after the
+- [x] M4.2 Implement friend mode, false starts, simultaneous taps, and score rules.
+- [x] M4.3 Implement bots using calibrated, variable reaction delays after the
   actual signal: Easy slower, Normal moderate, Hard faster but bounded. No bot
   access to a future signal time or input before the signal.
-- [ ] M4.4 Cancel pending timers on pause/dispose; restart an interrupted waiting
+- [x] M4.4 Cancel pending timers on pause/dispose; restart an interrupted waiting
   round with a fresh delay and no penalty on resume. Preserve match scores.
-- [ ] M4.5 Register the game with setup, favourites, sound, vibration, and results.
+- [x] M4.5 Register the game with setup, favourites, sound, vibration, and results.
+
+Reaction Duel is implemented as a pure Flutter game. It uses a timer/state
+machine rather than render frames, replays legal taps within a 75 ms tie window,
+and gives a false starter's opponent the point. Bot delays begin only after the
+signal, vary by difficulty, and use the shared configured winning score.
 
 Acceptance: false starts and ties are deterministic; two fingers work; no stale
 timer scores after pause; reaction timing is independent of target FPS; complete
