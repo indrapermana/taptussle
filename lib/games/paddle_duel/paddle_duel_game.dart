@@ -77,10 +77,19 @@ class PaddleDuelGame extends Game {
   @override
   void render(Canvas canvas) {
     if (size.x <= 0 || size.y <= 0) return;
+    renderAtSize(canvas, Size(size.x, size.y));
+  }
+
+  /// Renders the fixed logical court into a caller-controlled output size.
+  ///
+  /// The presentation layer uses this to rasterize a physical render target
+  /// independently from the Flutter layout size.
+  void renderAtSize(Canvas canvas, Size outputSize) {
+    if (outputSize.isEmpty) return;
     canvas.save();
     canvas.scale(
-      size.x / PaddleDuelModel.width,
-      size.y / PaddleDuelModel.height,
+      outputSize.width / PaddleDuelModel.width,
+      outputSize.height / PaddleDuelModel.height,
     );
     final line = Paint()
       ..color = const Color(0xFF304253)

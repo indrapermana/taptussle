@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/match_session.dart';
 import '../../core/match_options.dart';
+import '../../core/app_settings.dart';
 import '../../core/mini_game.dart';
 import '../../core/sound_service.dart';
 
@@ -9,11 +10,15 @@ class MatchScreen extends StatefulWidget {
   const MatchScreen({
     required this.game,
     required this.options,
+    this.resolution = ResolutionPreset.native,
+    this.frameRate = FrameRatePreset.fps60,
     this.startImmediately = false,
     super.key,
   });
   final MiniGame game;
   final MatchOptions options;
+  final ResolutionPreset resolution;
+  final FrameRatePreset frameRate;
   final bool startImmediately;
   @override
   State<MatchScreen> createState() => _MatchScreenState();
@@ -28,7 +33,14 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     session = MatchSession(options: widget.options);
-    gameView = widget.game.build(session, widget.options);
+    gameView =
+        widget.game.buildWithPresentation?.call(
+          session,
+          widget.options,
+          widget.resolution,
+          widget.frameRate,
+        ) ??
+        widget.game.build(session, widget.options);
     if (widget.startImmediately) session.start();
   }
 

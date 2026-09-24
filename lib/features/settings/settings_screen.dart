@@ -18,6 +18,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late double volume;
   late bool vibrationEnabled;
+  late ResolutionPreset resolution;
+  late FrameRatePreset frameRate;
   bool saving = false;
 
   @override
@@ -25,6 +27,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     volume = widget.settings.effectsVolume;
     vibrationEnabled = widget.settings.vibrationEnabled;
+    resolution = widget.settings.resolution;
+    frameRate = widget.settings.frameRate;
   }
 
   Future<void> _saveVibration(bool value) async {
@@ -56,6 +60,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not save effects volume.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> _saveGraphics() async {
+    setState(() => saving = true);
+    try {
+      await widget.settings.setResolution(resolution);
+      await widget.settings.setFrameRate(frameRate);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save graphics setting.')),
         );
       }
     } finally {
@@ -102,6 +122,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: const Icon(Icons.volume_up_rounded),
             label: const Text('Preview sound'),
           ),
+          const SizedBox(height: 36),
+          const Text(
+            'Graphics',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Resolution controls the number of pixels rendered before the game is displayed. FPS controls how often that image is refreshed; match timing stays the same.',
+            style: TextStyle(color: Colors.white70, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          SegmentedButton<ResolutionPreset>(
+            key: const ValueKey('resolution-selector'),
+            segments: [
+              for (final option in ResolutionPreset.values)
+                ButtonSegment(
+                  value: option,
+                  label: Text(
+                    '${option.label}\n${(option.renderScale * 100).round()}%',
+                  ),
+                ),
+            ],
+            selected: {resolution},
+            onSelectionChanged: saving
+                ? null
+                : (selection) {
+                    SoundEffects.play(SoundEffect.click);
+                    setState(() => resolution = selection.single);
+                    _saveGraphics();
+                  },
+          ),
+          const SizedBox(height: 16),
+          SegmentedButton<FrameRatePreset>(
+            key: const ValueKey('fps-selector'),
+            segments: [
+              for (final option in FrameRatePreset.values)
+                ButtonSegment(
+                  value: option,
+                  label: Text('${option.framesPerSecond} FPS'),
+                ),
+            ],
+            selected: {frameRate},
+            onSelectionChanged: saving
+                ? null
+                : (selection) {
+                    SoundEffects.play(SoundEffect.click);
+                    setState(() => frameRate = selection.single);
+                    _saveGraphics();
+                  },
+          ),
+          const SizedBox(height: 16),
+          _GraphicsPreview(resolution: resolution, frameRate: frameRate),
           const SizedBox(height: 36),
           const Text(
             'Vibration',
@@ -192,5 +264,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     ),
+  );
+}
+
+class _GraphicsPreview extends StatelessWidget {
+  const _GraphicsPreview({required this.resolution, required this.frameRate});
+  final ResolutionPreset resolution;
+  final FrameRatePreset frameRate;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: const Color(0xFF142333),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0xFF304253)),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _PreviewColumn(
+              title: 'Render target',
+              value: '${(resolution.renderScale * 100).round()}%',
+              caption: switch (resolution) {
+                ResolutionPreset.economy => 'Fewer pixels; lighter GPU load',
+                ResolutionPreset.balanced => 'Three quarters of native pixels',
+                ResolutionPreset.native => 'Full device pixel density',
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _PreviewColumn(
+              title: 'Frame refresh',
+              value: '${frameRate.framesPerSecond} FPS',
+              caption: frameRate == FrameRatePreset.fps30
+                  ? 'One new frame about every 33 ms'
+                  : 'One new frame about every 17 ms',
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _PreviewColumn extends StatelessWidget {
+  const _PreviewColumn({
+    required this.title,
+    required this.value,
+    required this.caption,
+  });
+  final String title;
+  final String value;
+  final String caption;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+      const SizedBox(height: 4),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 4),
+      Text(
+        caption,
+        style: const TextStyle(color: Colors.white70, fontSize: 12),
+      ),
+    ],
   );
 }

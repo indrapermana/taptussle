@@ -53,6 +53,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       builder: (_) => MatchScreen(
         game: widget.game,
         options: preferences.matchOptions(widget.settings.winningScore),
+        resolution: widget.settings.resolution,
+        frameRate: widget.settings.frameRate,
         startImmediately: true,
       ),
     ),
@@ -210,6 +212,8 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
             builder: (_) => MatchScreen(
               game: widget.game,
               options: preferences.matchOptions(widget.settings.winningScore),
+              resolution: widget.settings.resolution,
+              frameRate: widget.settings.frameRate,
               startImmediately: true,
             ),
           ),

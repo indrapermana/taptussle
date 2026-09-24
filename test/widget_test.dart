@@ -1,4 +1,3 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +7,7 @@ import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/mini_game.dart';
 import 'package:tap_tussle/features/match/match_screen.dart';
-import 'package:tap_tussle/games/paddle_duel/paddle_duel_game.dart';
+import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
 
 void main() {
   testWidgets(
@@ -26,6 +25,7 @@ void main() {
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
       expect(find.text('Settings'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('5'), 200);
       await tester.tap(find.text('5'));
       await tester.pumpAndSettle();
       expect(settings.winningScore, 5);
@@ -39,10 +39,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
       final game = tester
-          .widget<GameWidget<PaddleDuelGame>>(
-            find.byType(GameWidget<PaddleDuelGame>),
-          )
-          .game!;
+          .widget<PaddleDuelPresentation>(find.byType(PaddleDuelPresentation))
+          .game;
       final court = tester.getRect(find.byKey(const ValueKey('paddle-court')));
       final bottom = await tester.startGesture(
         Offset(court.left + court.width * .25, court.top + court.height * .8),

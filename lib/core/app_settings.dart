@@ -5,6 +5,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'match_options.dart';
 
+enum ResolutionPreset {
+  economy('Economy', .5),
+  balanced('Balanced', .75),
+  native('Native', 1);
+
+  const ResolutionPreset(this.label, this.renderScale);
+  final String label;
+  final double renderScale;
+}
+
+enum FrameRatePreset {
+  fps30(30),
+  fps60(60);
+
+  const FrameRatePreset(this.framesPerSecond);
+  final int framesPerSecond;
+}
+
 class AppSettings extends ChangeNotifier {
   AppSettings(this._preferences) {
     final saved = _preferences.get('winningScore');
@@ -18,6 +36,14 @@ class AppSettings extends ChangeNotifier {
         ? savedVolume.toDouble()
         : .7;
     _vibrationEnabled = _preferences.getBool('vibrationEnabled') ?? true;
+    _resolution = ResolutionPreset.values.firstWhere(
+      (value) => value.name == _preferences.getString('resolutionPreset'),
+      orElse: () => ResolutionPreset.native,
+    );
+    _frameRate = FrameRatePreset.values.firstWhere(
+      (value) => value.name == _preferences.getString('frameRatePreset'),
+      orElse: () => FrameRatePreset.fps60,
+    );
   }
 
   static const allowedScores = [5, 7, 11];
@@ -32,6 +58,10 @@ class AppSettings extends ChangeNotifier {
   double get effectsVolume => _effectsVolume;
   late bool _vibrationEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
+  late ResolutionPreset _resolution;
+  ResolutionPreset get resolution => _resolution;
+  late FrameRatePreset _frameRate;
+  FrameRatePreset get frameRate => _frameRate;
 
   // Serialize writes so rapid callers cannot overwrite each other's favourites.
   Future<void> _write(Future<void> Function() action) {
@@ -73,6 +103,22 @@ class AppSettings extends ChangeNotifier {
       throw StateError('Could not save vibration setting');
     }
     _vibrationEnabled = value;
+    notifyListeners();
+  });
+
+  Future<void> setResolution(ResolutionPreset value) => _write(() async {
+    if (!await _preferences.setString('resolutionPreset', value.name)) {
+      throw StateError('Could not save resolution setting');
+    }
+    _resolution = value;
+    notifyListeners();
+  });
+
+  Future<void> setFrameRate(FrameRatePreset value) => _write(() async {
+    if (!await _preferences.setString('frameRatePreset', value.name)) {
+      throw StateError('Could not save FPS setting');
+    }
+    _frameRate = value;
     notifyListeners();
   });
 

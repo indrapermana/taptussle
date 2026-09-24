@@ -254,11 +254,23 @@ the baseline settings work reliably on supported devices.
 - [ ] M3.6 First run a bounded implementation/profiling investigation on the
   installed Flutter/Flame versions. Prove actual game rendering scale and frame
   pacing on iPhone and Android before wiring up production controls.
-- [ ] M3.7 Implement a shared rendering adapter with supported capabilities and
+
+  Source investigation is recorded in
+  [Graphics rendering investigation](GRAPHICS_RENDERING_INVESTIGATION.md).
+  It confirms that Flame viewport settings are not physical resolution scaling
+  and that `GameWidget` has no public FPS cap. Device profiling remains required
+  before this item can be marked complete.
+- [x] M3.7 Implement a shared rendering adapter with supported capabilities and
   effective settings. Merely changing Flame's logical viewport size or skipping
   simulation updates does not implement resolution scaling or a rendering cap.
-- [ ] M3.8 Keep simulation/timing independent of presentation. Use consistent
+- [x] M3.8 Keep simulation/timing independent of presentation. Use consistent
   elapsed-time or fixed-step rules; do not slow the game when choosing 30 FPS.
+
+  Paddle Duel now uses a presentation adapter that advances its existing
+  elapsed-time simulation at display cadence, then rasterizes a snapshot at
+  the selected 50%, 75%, or 100% physical pixel scale and publishes it at 30
+  or 60 FPS. The settings are saved locally. Physical profiling and effective
+  FPS reporting remain open in M3.6 and M3.10.
 - [ ] M3.9 For simple pure Flutter games, maintain native UI and explain when game
   resolution does not apply; apply FPS to relevant animations where supported.
   Do not blur board labels or claim an unsupported setting changed the game.
@@ -428,6 +440,11 @@ Proposed defaults: game choices/rules for Lane Dash and Tic-Tac-Toe, 30/60 FPS,
 50/75/100% rendering scales, volume 70%, vibration On, and remembered setup choices.
 Validate performance presets in M3 before treating them as shipping guarantees.
 These decisions do not block starting M1.
+
+Versioning decision: retain the current `1.0.0+1` during local development.
+Before the first App Store or Play Store upload, choose the release semantic
+version and update `pubspec.yaml`; increment the build number for every uploaded
+build thereafter.
 
 For each increment append: date, task IDs, short change description, tests/device
 evidence, unresolved issues, and next task. Implementation starts with M1.1.

@@ -27,5 +27,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     icon: Icons.sports_tennis_rounded,
     build: (session, options) =>
         PaddleDuelView(session: session, options: options),
+    buildWithPresentation: (session, options, resolution, frameRate) =>
+        PaddleDuelView(
+          session: session,
+          options: options,
+          resolution: resolution,
+          frameRate: frameRate,
+        ),
   ),
 ]);

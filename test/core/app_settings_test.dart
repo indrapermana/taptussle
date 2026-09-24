@@ -12,6 +12,8 @@ void main() {
     expect(settings.winningScore, 7);
     expect(settings.effectsVolume, .7);
     expect(settings.vibrationEnabled, isTrue);
+    expect(settings.resolution, ResolutionPreset.native);
+    expect(settings.frameRate, FrameRatePreset.fps60);
     await settings.setWinningScore(5);
     await settings.setEffectsVolume(.35);
     final restored = AppSettings(prefs);
@@ -24,5 +26,11 @@ void main() {
     expect(settings.effectsVolume, 1);
     await settings.setVibrationEnabled(false);
     expect(settings.vibrationEnabled, isFalse);
+    await settings.setResolution(ResolutionPreset.balanced);
+    await settings.setFrameRate(FrameRatePreset.fps30);
+    final graphicsRestored = AppSettings(prefs);
+    addTearDown(graphicsRestored.dispose);
+    expect(graphicsRestored.resolution, ResolutionPreset.balanced);
+    expect(graphicsRestored.frameRate, FrameRatePreset.fps30);
   });
 }

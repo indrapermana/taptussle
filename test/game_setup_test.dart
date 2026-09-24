@@ -1,4 +1,3 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +8,7 @@ import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/core/mini_game.dart';
 import 'package:tap_tussle/features/game_setup/game_setup_screen.dart';
-import 'package:tap_tussle/games/paddle_duel/paddle_duel_game.dart';
+import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
 
 Future<AppSettings> settingsFor(
   WidgetTester tester, {
@@ -59,10 +58,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
 
         final game = tester
-            .widget<GameWidget<PaddleDuelGame>>(
-              find.byType(GameWidget<PaddleDuelGame>),
-            )
-            .game!;
+            .widget<PaddleDuelPresentation>(find.byType(PaddleDuelPresentation))
+            .game;
         expect(game.session.phase, MatchPhase.playing);
         expect(game.bot!.difficulty, difficulty);
         expect(find.text('You  0'), findsOneWidget);
@@ -203,7 +200,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<Slider>(find.byType(Slider)).value, 2);
     expect(find.text('Play Hard'), findsOneWidget);
-    expect(find.byType(GameWidget<PaddleDuelGame>), findsNothing);
+    expect(find.byType(PaddleDuelPresentation), findsNothing);
   });
 
   testWidgets('small screen and large text allow bot setup without overflow', (

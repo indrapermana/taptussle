@@ -1,21 +1,26 @@
 import 'dart:math' as math;
 
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/app_settings.dart';
 import '../../core/match_session.dart';
 import '../../core/match_options.dart';
 import 'paddle_duel_game.dart';
 import 'paddle_duel_model.dart';
+import 'paddle_duel_presentation.dart';
 
 class PaddleDuelView extends StatefulWidget {
   const PaddleDuelView({
     required this.session,
     required this.options,
+    this.resolution = ResolutionPreset.native,
+    this.frameRate = FrameRatePreset.fps60,
     super.key,
   });
   final MatchSession session;
   final MatchOptions options;
+  final ResolutionPreset resolution;
+  final FrameRatePreset frameRate;
   @override
   State<PaddleDuelView> createState() => _PaddleDuelViewState();
 }
@@ -39,11 +44,8 @@ class _PaddleDuelViewState extends State<PaddleDuelView> {
       pointers.clear();
       game.resetMatch();
     }
-    if (widget.session.phase == MatchPhase.playing) {
-      game.resumeEngine();
-    } else {
+    if (widget.session.phase != MatchPhase.playing) {
       pointers.clear();
-      game.pauseEngine();
     }
   }
 
@@ -94,7 +96,12 @@ class _PaddleDuelViewState extends State<PaddleDuelView> {
         child: Center(
           child: AspectRatio(
             aspectRatio: PaddleDuelModel.width / PaddleDuelModel.height,
-            child: GameWidget<PaddleDuelGame>(game: game),
+            child: PaddleDuelPresentation(
+              game: game,
+              session: widget.session,
+              resolution: widget.resolution,
+              frameRate: widget.frameRate,
+            ),
           ),
         ),
       );

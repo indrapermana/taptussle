@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'app_settings.dart';
 import 'match_session.dart';
 import 'match_options.dart';
 
 typedef MiniGameBuilder =
     Widget Function(MatchSession session, MatchOptions options);
+typedef MiniGamePresentationBuilder =
+    Widget Function(
+      MatchSession session,
+      MatchOptions options,
+      ResolutionPreset resolution,
+      FrameRatePreset frameRate,
+    );
 
 /// Exposes a widget so pure Flutter games can use the same shell as Flame games.
 class MiniGame {
@@ -15,6 +23,7 @@ class MiniGame {
     required this.instructions,
     required this.icon,
     required this.build,
+    this.buildWithPresentation,
     this.preview,
     this.matchLabel,
     this.botInstructions,
@@ -32,6 +41,7 @@ class MiniGame {
       mode == PlayMode.bot ? botInstructions ?? instructions : instructions;
   final IconData icon;
   final MiniGameBuilder build;
+  final MiniGamePresentationBuilder? buildWithPresentation;
   final WidgetBuilder? preview;
   final String Function(MatchOptions options)? matchLabel;
 }

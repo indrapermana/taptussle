@@ -1,4 +1,3 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -8,6 +7,7 @@ import 'package:tap_tussle/core/app_settings.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_game.dart';
+import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -64,10 +64,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('play-vs-friend')));
     await tester.pump(const Duration(milliseconds: 500));
     final game = tester
-        .widget<GameWidget<PaddleDuelGame>>(
-          find.byType(GameWidget<PaddleDuelGame>),
-        )
-        .game!;
+        .widget<PaddleDuelPresentation>(find.byType(PaddleDuelPresentation))
+        .game;
     expect(game.session.phase, MatchPhase.playing);
 
     binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
@@ -111,10 +109,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       final game = tester
-          .widget<GameWidget<PaddleDuelGame>>(
-            find.byType(GameWidget<PaddleDuelGame>),
-          )
-          .game!;
+          .widget<PaddleDuelPresentation>(find.byType(PaddleDuelPresentation))
+          .game;
       expect(game.bot!.difficulty, difficulty);
 
       await tester.tap(find.byTooltip('Pause match'));
