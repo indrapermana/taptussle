@@ -33,6 +33,12 @@ The package namespace is `com.indesyakaryadigital.tap_tussle`.
 
 ## Play Paddle Duel
 
+Choose **Play vs Friend** or **Play vs Bot** from the game setup page. Bot mode
+offers Easy, Normal, and Hard; you control the mint bottom paddle while the bot
+controls the coral top paddle. Game setup also lets you favourite a game. Saved
+favourites appear first in the selection list, while the remaining games retain
+their catalog order.
+
 - Hold the phone in portrait and sit at opposite ends.
 - Player 1 (mint) drags in the bottom half; Player 2 (coral) in the top half.
 - Both players can drag at once. One finger owns each paddle until released;

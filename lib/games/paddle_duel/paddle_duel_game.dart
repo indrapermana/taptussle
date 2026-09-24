@@ -1,13 +1,33 @@
+import 'dart:math' as math;
+
 import 'package:flame/game.dart';
 import 'package:flutter/painting.dart';
 
 import '../../core/match_session.dart';
+import '../../core/match_options.dart';
+import 'paddle_duel_bot.dart';
 import 'paddle_duel_model.dart';
 
 /// Flame owns frame scheduling and court rendering; Flutter owns the match UI.
 class PaddleDuelGame extends Game {
-  PaddleDuelGame({required this.session, required int winningScore})
-    : model = PaddleDuelModel(winningScore: winningScore);
+  PaddleDuelGame({required this.session, math.Random? botRandom})
+    : model = PaddleDuelModel(winningScore: session.options.winningScore),
+      bot = session.options.mode == PlayMode.bot
+          ? PaddleDuelBot(session.options.botDifficulty!, random: botRandom)
+          : null;
+
+  final PaddleDuelBot? bot;
+  bool _stopped = false;
+
+  void resetMatch() {
+    model.reset();
+    bot?.reset();
+  }
+
+  void stopMatch() {
+    _stopped = true;
+    pauseEngine();
+  }
 
   final MatchSession session;
   final PaddleDuelModel model;
@@ -19,15 +39,28 @@ class PaddleDuelGame extends Game {
 
   @override
   void update(double dt) {
-    if (session.phase != MatchPhase.playing) return;
-    final oldTotal = model.scores[0] + model.scores[1];
-    model.update(dt);
-    if (oldTotal != model.scores[0] + model.scores[1]) {
-      session.reportScore(
-        model.scores[0],
-        model.scores[1],
-        winner: model.winner,
-      );
+    if (_stopped ||
+        session.phase != MatchPhase.playing ||
+        dt <= 0 ||
+        !dt.isFinite) {
+      return;
+    }
+    var remaining = math.min(dt, .1);
+    while (remaining > .000001) {
+      final step = math.min(remaining, 1 / 120);
+      final oldTotal = model.scores[0] + model.scores[1];
+      bot?.update(model, step);
+      model.update(step);
+      remaining -= step;
+      if (oldTotal != model.scores[0] + model.scores[1]) {
+        bot?.reset();
+        session.reportScore(
+          model.scores[0],
+          model.scores[1],
+          winner: model.winner,
+        );
+        if (session.phase != MatchPhase.playing) break;
+      }
     }
   }
 
@@ -63,11 +96,21 @@ class PaddleDuelGame extends Game {
     );
     canvas.drawLine(const Offset(1, 0), const Offset(1, 600), line);
     canvas.drawLine(const Offset(359, 0), const Offset(359, 600), line);
-    _label(canvas, 'PLAYER 1', const Offset(180, 588), mint);
+    _label(
+      canvas,
+      session.options.playerLabel(0).toUpperCase(),
+      const Offset(180, 588),
+      mint,
+    );
     canvas.save();
     canvas.translate(180, 12);
-    canvas.rotate(3.141592653589793);
-    _label(canvas, 'PLAYER 2', Offset.zero, coral);
+    if (session.options.mode == PlayMode.friend) canvas.rotate(math.pi);
+    _label(
+      canvas,
+      session.options.playerLabel(1).toUpperCase(),
+      Offset.zero,
+      coral,
+    );
     canvas.restore();
     for (var player = 0; player < 2; player++) {
       final rect = Rect.fromCenter(

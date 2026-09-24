@@ -25,13 +25,14 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | ID | Milestone | Depends on | Status | Completion evidence |
 | --- | --- | --- | --- | --- |
 | M0 | Foundation and Paddle Duel | — | Done | Existing implementation; initial 13 tests and web build passed; user confirmed first iPhone debug run |
-| M1 | Game setup, favourites, and Paddle Duel bots | M0 | Not started | — |
-| M2 | Settings, audio, vibration, and live graphics comparison | M1 | Not started | — |
-| M3 | Reaction Duel | M1, M2 | Not started | — |
-| M4 | Air Hockey | M3 | Not started | — |
-| M5 | Lane Dash: simple racing/movement game | M4 | Not started | — |
-| M6 | Tic-Tac-Toe: proposed fifth game | M5 | Not started | — |
-| M7 | Five-game device validation and release preparation | M1–M6 | Not started | — |
+| M1 | Game setup, favourites, and Paddle Duel bots | M0 | Done | User verified friend mode plus Easy, Normal, and Hard bots on iPhone; difficulties were distinct |
+| M2 | UI automation and M1 usability follow-up | M1 | In progress | Native automation plan and user feedback recorded; implementation in progress |
+| M3 | Settings, audio, vibration, and live graphics comparison | M1, M2 | Not started | — |
+| M4 | Reaction Duel | M1, M2, M3 | Not started | — |
+| M5 | Air Hockey | M4 | Not started | — |
+| M6 | Lane Dash: simple racing/movement game | M5 | Not started | — |
+| M7 | Tic-Tac-Toe: proposed fifth game | M6 | Not started | — |
+| M8 | Five-game device validation and release preparation | M1–M7 | Not started | — |
 
 M0 completion means a working foundation, not release certification. The iPhone
 debug run was reported by the user; a complete iPhone acceptance pass and Android
@@ -96,41 +97,97 @@ package's compatibility with the installed Flutter SDK before adding it.
 Deliver this in two increments: shared setup/favourites first, then working bot
 play. Do not expose a working-looking bot start action before the bot is available.
 
-- [ ] M1.1 Add match options, participant information, and game capability metadata;
+- [x] M1.1 Add match options, participant information, and game capability metadata;
   migrate existing callers while preserving friend-mode behavior.
-- [ ] M1.2 Route game selection into the new setup page, with title, instructions,
+- [x] M1.2 Route game selection into the new setup page, with title, instructions,
   Play vs Friend, Play vs Bot, favourite toggle, and Start match.
-- [ ] M1.3 Show Easy / Normal / Hard only for bot mode. Validate difficulty before
+- [x] M1.3 Show Easy / Normal / Hard only for bot mode. Validate difficulty before
   starting a bot match; do not pass an active bot into friend mode.
-- [ ] M1.4 Persist favourites using stable catalog IDs, independent of game titles.
+- [x] M1.4 Persist favourites using stable catalog IDs, independent of game titles.
   Sort favourites before other games and preserve catalog order within each group.
   Unfavouriting restores the game's normal position. Do not mutate the catalog.
-- [ ] M1.5 Refresh ordering when returning to the list, retaining usable scroll
+- [x] M1.5 Refresh ordering when returning to the list, retaining usable scroll
   position and preventing duplicate cards. Ignore unknown saved IDs safely.
-- [ ] M1.6 Implement Paddle Duel bot controls: player at bottom, bot at top;
+- [x] M1.6 Implement Paddle Duel bot controls: player at bottom, bot at top;
   ignore human touches on the bot side. Preserve two simultaneous touches in
   friend mode.
-- [ ] M1.7 Tune Easy using slower reactions, lower paddle speed, and larger aim
+- [x] M1.7 Tune Easy using slower reactions, lower paddle speed, and larger aim
   error; Normal with moderate tracking; Hard with bounded prediction, quicker
   reactions, and smaller error. Hard should remain beatable in Paddle Duel.
-- [ ] M1.8 Make bot updates respect pause, backgrounding, result, rematch, and
+- [x] M1.8 Make bot updates respect pause, backgrounding, result, rematch, and
   disposal. Clear delayed actions and pointer ownership on match transitions.
-- [ ] M1.9 Use Player 1 / Player 2 in friend mode and You / Bot in solo mode,
+- [x] M1.9 Use Player 1 / Player 2 in friend mode and You / Bot in solo mode,
   including instructions, HUD, and result copy. Rematch retains the selected mode,
   difficulty, and win rules; Change options returns to setup.
 
 Acceptance:
 
-- [ ] Favourite and unfavourite from setup, restart the app, and verify persistence
+- [x] Favourite and unfavourite from setup, restart the app, and verify persistence
   and ordering. Test sorting with a multi-game fixture before more games ship.
-- [ ] Complete a Paddle Duel match in friend mode and all three bot difficulties.
-- [ ] Confirm bots cannot move while paused, act after disposal, or receive human
+- [x] Complete a Paddle Duel match in friend mode and all three bot difficulties.
+- [x] Confirm bots cannot move while paused, act after disposal, or receive human
   touches. Confirm fresh rematches reset bot state.
-- [ ] Existing friend-mode input and scoring regression tests remain green.
-- [ ] Record human play feedback showing a meaningful Easy → Normal → Hard
+- [x] Existing friend-mode input and scoring regression tests remain green.
+- [x] Record human play feedback showing a meaningful Easy → Normal → Hard
   progression; use deterministic seeds for automated bot tests.
 
-## M2 — Settings and live graphics comparison
+## M2 — UI automation and M1 usability follow-up
+
+The user confirmed an iPhone play-through of friend mode and every bot difficulty,
+with a clear Easy → Normal → Hard difference. The following feedback is part of
+this milestone and must be verified on physical devices before continuing to M3.
+
+- [x] M2.1 Replace the large selection cards with a compact two-column game grid.
+  Each tile contains only game artwork, its name, and an unobtrusive favourite
+  indicator. The grid keeps favourites first and avoids a growing vertical card list.
+- [x] M2.2 Split setup into participant and difficulty pages. The participant page
+  starts with How to play, then presents Play vs Friend and Play vs Bot. Friend
+  mode starts directly; bot mode opens the difficulty page.
+- [x] M2.3 Replace difficulty chips with a three-stop slider: Easy, Normal, Hard.
+  Show a difficulty description and a Play button below the slider.
+- [x] M2.4 Expand Paddle Duel touch capture to the complete available match area,
+  including the space below the court. The bottom player can control the paddle
+  from the bottom of the screen without covering the ball. Keep the court mapping
+  correct when the court is letterboxed on larger devices.
+- [x] M2.5 Opt into iOS Game Mode with `GCSupportsGameMode` in `Info.plist`.
+  Game Mode is activated by iOS when the game launches; the app cannot force its
+  notification or state. Verify the notification on an iPhone running iOS 18+.
+
+### Native UI automation
+
+Playwright does not automate a native Flutter application installed on iOS or
+Android. Use Flutter's `integration_test` package as the required native UI
+automation tool because it can drive app widgets and run on physical devices and
+emulators. Playwright may be added later for optional web-build smoke tests, but
+it is not evidence for iPhone/Android behavior.
+
+- [ ] M2.6 Add `integration_test` as a development dependency and an iOS/Android
+  runner path. Keep tests offline and deterministic; do not depend on a simulator
+  or a network service.
+- [ ] M2.7 Add stable semantic labels/keys only where needed for automation. Do not
+  test rendering implementation details or brittle widget-tree positions.
+- [ ] M2.8 Automate the critical M1 journey: grid → favourite → participant page →
+  friend match; grid → bot → each slider position → match; pause/background →
+  resume; result → rematch/change options; restart → saved favourites/options.
+- [ ] M2.9 Run the suite on a physical iPhone and Android device. Record device,
+  OS, build, command, result, and any platform-specific failures.
+- [ ] M2.10 Add an optional Playwright web smoke-test proposal only after the native
+  suite is stable. It must target the compiled web build and remain separate from
+  mobile acceptance results.
+
+Acceptance:
+
+- [ ] Confirm the 2×2 grid works with 1, 2, 3, and 5 games; favourites stay first
+  and no duplicate/missing tile appears after returning from setup.
+- [ ] On iPhone and Android, use the bottom-most reachable part of the play area to
+  move Paddle Duel's lower paddle while keeping the ball visible. Verify friend
+  mode retains two independent touch zones.
+- [ ] Confirm Game Mode notification/state on a supported iPhone after rebuilding
+  with the new `Info.plist`; record if the OS chooses not to show a notification.
+- [ ] Native integration tests pass on iPhone and Android. Playwright results, if
+  added, are reported separately as web-only coverage.
+
+## M3 — Settings and live graphics comparison
 
 Promote settings to a dedicated scrollable page. Proposed defaults: volume 70%,
 vibration On, High resolution, and target 60 FPS. Keep Paddle Duel's points-to-win
@@ -138,17 +195,17 @@ control. Store choices locally and handle missing, invalid, or failed writes.
 
 ### Sound, vibration, and version
 
-- [ ] M2.1 Add a master volume slider from 0–100%, with 0 explicitly muted.
+- [ ] M3.1 Add a master volume slider from 0–100%, with 0 explicitly muted.
   Include a short sample action so its effect can be heard immediately.
-- [ ] M2.2 Add bundled, licensed sound effects for meaningful actions such as
+- [ ] M3.2 Add bundled, licensed sound effects for meaningful actions such as
   collisions, scoring, start, and result. A slider with no audible game effects
   does not satisfy this feature. Background music is outside this increment.
-- [ ] M2.3 Route sound through one service, respecting volume across all games,
+- [ ] M3.3 Route sound through one service, respecting volume across all games,
   limiting overlapping sounds, and stopping/suspending playback on backgrounding.
-- [ ] M2.4 Add vibration On / Off plus a test action. Use brief, rate-limited
+- [ ] M3.4 Add vibration On / Off plus a test action. Use brief, rate-limited
   feedback on selected events, with no failure on unsupported hardware. For a
   shared phone, feedback is device-wide, not private feedback to one player.
-- [ ] M2.5 Show the installed app's version and build number at the bottom, e.g.
+- [ ] M3.5 Show the installed app's version and build number at the bottom, e.g.
   `Version 1.0.0 (1)`, using runtime package metadata rather than hard-coded text.
 
 ### Resolution and FPS
@@ -173,38 +230,38 @@ Flutter menus, buttons, and HUD remain readable at native resolution. Keep the
 current logical arena and touch mapping unchanged. Do not add 90/120 FPS until
 the baseline settings work reliably on supported devices.
 
-- [ ] M2.6 First run a bounded implementation/profiling investigation on the
+- [ ] M3.6 First run a bounded implementation/profiling investigation on the
   installed Flutter/Flame versions. Prove actual game rendering scale and frame
   pacing on iPhone and Android before wiring up production controls.
-- [ ] M2.7 Implement a shared rendering adapter with supported capabilities and
+- [ ] M3.7 Implement a shared rendering adapter with supported capabilities and
   effective settings. Merely changing Flame's logical viewport size or skipping
   simulation updates does not implement resolution scaling or a rendering cap.
-- [ ] M2.8 Keep simulation/timing independent of presentation. Use consistent
+- [ ] M3.8 Keep simulation/timing independent of presentation. Use consistent
   elapsed-time or fixed-step rules; do not slow the game when choosing 30 FPS.
-- [ ] M2.9 For simple pure Flutter games, maintain native UI and explain when game
+- [ ] M3.9 For simple pure Flutter games, maintain native UI and explain when game
   resolution does not apply; apply FPS to relevant animations where supported.
   Do not blur board labels or claim an unsupported setting changed the game.
-- [ ] M2.10 Distinguish requested from effective settings, including display-rate
+- [ ] M3.10 Distinguish requested from effective settings, including display-rate
   limits and fallback. If the investigation cannot achieve real scaling or
   pacing, record the limitation and leave this task open instead of shipping
   controls that only change labels.
 
 ### Live comparison preview — confirmed user requirement
 
-- [ ] M2.11 Add an animated preview inside settings using a looping scene with a
+- [ ] M3.11 Add an animated preview inside settings using a looping scene with a
   moving ball, paddles, fine lines, and an image/texture detail. Use local assets.
-- [ ] M2.12 Show two labelled panes: current saved settings and candidate settings.
+- [ ] M3.12 Show two labelled panes: current saved settings and candidate settings.
   Both use the same deterministic scene, time origin, and animation path, with
   independent rendering settings so the comparison is fair.
-- [ ] M2.13 Let the user vary resolution and FPS independently, comparing all six
+- [ ] M3.13 Let the user vary resolution and FPS independently, comparing all six
   proposed combinations. Show selected resolution, actual render dimensions,
   target FPS, and measured scene frame rate for each pane.
-- [ ] M2.14 Reuse the production rendering adapter in the preview; a prerecorded
+- [ ] M3.14 Reuse the production rendering adapter in the preview; a prerecorded
   video or identical animations with different labels do not count.
-- [ ] M2.15 Apply commits the candidate graphics settings; Cancel/Back restores
+- [ ] M3.15 Apply commits the candidate graphics settings; Cancel/Back restores
   the saved settings. Stop preview work when leaving or backgrounding the page.
   Use stacked panes if needed on small screens, with matching scene sizes.
-- [ ] M2.16 Explain sharpness, smoothness, and potential battery tradeoffs without
+- [ ] M3.16 Explain sharpness, smoothness, and potential battery tradeoffs without
   invented battery percentages. A two-pane preview adds workload, so its measured
   FPS is not a guarantee of match performance.
 
@@ -223,7 +280,7 @@ Acceptance:
 - [ ] Verify the footer version against the installed build and confirm layout
   remains usable with larger text and on small phones.
 
-## M3 — Reaction Duel
+## M4 — Reaction Duel
 
 Engine: pure Flutter. Proposed rules: wait through a random delay, then tap your
 side when the signal appears. First legal tap wins a point; an early tap awards
@@ -231,39 +288,39 @@ the opponent a point. First to 5 wins. Use a monotonic clock, not rendered frame
 to timestamp taps; define a small simultaneous-tap tolerance and replay tied
 rounds without awarding points.
 
-- [ ] M3.1 Build a testable waiting/signal/result round state machine and seedable
+- [ ] M4.1 Build a testable waiting/signal/result round state machine and seedable
   delay source, with clear visual instructions and large mirrored touch zones.
-- [ ] M3.2 Implement friend mode, false starts, simultaneous taps, and score rules.
-- [ ] M3.3 Implement bots using calibrated, variable reaction delays after the
+- [ ] M4.2 Implement friend mode, false starts, simultaneous taps, and score rules.
+- [ ] M4.3 Implement bots using calibrated, variable reaction delays after the
   actual signal: Easy slower, Normal moderate, Hard faster but bounded. No bot
   access to a future signal time or input before the signal.
-- [ ] M3.4 Cancel pending timers on pause/dispose; restart an interrupted waiting
+- [ ] M4.4 Cancel pending timers on pause/dispose; restart an interrupted waiting
   round with a fresh delay and no penalty on resume. Preserve match scores.
-- [ ] M3.5 Register the game with setup, favourites, sound, vibration, and results.
+- [ ] M4.5 Register the game with setup, favourites, sound, vibration, and results.
 
 Acceptance: false starts and ties are deterministic; two fingers work; no stale
 timer scores after pause; reaction timing is independent of target FPS; complete
 matches in friend mode and all bot difficulties on both mobile platforms.
 
-## M4 — Air Hockey
+## M5 — Air Hockey
 
 Engine: Flame. Proposed rules: one mallet per half, one puck, first to 7 goals.
 Use simple circle/rail collision rules initially; assess Forge2D only if collision
 stability or contact requirements justify it. Do not inherit Paddle Duel rules.
 
-- [ ] M4.1 Implement puck, mallets, rails, goal mouths, and deterministic reset.
-- [ ] M4.2 Constrain mallets to their own halves; support simultaneous dragging
+- [ ] M5.1 Implement puck, mallets, rails, goal mouths, and deterministic reset.
+- [ ] M5.2 Constrain mallets to their own halves; support simultaneous dragging
   and bounded mallet speed to avoid teleporting through the puck.
-- [ ] M4.3 Handle fast contacts, corners, goal detection, and exactly-once scoring.
-- [ ] M4.4 Build bot difficulty from reaction time, aim error, speed, and defensive
+- [ ] M5.3 Handle fast contacts, corners, goal detection, and exactly-once scoring.
+- [ ] M5.4 Build bot difficulty from reaction time, aim error, speed, and defensive
   versus attacking decisions; use the same mallet constraints as humans.
-- [ ] M4.5 Integrate shared setup, favourites, effects, settings, and lifecycle.
+- [ ] M5.5 Integrate shared setup, favourites, effects, settings, and lifecycle.
 
 Acceptance: no tunnelling or repeated goals during stress scenarios; equivalent
 physics across FPS settings; complete friend/bot matches; no input ownership
 changes when fingers cross or leave the court.
 
-## M5 — Lane Dash (proposed movement/racing game)
+## M6 — Lane Dash (proposed movement/racing game)
 
 Engine: Flame. Proposed design: two separate three-lane tracks sharing the phone.
 Each player taps left/right on their side to avoid obstacles and reach a finish
@@ -271,42 +328,42 @@ distance. Collisions apply a brief slowdown rather than immediate elimination.
 Use the same obstacle sequence and travel distance for both players. Settle a
 finish within the same simulation step as a draw, rather than by update order.
 
-- [ ] M5.1 Finalize mirrored controls, track layout, race length, slowdown, and a
+- [ ] M6.1 Finalize mirrored controls, track layout, race length, slowdown, and a
   maximum race duration with a defined distance-based result if nobody finishes.
-- [ ] M5.2 Build seedable obstacle generation that always leaves a possible path.
-- [ ] M5.3 Add movement, collisions, countdown, progress, and finish resolution.
-- [ ] M5.4 Extend shared match results explicitly for draws and non-point-based
+- [ ] M6.2 Build seedable obstacle generation that always leaves a possible path.
+- [ ] M6.3 Add movement, collisions, countdown, progress, and finish resolution.
+- [ ] M6.4 Extend shared match results explicitly for draws and non-point-based
   results; keep Paddle Duel scoring compatible. Do not show FIRST TO 7 here.
-- [ ] M5.5 Add bots with bounded obstacle lookahead, reaction delay, and mistake
+- [ ] M6.5 Add bots with bounded obstacle lookahead, reaction delay, and mistake
   probability; no knowledge of obstacles outside the visible/allowed horizon.
-- [ ] M5.6 Integrate shared features and pause/resume without advancing obstacles
+- [ ] M6.6 Integrate shared features and pause/resume without advancing obstacles
   or granting one participant extra movement while paused.
 
 Acceptance: seeded races are fair, controls stay responsive, finish/draw rules are
 independent of update order, and races complete in both modes at 30 and 60 FPS.
 
-## M6 — Tic-Tac-Toe (proposed fifth simple game)
+## M7 — Tic-Tac-Toe (proposed fifth simple game)
 
 Engine: pure Flutter. Proposed rules: a 3×3 board, X/O alternate turns, three in a
 row wins, full board without a winner draws. One board is one match; rematch
 alternates the starting player. This validates turn-based games in the architecture.
 
-- [ ] M6.1 Implement pure board rules, legal moves, turn ownership, win detection,
-  and draw results using the shared result support introduced in M5.
-- [ ] M6.2 Build a readable board with clear current-player and occupied-cell states.
-- [ ] M6.3 Easy picks random legal moves; Normal takes immediate wins/blocks with
+- [ ] M7.1 Implement pure board rules, legal moves, turn ownership, win detection,
+  and draw results using the shared result support introduced in M6.
+- [ ] M7.2 Build a readable board with clear current-player and occupied-cell states.
+- [ ] M7.3 Easy picks random legal moves; Normal takes immediate wins/blocks with
   occasional weaker choices; Hard uses optimal search. Hard may be unbeatable
   here, but must still permit a draw and must never make an illegal move.
-- [ ] M6.4 Block human moves during the bot turn; cancel pending bot turns on
+- [ ] M7.4 Block human moves during the bot turn; cancel pending bot turns on
   pause/dispose and resume safely without a duplicate move.
-- [ ] M6.5 Integrate setup, favourites, effects, and rematch. Mark game resolution
+- [ ] M7.5 Integrate setup, favourites, effects, and rematch. Mark game resolution
   as not applicable to the native Flutter board; retain readable controls.
 
 Acceptance: cover all winning lines, draws, invalid input, alternating starters,
 and bot legality. Exhaustive rule/search tests demonstrate Hard never loses from
 an initially empty board. Complete friend/bot matches on mobile devices.
 
-## M7 — Device validation and release preparation
+## M8 — Device validation and release preparation
 
 - [ ] Run analysis and relevant rule/widget tests for every completed milestone.
 - [ ] Complete the matrix below on a physical iPhone and Android device. Record
@@ -348,11 +405,21 @@ resolution, FPS, vibration, version footer, and a **live comparison preview**.
 
 Proposed defaults: game choices/rules for Lane Dash and Tic-Tac-Toe, 30/60 FPS,
 50/75/100% rendering scales, volume 70%, vibration On, and remembered setup choices.
-Validate performance presets in M2 before treating them as shipping guarantees.
+Validate performance presets in M3 before treating them as shipping guarantees.
 These decisions do not block starting M1.
 
 For each increment append: date, task IDs, short change description, tests/device
 evidence, unresolved issues, and next task. Implementation starts with M1.1.
+
+2026-09-24 — M1.1–M1.9 implemented. `flutter analyze` passed and 32 automated
+tests passed, covering setup, favourite persistence/order, all bot difficulties,
+friend-mode input regression, lifecycle, rematch, and navigation. The player
+confirmed Friend mode and each bot difficulty on an iPhone, so M1 is complete.
+
+2026-09-24 — M2.1–M2.5 implemented from iPhone feedback: compact two-column
+game grid, participant-first setup, a separate slider-based bot difficulty page,
+bottom-screen Paddle Duel control, and the iOS Game Mode opt-in. Native UI
+automation remains the next M2 task.
 
 ## Technical references
 
@@ -363,3 +430,7 @@ evidence, unresolved issues, and next task. Implementation starts with M1.1.
   representative of release behavior.
 - [Flutter haptic feedback](https://api.flutter.dev/flutter/services/HapticFeedback-class.html):
   platform feedback primitives for the shared vibration adapter.
+- [Flutter integration tests](https://docs.flutter.dev/testing/integration-tests):
+  native iOS and Android UI automation for the M2 test suite.
+- [Apple Game Mode](https://developer.apple.com/documentation/bundleresources/information-property-list/lssupportsgamemode):
+  the platform-controlled Game Mode opt-in behavior.

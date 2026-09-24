@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/mini_game.dart';
+import '../core/match_options.dart';
 import '../games/paddle_duel/paddle_duel_view.dart';
 import '../games/paddle_duel/paddle_duel_preview.dart';
 
@@ -9,7 +10,13 @@ final gameCatalog = List<MiniGame>.unmodifiable([
   MiniGame(
     id: 'paddle-duel',
     preview: (_) => const CustomPaint(painter: PaddleDuelPreview()),
-    matchLabel: (score) => 'FIRST TO $score',
+    matchLabel: (options) => 'FIRST TO ${options.winningScore}',
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    botInstructions:
+        'You control the mint paddle at the bottom. Drag in the '
+        'bottom half to move; the bot controls the coral paddle at the top. '
+        'Get the ball past the bot to score. Hit near a paddle edge to angle '
+        'your return.',
     title: 'Paddle Duel',
     subtitle: 'Quick hands. Long rallies. One winner.',
     instructions:
@@ -18,7 +25,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         'top. Drag anywhere in your half to move your paddle. Get the ball '
         'past your opponent to score.',
     icon: Icons.sports_tennis_rounded,
-    build: (session, winningScore) =>
-        PaddleDuelView(session: session, winningScore: winningScore),
+    build: (session, options) =>
+        PaddleDuelView(session: session, options: options),
   ),
 ]);

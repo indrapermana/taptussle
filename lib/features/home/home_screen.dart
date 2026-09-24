@@ -1,161 +1,114 @@
 import 'package:flutter/material.dart';
 
-import '../../app/game_catalog.dart';
 import '../../core/app_settings.dart';
-import '../match/match_screen.dart';
+import '../../core/mini_game.dart';
+import '../game_setup/game_setup_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({required this.settings, super.key});
+  const HomeScreen({required this.settings, required this.games, super.key});
+
   final AppSettings settings;
+  final List<MiniGame> games;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.bolt_rounded,
-                    color: Color(0xFF9DF5CF),
-                    size: 30,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'TAPTUSSLE',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    tooltip: 'Settings',
-                    onPressed: () => showModalBottomSheet<void>(
-                      context: context,
-                      showDragHandle: true,
-                      isScrollControlled: true,
-                      builder: (_) => _SettingsSheet(settings: settings),
-                    ),
-                    icon: const Icon(Icons.tune_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 36),
-              const Text(
-                'One phone.\nTwo rivals.',
-                style: TextStyle(
-                  fontSize: 48,
-                  height: 1.05,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -2,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'A little friendly competition.\nPick a game and take your side.',
-                style: TextStyle(
-                  fontSize: 17,
-                  height: 1.5,
-                  color: Colors.white.withValues(alpha: 0.65),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _Badge(icon: Icons.people_alt_outlined, label: '2 players'),
-                  _Badge(icon: Icons.wifi_off_rounded, label: 'Always offline'),
-                ],
-              ),
-              const SizedBox(height: 36),
-              const Text(
-                'PICK YOUR CHALLENGE',
-                style: TextStyle(
-                  fontSize: 12,
-                  letterSpacing: 2,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              for (final game in gameCatalog)
-                Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        height: 180,
-                        child:
-                            game.preview?.call(context) ??
-                            Icon(game.icon, size: 64),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: settings,
+    builder: (context, _) => Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: CustomScrollView(
+              key: const PageStorageKey('game-selection'),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              game.title,
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
+                            const Icon(
+                              Icons.bolt_rounded,
+                              color: Color(0xFF9DF5CF),
+                              size: 30,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'TAPTUSSLE',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              game.subtitle,
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                            const SizedBox(height: 22),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => MatchScreen(
-                                      game: game,
-                                      winningScore: settings.winningScore,
-                                    ),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.play_arrow_rounded),
-                                label: const Text('Let’s play'),
+                            const Spacer(),
+                            IconButton(
+                              tooltip: 'Settings',
+                              onPressed: () => showModalBottomSheet<void>(
+                                context: context,
+                                showDragHandle: true,
+                                isScrollControlled: true,
+                                builder: (_) =>
+                                    _SettingsSheet(settings: settings),
                               ),
+                              icon: const Icon(Icons.tune_rounded),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 12),
-              const Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome_outlined,
-                    size: 18,
-                    color: Colors.white54,
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'More tiny games. More big rivalries.\nNew challenges are on the way.',
-                      style: TextStyle(color: Colors.white54, height: 1.5),
+                        const SizedBox(height: 28),
+                        const Text(
+                          'One phone.\nTwo rivals.',
+                          style: TextStyle(
+                            fontSize: 42,
+                            height: 1.05,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -2,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Pick a challenge and take your side.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withValues(alpha: 0.65),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'PICK YOUR CHALLENGE',
+                          style: TextStyle(
+                            fontSize: 12,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 260,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: .92,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final game = favouritesFirst(
+                        games,
+                        settings.favouriteIds,
+                      )[index];
+                      return _GameTile(game: game, settings: settings);
+                    }, childCount: games.length),
+                  ),
+                ),
+                const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+              ],
+            ),
           ),
         ),
       ),
@@ -163,24 +116,62 @@ class HomeScreen extends StatelessWidget {
   );
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+class _GameTile extends StatelessWidget {
+  const _GameTile({required this.game, required this.settings});
+
+  final MiniGame game;
+  final AppSettings settings;
+
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.white12),
-      borderRadius: BorderRadius.circular(30),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+  Widget build(BuildContext context) => Card(
+    key: ValueKey('game-card-${game.id}'),
+    clipBehavior: Clip.antiAlias,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+    child: InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => GameSetupScreen(game: game, settings: settings),
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Icon(icon, size: 15, color: const Color(0xFF9DF5CF)),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 12)),
+          game.preview?.call(context) ??
+              Center(child: Icon(game.icon, size: 64)),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: .86),
+                ],
+                stops: const [.42, 1],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Text(
+                game.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          if (settings.isFavourite(game.id))
+            const Positioned(
+              top: 10,
+              right: 10,
+              child: Icon(Icons.favorite_rounded, color: Color(0xFFFF968A)),
+            ),
         ],
       ),
     ),
@@ -189,13 +180,16 @@ class _Badge extends StatelessWidget {
 
 class _SettingsSheet extends StatefulWidget {
   const _SettingsSheet({required this.settings});
+
   final AppSettings settings;
+
   @override
   State<_SettingsSheet> createState() => _SettingsSheetState();
 }
 
 class _SettingsSheetState extends State<_SettingsSheet> {
   bool saving = false;
+
   @override
   Widget build(BuildContext context) => SafeArea(
     child: SingleChildScrollView(

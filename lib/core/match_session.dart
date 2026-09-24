@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
 
+import 'match_options.dart';
+
 enum MatchPhase { ready, playing, paused, finished }
 
 /// Engine-independent lifecycle. Games publish scores and results;
 /// the Flutter shell owns navigation and lifecycle controls.
 class MatchSession extends ChangeNotifier {
+  MatchSession({this.options = const MatchOptions.friend()});
+
+  final MatchOptions options;
   MatchPhase get phase => _phase;
   MatchPhase _phase = MatchPhase.ready;
   int get round => _round;

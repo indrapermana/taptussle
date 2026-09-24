@@ -1,29 +1,34 @@
 import 'package:flutter/material.dart';
 
 import '../../core/match_session.dart';
+import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
     required this.game,
-    required this.winningScore,
+    required this.options,
+    this.startImmediately = false,
     super.key,
   });
   final MiniGame game;
-  final int winningScore;
+  final MatchOptions options;
+  final bool startImmediately;
   @override
   State<MatchScreen> createState() => _MatchScreenState();
 }
 
 class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
-  final session = MatchSession();
+  late final MatchSession session;
   late final Widget gameView;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    gameView = widget.game.build(session, widget.winningScore);
+    session = MatchSession(options: widget.options);
+    gameView = widget.game.build(session, widget.options);
+    if (widget.startImmediately) session.start();
   }
 
   @override
@@ -49,7 +54,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            tooltip: 'Back to games',
+            tooltip: 'Change options',
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () {
               if (session.phase == MatchPhase.playing) {
@@ -91,7 +96,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'P1  ${session.scores[0]}',
+                              '${widget.options.playerLabel(0)}  ${session.scores[0]}',
                               style: const TextStyle(
                                 color: Color(0xFF9DF5CF),
                                 fontWeight: FontWeight.w900,
@@ -107,9 +112,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                widget.game.matchLabel?.call(
-                                      widget.winningScore,
-                                    ) ??
+                                widget.game.matchLabel?.call(widget.options) ??
                                     '2 PLAYERS',
                                 style: const TextStyle(
                                   fontSize: 11,
@@ -125,7 +128,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerRight,
                             child: Text(
-                              '${session.scores[1]}  P2',
+                              '${session.scores[1]}  ${widget.options.playerLabel(1)}',
                               style: const TextStyle(
                                 color: Color(0xFFFF968A),
                                 fontWeight: FontWeight.w900,
@@ -161,10 +164,15 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                     const SizedBox(height: 20),
                                     Text(
                                       switch (session.phase) {
-                                        MatchPhase.ready => 'Take your sides',
+                                        MatchPhase.ready =>
+                                          widget.options.mode == PlayMode.friend
+                                              ? 'Take your sides'
+                                              : 'Ready to challenge the bot?',
                                         MatchPhase.paused => 'Time out',
                                         MatchPhase.finished =>
-                                          'Player ${session.winner! + 1} wins!',
+                                          widget.options.resultLabel(
+                                            session.winner!,
+                                          ),
                                         MatchPhase.playing => '',
                                       },
                                       textAlign: TextAlign.center,
@@ -177,7 +185,9 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                     Text(
                                       switch (session.phase) {
                                         MatchPhase.ready =>
-                                          widget.game.instructions,
+                                          widget.game.instructionsFor(
+                                            widget.options.mode,
+                                          ),
                                         MatchPhase.paused =>
                                           'Catch your breath. Your match is right here.',
                                         MatchPhase.finished =>
@@ -207,9 +217,27 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
+                                    if (widget.options.mode == PlayMode.bot)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        child: Text(
+                                          '${widget.options.botDifficulty!.label} bot',
+                                          style: const TextStyle(
+                                            color: Colors.white60,
+                                          ),
+                                        ),
+                                      ),
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.of(context).pop(),
+                                      child: const Text('Change options'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(
+                                        context,
+                                      ).popUntil((route) => route.isFirst),
                                       child: const Text('Back to games'),
                                     ),
                                   ],

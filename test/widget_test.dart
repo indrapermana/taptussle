@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tap_tussle/app/tap_tussle_app.dart';
 import 'package:tap_tussle/core/app_settings.dart';
 import 'package:tap_tussle/core/match_session.dart';
+import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/mini_game.dart';
 import 'package:tap_tussle/features/match/match_screen.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_game.dart';
@@ -30,13 +31,11 @@ void main() {
       // Dismiss the settings sheet using the modal barrier.
       await tester.tapAt(const Offset(10, 20));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Let’s play'), 250);
+      await tester.tap(find.byKey(const ValueKey('game-card-paddle-duel')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Let’s play'));
-      await tester.pumpAndSettle();
-      expect(find.text('Take your sides'), findsOneWidget);
+      expect(find.text('How to play'), findsOneWidget);
       expect(find.text('FIRST TO 5'), findsOneWidget);
-      await tester.tap(find.text('Start match'));
+      await tester.tap(find.text('Play vs Friend'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
       final game = tester
@@ -120,7 +119,12 @@ void main() {
       },
     );
     await tester.pumpWidget(
-      MaterialApp(home: MatchScreen(game: definition, winningScore: 7)),
+      MaterialApp(
+        home: MatchScreen(
+          game: definition,
+          options: const MatchOptions.friend(),
+        ),
+      ),
     );
     await tester.tap(find.text('Start match'));
     await tester.pump();
@@ -142,9 +146,14 @@ void main() {
     final settings = AppSettings(await SharedPreferences.getInstance());
     addTearDown(settings.dispose);
     await tester.pumpWidget(TapTussleApp(settings: settings));
-    await tester.scrollUntilVisible(find.text('Let’s play'), 250);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('game-card-paddle-duel')),
+      200,
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Let’s play'));
+    await tester.tap(
+      find.byKey(const ValueKey('game-card-paddle-duel')).hitTestable(),
+    );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());

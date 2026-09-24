@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_settings.dart';
+import '../core/mini_game.dart';
+import 'game_catalog.dart';
 import '../features/home/home_screen.dart';
 
 class TapTussleApp extends StatelessWidget {
-  const TapTussleApp({required this.settings, super.key});
+  const TapTussleApp({required this.settings, this.games, super.key});
   final AppSettings settings;
+  final List<MiniGame>? games;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -32,6 +35,6 @@ class TapTussleApp extends StatelessWidget {
         ),
       ),
     ),
-    home: HomeScreen(settings: settings),
+    home: HomeScreen(settings: settings, games: games ?? gameCatalog),
   );
 }
