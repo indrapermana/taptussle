@@ -32,6 +32,12 @@ The web preview is not an offline-installed PWA; the offline product target is
 the installed mobile application. Release signing and store assets are not set up.
 The package namespace is `com.indesyakaryadigital.tap_tussle`.
 
+The native mobile launch experience uses the branded Tap Tussle artwork on iOS
+and supported Android versions. Android 12 and newer use the TT app icon on a
+matching dark-blue background within the operating system's splash layout. A
+branded Flutter loading screen then initializes saved preferences and feedback
+services with an animated progress bar before opening the game catalog.
+
 ## Play
 
 Choose a game, then select **Play vs Friend** or **Play vs Bot**. Bot mode offers
@@ -131,5 +137,5 @@ iPhone and Android devices. The newly revised Air Hockey bot profiles still need
 another device pass.
 Before release, M8 requires recorded device/build details, profile-mode graphics
 measurements, offline and interruption checks, accessibility/safe-area coverage,
-long-session checks, app icons, attribution, and release signing. Native UI
+long-session checks, and release signing. Native UI
 automation remains parked because Flutter could not attach its iPhone test runner.

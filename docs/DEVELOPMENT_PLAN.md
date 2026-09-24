@@ -33,7 +33,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M5 | Air Hockey | M4 | Done | User confirmed M3–M6 working on iPhone and Android |
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
-| M8 | Five-game device validation and release preparation | M1–M7 | Not started | — |
+| M8 | Five-game device validation and release preparation | M1–M7 | In progress | M8.1 final iOS/Android app icons and attribution complete; Android debug and iOS simulator builds pass |
 
 Milestone completion records functional implementation and the device evidence
 listed in the tracker; it is not release certification. M3–M6 have been confirmed
@@ -494,16 +494,23 @@ an initially empty board. Complete friend/bot matches on mobile devices.
 
 ## M8 — Device validation and release preparation
 
-- [ ] Run analysis and relevant rule/widget tests for every completed milestone.
-- [ ] Complete the matrix below on a physical iPhone and Android device. Record
+- [x] M8.1 Add the final app icon for iOS and Android, verify every required icon
+  size, and record attribution or original-asset ownership.
+- [ ] M8.2 Run analysis and relevant rule/widget tests for every completed
+  milestone; expand regression and persistence coverage where release-critical
+  behavior is not yet protected.
+- [ ] M8.3 Profile graphics settings on physical devices and record frame-rate,
+  resolution-scale, and stability results using profile builds.
+- [ ] M8.4 Test fully offline launches and matches, setting/favourite persistence,
+  interruptions, audio focus, accessibility text, safe areas, and long sessions
+  for heat or input issues. Check that existing installations preserve points-to-win
+  and load sane defaults for newer storage keys.
+- [ ] M8.5 Complete the matrix below on a physical iPhone and Android device. Record
   the actual model, OS version, app build, result, and any defects.
-- [ ] Test fully offline launches and matches, setting/favourite persistence,
-  interruptions, audio focus, safe areas, and long sessions for heat/input issues.
-- [ ] Check that new storage keys preserve existing points-to-win preferences and
-  old installations load sane defaults for new settings.
-- [ ] Add app icons, bundled asset attribution, and release signing/build setup
-  before distribution. Local device testing does not require store publication.
-- [ ] Close release-blocking defects and attach build/test evidence to the tracker.
+- [ ] M8.6 Configure Android and iOS release signing and produce release builds.
+  Local device testing does not require store publication.
+- [ ] M8.7 Close release-blocking defects, finalize the release version, and attach
+  build/test evidence to the tracker.
 
 | Game | Friend | Easy bot | Normal bot | Hard bot | iPhone | Android |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -612,6 +619,30 @@ Tic-Tac-Toe tests plus shared setup/favourites coverage pass (45 tests in the
 focused run), `flutter analyze` reports no issues, and `git diff --check` passes.
 The user subsequently confirmed Friend and Easy, Normal, and Hard bot modes on
 physical iPhone and Android devices, completing M7.
+
+2026-09-24 — M8.1 replaced the Flutter placeholder launcher icons with the final
+red/blue `TT` artwork supplied by the project owner. The 1254×1254 RGB source is
+preserved under `assets/branding`, with its ChatGPT-generation attribution. All
+15 required iOS icon slots and five Android density icons have the expected pixel
+dimensions and no alpha channel. `flutter analyze`, an Android debug APK build,
+an iOS simulator debug build, and `git diff --check` pass. M8.2 automated release
+regression and persistence coverage is next.
+
+2026-09-24 — Added the selected candidate 5 launch artwork as the branded native
+splash screen. iOS displays it edge-to-edge with aspect-fill constraints; Android
+launch screens display the 9:16 artwork, while Android 12 and newer use the TT
+launcher icon on the matching dark-blue system splash background. The original
+941×1672 RGB source and its ChatGPT-generation attribution are preserved under
+`assets/branding`. `flutter analyze`, the Android debug APK build, the iOS
+simulator debug build, and `git diff --check` pass.
+
+2026-09-24 — Extended the launch experience with an in-app branded loading
+screen instead of artificially holding the native operating-system splash. It
+initializes saved preferences, audio, and haptics while displaying an animated,
+accessible progress bar, keeps the transition visible for a minimum of two
+seconds on fast devices, and offers Retry if initialization fails. A focused
+startup widget test, `flutter analyze`, Android debug APK build, iOS simulator
+debug build, and `git diff --check` pass.
 
 2026-09-24 — Added a distinct Paddle Duel paddle-hit effect and changed the
 effects-volume slider to 20% intervals (0%, 20%, 40%, 60%, 80%, 100%).
