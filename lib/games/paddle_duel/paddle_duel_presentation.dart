@@ -52,6 +52,7 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
   bool _rendering = false;
   Duration? _firstPublishedFrame;
   int _publishedFrames = 0;
+  int _captureGeneration = 0;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.resolution != widget.resolution ||
         oldWidget.frameRate != widget.frameRate) {
+      _captureGeneration++;
       _previousRender = null;
       _firstPublishedFrame = null;
       _publishedFrames = 0;
@@ -92,34 +94,45 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
   }
 
   Future<void> _captureFrame() async {
+    final renderedAt = _previousRender;
+    if (renderedAt == null || _outputSize.isEmpty) return;
+    final generation = _captureGeneration;
+    final outputSize = _outputSize;
     _rendering = true;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    widget.game.renderAtSize(canvas, _outputSize);
+    widget.game.renderAtSize(canvas, outputSize);
     final picture = recorder.endRecording();
     try {
       final image = await picture.toImage(
-        _outputSize.width.ceil(),
-        _outputSize.height.ceil(),
+        outputSize.width.ceil(),
+        outputSize.height.ceil(),
       );
-      if (!mounted) {
+      if (!mounted || generation != _captureGeneration) {
         image.dispose();
         return;
       }
       final previous = _frame;
       setState(() => _frame = image);
       previous?.dispose();
-      final now = _previousRender!;
-      _firstPublishedFrame ??= now;
+      _firstPublishedFrame ??= renderedAt;
       _publishedFrames++;
-      final elapsed = now - _firstPublishedFrame!;
+      final elapsed = renderedAt - _firstPublishedFrame!;
       widget.onMetrics?.call(
         PresentationMetrics(
-          outputSize: _outputSize,
+          outputSize: outputSize,
           requestedFps: widget.frameRate.framesPerSecond,
           effectiveFps: _publishedFrames < 2 || elapsed.inMicroseconds == 0
               ? 0
               : (_publishedFrames - 1) * 1000000 / elapsed.inMicroseconds,
+        ),
+      );
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'Paddle Duel graphics preview',
         ),
       );
     } finally {
@@ -143,6 +156,7 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
       final nextOutput =
           logicalSize * pixelRatio * widget.resolution.renderScale;
       if (nextOutput != _outputSize) {
+        _captureGeneration++;
         _outputSize = nextOutput;
         _previousRender = null;
       }

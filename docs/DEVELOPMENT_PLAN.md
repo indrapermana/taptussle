@@ -27,17 +27,18 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M0 | Foundation and Paddle Duel | — | Done | Existing implementation; initial 13 tests and web build passed; user confirmed first iPhone debug run |
 | M1 | Game setup, favourites, and Paddle Duel bots | M0 | Done | User verified friend mode plus Easy, Normal, and Hard bots on iPhone; difficulties were distinct |
 | M2 | UI automation and M1 usability follow-up | M1 | Blocked | Native iPhone integration-test transport cannot attach; retry when the Flutter/iPhone debug transport issue is resolved |
-| M3 | Settings, audio, vibration, and live graphics comparison | M1, M2 | In progress | User verified on iPhone; Android profiling and final M3.6 device evidence remain |
-| M4 | Reaction Duel | M1, M2, M3 | In progress | Implemented and user verified on iPhone; retain device validation across bot difficulties |
-| M5 | Air Hockey | M4 | In progress | Core rink, puck, goals, controls, bot, match integration, and goal-mouth fix implemented; complete device and physics validation remain |
-| M6 | Lane Dash: simple racing/movement game | M5 | Not started | — |
+| M3 | Settings, audio, vibration, and live graphics comparison | M1, M2 | Done | User confirmed M3 works on iPhone and Android, including graphics settings after the preview capture fix |
+| M4 | Reaction Duel | M1, M2, M3 | Done | User confirmed M3–M6 working on iPhone and Android |
+| M5 | Air Hockey | M4 | Done | User confirmed M3–M6 working on iPhone and Android |
+| M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: proposed fifth game | M6 | Not started | — |
 | M8 | Five-game device validation and release preparation | M1–M7 | Not started | — |
 
 M0 completion means a working foundation, not release certification. The iPhone
 debug run was reported by the user; a complete iPhone acceptance pass and Android
 device verification remain open. Game names and rules below are proposed defaults
-for implementation planning; Lane Dash and Tic-Tac-Toe are not yet built.
+for implementation planning; Lane Dash is implemented and user-confirmed on
+iPhone and Android, while Tic-Tac-Toe is not yet built.
 
 ## Target player flow
 
@@ -252,15 +253,15 @@ Flutter menus, buttons, and HUD remain readable at native resolution. Keep the
 current logical arena and touch mapping unchanged. Do not add 90/120 FPS until
 the baseline settings work reliably on supported devices.
 
-- [ ] M3.6 First run a bounded implementation/profiling investigation on the
+- [x] M3.6 First run a bounded implementation/profiling investigation on the
   installed Flutter/Flame versions. Prove actual game rendering scale and frame
   pacing on iPhone and Android before wiring up production controls.
 
   Source investigation is recorded in
   [Graphics rendering investigation](GRAPHICS_RENDERING_INVESTIGATION.md).
   It confirms that Flame viewport settings are not physical resolution scaling
-  and that `GameWidget` has no public FPS cap. Device profiling remains required
-  before this item can be marked complete.
+  and that `GameWidget` has no public FPS cap. User confirmed the graphics
+  settings work on iPhone and Android; broader release profiling remains in M8.
 - [x] M3.7 Implement a shared rendering adapter with supported capabilities and
   effective settings. Merely changing Flame's logical viewport size or skipping
   simulation updates does not implement resolution scaling or a rendering cap.
@@ -270,8 +271,8 @@ the baseline settings work reliably on supported devices.
   Paddle Duel now uses a presentation adapter that advances its existing
   elapsed-time simulation at display cadence, then rasterizes a snapshot at
   the selected 50%, 75%, or 100% physical pixel scale and publishes it at 30
-  or 60 FPS. The settings are saved locally. Physical profiling and effective
-  FPS reporting remain open in M3.6 and M3.10.
+  or 60 FPS. The settings are saved locally. User confirmed graphics settings
+  work on iPhone and Android; broader release profiling remains in M8.
 - [x] M3.9 For simple pure Flutter games, maintain native UI and explain when game
   resolution does not apply; apply FPS to relevant animations where supported.
   Do not blur board labels or claim an unsupported setting changed the game.
@@ -348,6 +349,8 @@ Acceptance: false starts and ties are deterministic; two fingers work; no stale
 timer scores after pause; reaction timing is independent of target FPS; complete
 matches in friend mode and all bot difficulties on both mobile platforms.
 
+Validation: user confirmed M3–M6 working on both iPhone and Android.
+
 ## M5 — Air Hockey
 
 Engine: Flame. Proposed rules: one mallet per half, one puck, first to 7 goals.
@@ -364,38 +367,60 @@ collision state, while preserving the configured points-to-win value.
 The fixed-step simulation stops as soon as a winning goal is recorded, preventing
 multiple score increments from one puck crossing.
 
-- [ ] M5.1 Implement puck, mallets, rails, goal mouths, and deterministic reset.
-- [ ] M5.2 Constrain mallets to their own halves; support simultaneous dragging
+- [x] M5.1 Implement puck, mallets, rails, goal mouths, and deterministic reset.
+- [x] M5.2 Constrain mallets to their own halves; support simultaneous dragging
   and bounded mallet speed to avoid teleporting through the puck.
-- [ ] M5.3 Handle fast contacts, corners, goal detection, and exactly-once scoring.
-- [ ] M5.4 Build bot difficulty from reaction time, aim error, speed, and defensive
+- [x] M5.3 Handle fast contacts, corners, goal detection, and exactly-once scoring.
+- [x] M5.4 Build bot difficulty from reaction time, aim error, speed, and defensive
   versus attacking decisions; use the same mallet constraints as humans.
-- [ ] M5.5 Integrate shared setup, favourites, effects, settings, and lifecycle.
+- [x] M5.5 Integrate shared setup, favourites, effects, settings, and lifecycle.
 
 Acceptance: no tunnelling or repeated goals during stress scenarios; equivalent
 physics across FPS settings; complete friend/bot matches; no input ownership
 changes when fingers cross or leave the court.
 
+Validation: user confirmed M3–M6 working on both iPhone and Android. Earlier
+iPhone checks also covered replay behavior, visible goal mouths, and exact scores.
+Release-level physics stress validation remains in M8.
+
 ## M6 — Lane Dash (proposed movement/racing game)
 
 Engine: Flame. Proposed design: two separate three-lane tracks sharing the phone.
 Each player taps left/right on their side to avoid obstacles and reach a finish
-distance. Collisions apply a brief slowdown rather than immediate elimination.
-Use the same obstacle sequence and travel distance for both players. Settle a
+distance. Show two distinct track panels: bottom player's obstacles move down
+toward the bottom runner; top player's obstacles move up toward the top runner.
+Render a single visible obstacle per course row as a cone sprite, show each
+player's distance/progress and collision slowdown clearly. Collisions apply a
+brief slowdown rather than immediate elimination.
+Give each player an independently generated obstacle sequence with a randomized
+starting offset; keep course pressure comparable at a given difficulty. Settle a
 finish within the same simulation step as a draw, rather than by update order.
 
-- [ ] M6.1 Finalize mirrored controls, track layout, race length, slowdown, and a
+- [x] M6.1 Finalize mirrored controls, track layout, race length, slowdown, and a
   maximum race duration with a defined distance-based result if nobody finishes.
-- [ ] M6.2 Build seedable obstacle generation that always leaves a possible path.
-- [ ] M6.3 Add movement, collisions, countdown, progress, and finish resolution.
-- [ ] M6.4 Extend shared match results explicitly for draws and non-point-based
+- [x] M6.2 Build seedable obstacle generation that always leaves a possible path.
+- [x] M6.3 Add movement, collisions, countdown, progress, and finish resolution;
+  use swipe controls on each player's half and a mirrored swipe for the top runner.
+  Revised after user testing found the initial shared obstacle renderer unreadable
+  and race progress unclear. The two mirrored track panels, cone obstacles,
+  independent scrolling, distance meters, and hit feedback are now implemented;
+  swipe controls replaced arrows. Runner speed is shared across all difficulties;
+  each side now gets an independent, offset obstacle course, with spacing and
+  blocked-lane patterns increasing course pressure by difficulty. Bot reaction
+  delay and mistake rates are tuned per difficulty. User confirmed the latest bot
+  changes and the complete M3–M6 set on iPhone and Android.
+- [x] M6.4 Extend shared match results explicitly for draws and non-point-based
   results; keep Paddle Duel scoring compatible. Do not show FIRST TO 7 here.
-- [ ] M6.5 Add bots with bounded obstacle lookahead, reaction delay, and mistake
+- [x] M6.5 Add bots with bounded obstacle lookahead, reaction delay, and mistake
   probability; no knowledge of obstacles outside the visible/allowed horizon.
-- [ ] M6.6 Integrate shared features and pause/resume without advancing obstacles
+- [x] M6.6 Integrate shared features and pause/resume without advancing obstacles
   or granting one participant extra movement while paused.
 
-Acceptance: seeded races are fair, controls stay responsive, finish/draw rules are
+Acceptance: seeded races have independent but difficulty-matched courses, controls
+stay responsive, each separate track has its own mirrored obstacle flow, obstacle
+sprites and hit feedback are clear, distance progress is visible, swipe controls
+move each runner in the intended direction, difficulty changes obstacle pressure
+and bot decision quality while keeping runner speed equal, finish/draw rules are
 independent of update order, and races complete in both modes at 30 and 60 FPS.
 
 ## M7 — Tic-Tac-Toe (proposed fifth simple game)
@@ -497,6 +522,11 @@ persisted 0–100% effects-volume slider and preview, and added original bundled
 PCM WAV click, score, and result tones generated by `tool/generate_sounds.dart`.
 Effects are routed through a three-player offline mixer, respect the app volume,
 and stop on backgrounding.
+
+2026-09-24 — User confirmed M3–M6 working on both iPhone and Android. Closed the
+remaining device evidence for graphics settings and Lane Dash's independent
+courses/bot difficulty behavior; M3–M6 are Done. M2 remains blocked on iPhone
+integration-test transport, and M8's release-validation matrix remains open.
 
 2026-09-24 — Added a distinct Paddle Duel paddle-hit effect and changed the
 effects-volume slider to 20% intervals (0%, 20%, 40%, 60%, 80%, 100%).

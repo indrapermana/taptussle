@@ -187,9 +187,11 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                               : 'Ready to challenge the bot?',
                                         MatchPhase.paused => 'Time out',
                                         MatchPhase.finished =>
-                                          widget.options.resultLabel(
-                                            session.winner!,
-                                          ),
+                                          session.outcome == MatchOutcome.draw
+                                              ? 'Draw!'
+                                              : widget.options.resultLabel(
+                                                  session.winner!,
+                                                ),
                                         MatchPhase.playing => '',
                                       },
                                       textAlign: TextAlign.center,
@@ -208,7 +210,8 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                         MatchPhase.paused =>
                                           'Catch your breath. Your match is right here.',
                                         MatchPhase.finished =>
-                                          '${session.scores[0]} – ${session.scores[1]}  •  Another round?',
+                                          session.resultDetails ??
+                                              '${session.scores[0]} – ${session.scores[1]}  •  Another round?',
                                         MatchPhase.playing => '',
                                       },
                                       textAlign: TextAlign.center,

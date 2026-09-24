@@ -6,9 +6,28 @@ import '../games/paddle_duel/paddle_duel_view.dart';
 import '../games/paddle_duel/paddle_duel_preview.dart';
 import '../games/reaction_duel/reaction_duel_view.dart';
 import '../games/air_hockey/air_hockey_view.dart';
+import '../games/lane_dash/lane_dash_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'lane-dash',
+    title: 'Lane Dash',
+    subtitle: 'Dodge, switch, finish.',
+    instructions:
+        'Race along your own three-lane track. Swipe left or right across your '
+        'half to switch lanes and avoid orange cones. Hitting a cone slows you '
+        'down. The top runner faces the opposite way. Reach 1,200 m first to win.',
+    botInstructions:
+        'Swipe left or right across the bottom track to move the mint runner. '
+        'Hitting a cone slows you down. Bot difficulty changes its speed and '
+        'the density of the shared obstacle course.',
+    icon: Icons.directions_run_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    matchLabel: (_) => 'DISTANCE • M',
+    build: (session, options) =>
+        LaneDashView(session: session, options: options),
+  ),
   MiniGame(
     id: 'air-hockey',
     title: 'Air Hockey',
