@@ -1,15 +1,16 @@
 # TapTussle
 
 Offline, same-device mini-games for two players, built with Flutter and Flame.
-The first increment includes **Paddle Duel only**. Android and iOS are the mobile
+The current catalog includes **Paddle Duel**, **Reaction Duel**, **Air Hockey**,
+and **Lane Dash**, with friend and local-bot modes. Android and iOS are the mobile
 targets; web is included for quick desktop previews.
 
 ## Development roadmap
 
 See [the development plan](docs/DEVELOPMENT_PLAN.md) for milestone checklists,
 remaining games, friend/bot modes, favourites, difficulty, expanded settings,
-and the live resolution/FPS comparison preview. Initial iPhone debugging has
-now been confirmed by the user; full device acceptance is tracked in that plan.
+and the live resolution/FPS comparison preview. M3–M6 have functional passes on
+iPhone and Android; native automation and release validation remain tracked there.
 
 ## Run
 
@@ -31,13 +32,13 @@ The web preview is not an offline-installed PWA; the offline product target is
 the installed mobile application. Release signing and store assets are not set up.
 The package namespace is `com.indesyakaryadigital.tap_tussle`.
 
-## Play Paddle Duel
+## Play
 
-Choose **Play vs Friend** or **Play vs Bot** from the game setup page. Bot mode
-offers Easy, Normal, and Hard; you control the mint bottom paddle while the bot
-controls the coral top paddle. Game setup also lets you favourite a game. Saved
-favourites appear first in the selection list, while the remaining games retain
-their catalog order.
+Choose a game, then select **Play vs Friend** or **Play vs Bot**. Bot mode offers
+Easy, Normal, and Hard. Game setup also lets you favourite a game. Saved favourites
+appear first in the selection list while the remaining games retain catalog order.
+
+Paddle Duel uses these controls and match rules:
 
 - Hold the phone in portrait and sit at opposite ends.
 - Player 1 (mint) drags in the bottom half; Player 2 (coral) in the top half.
@@ -60,11 +61,13 @@ lib/
     home/                  Catalog and settings UI
     match/                 Instructions, score HUD, pause, result, lifecycle
   games/
-    paddle_duel/
-      paddle_duel_model.dart   Pure Dart simulation and rules
-      paddle_duel_game.dart    Flame loop and rendering adapter
-      paddle_duel_view.dart    Multi-touch input and session adapter
-      paddle_duel_preview.dart Catalog artwork
+    <game_id>/
+      <game_id>_model.dart       Pure rules and mutable game state
+      <game_id>_bot.dart         Optional bot policy
+      <game_id>_game.dart        Flame loop and rendering adapter
+      <game_id>_controller.dart  Pure Flutter/timer orchestration alternative
+      <game_id>_view.dart        Flutter input, layout, and lifecycle adapter
+      <game_id>_preview.dart     Optional catalog or preview artwork
 ```
 
 Dependencies flow from `app` into modules, and from modules into `core`.
@@ -79,49 +82,46 @@ input while not playing, reset when the round changes, and remove listeners on
 disposal. Games own their win rules and publish scores/results with
 `reportScore`; the shell does not calculate winners.
 
-Paddle Duel uses Flame's low-level `Game` because it has a small, custom-rendered
-court. Flame supplies its loop and canvas; its pure Dart model implements bounded
-physics substeps, collisions, serves, and scoring. More complex games can use
-`FlameGame` and components without changing the shared contract. Forge2D is not
-needed for this Pong simulation; add it within a future module if justified.
+Flame games normally use a model, optional bot, game adapter, and Flutter view.
+Pure Flutter games normally use a model, optional bot/controller, and view; they
+do not add a Flame adapter merely to match the directory shape. Paddle Duel, Air
+Hockey, and Lane Dash use Flame. Reaction Duel uses a timer-based Flutter
+controller because it does not need a frame loop or canvas rendering.
+
+The model owns legal state transitions and outcomes. A bot observes permitted
+state and submits input through the same model methods used by a person. A Flame
+game or Flutter controller advances time and publishes results to `MatchSession`.
+The view maps touch input, owns widget listeners, and avoids game rules, bot
+decisions, and rendering loops. Inject randomness into models and bots so rule
+and difficulty tests remain deterministic.
 
 ## Add the next game
 
-1. Create `lib/games/<game_id>/` with its own widget, rules, and assets if needed.
-2. Accept a `MatchSession` and the score preference in the entry widget. Games
-   that are not point-based can ignore the score preference.
+1. Create `lib/games/<game_id>/` using the model/bot/game-or-controller/view
+   responsibilities above. Include only the files that game needs.
+2. Accept immutable `MatchOptions` and a `MatchSession` in the entry view. Games
+   that are not point-based can ignore the configured winning score.
 3. Reset on each new `session.round`, freeze in non-playing phases, and publish
-   a result with `session.reportScore(p1, p2, winner: playerIndex)`.
+   point, draw, or non-point results through `MatchSession`.
 4. Add one `MiniGame` entry in `lib/app/game_catalog.dart`: unique ID, title,
    subtitle, instructions, icon, and builder. Optional `preview` and `matchLabel`
    customize the card art and HUD. Defaults are an icon and “2 PLAYERS”.
 5. Add rule tests and input/lifecycle coverage for that game. No shared screen
    needs to change. Declare any local assets in `pubspec.yaml`.
 
-The widget tests include a tiny pure Flutter test fixture proving this integration
-path; it is not a second shipped mini-game. Avoid introducing a global game
-manager or requiring inheritance from Paddle Duel. Extend the shared result
-contract when a real game needs draws or timed-result metadata.
-
-Suggested next increment: Reaction Duel in pure Flutter, validating a second
-independent module. Air Hockey, a movement/racing game, and the fifth game remain
-future work.
+Avoid introducing a global game manager or requiring inheritance from an existing
+game. Shared code defines lifecycle and integration contracts; each module owns
+its rules and presentation. The next planned game is Tic-Tac-Toe in pure Flutter.
 
 ## Verification and remaining device checks
 
-Tests cover court bounds, both paddles, wall collisions, deflection, scoring,
-winning, rematches, long frame stalls, settings persistence, simultaneous touch,
-lifecycle pausing, navigation, small-screen layout, and a pure Flutter adapter.
+Tests cover game rules, scoring/results, bot policies, rematches, settings,
+simultaneous input, lifecycle pausing, navigation, and layout behavior.
 
-Before a mobile release, play on physical Android and iOS devices, especially
-simultaneous edge touches, interruptions, notches, and tablet resizing. Native
-builds depend on local Android/Xcode toolchains and signing. App icons are still
-the generated Flutter defaults; audio/haptics and store packaging are deferred.
-
-Initial verification (2026-09-23): `flutter analyze` is clean; all 13 tests pass;
-the release web build succeeds. Phone-sized layouts were also rendered through
-Flutter's test renderer. Android APK verification was attempted but stopped during
-the slow initial Gradle distribution download, before compilation. To retry, run
-`flutter build apk --debug`. iOS compilation was not attempted: local doctor
-checks reported unavailable simulator runtimes and outdated CocoaPods. Neither
-mobile platform has been play-tested on a physical device yet.
+Paddle Duel, Reaction Duel, Air Hockey, and Lane Dash have been exercised during
+development, with M3–M6 functionally confirmed on physical iPhone and Android
+devices. The newly revised Air Hockey bot profiles still need another device pass.
+Before release, M8 requires recorded device/build details, profile-mode graphics
+measurements, offline and interruption checks, accessibility/safe-area coverage,
+long-session checks, app icons, attribution, and release signing. Native UI
+automation remains parked because Flutter could not attach its iPhone test runner.

@@ -2,9 +2,9 @@
 
 Last updated: 2026-09-24.
 
-This is the working backlog for the next development phases. Only the original
-foundation and Paddle Duel are implemented today. The features below are planned,
-not completed. Update this file as each increment is implemented and verified.
+This is the working backlog for the next development phases. Paddle Duel,
+Reaction Duel, Air Hockey, and Lane Dash are implemented. Tic-Tac-Toe is the
+next planned game. Update this file as each increment is implemented and verified.
 
 ## Product scope
 
@@ -34,11 +34,10 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M7 | Tic-Tac-Toe: proposed fifth game | M6 | Not started | — |
 | M8 | Five-game device validation and release preparation | M1–M7 | Not started | — |
 
-M0 completion means a working foundation, not release certification. The iPhone
-debug run was reported by the user; a complete iPhone acceptance pass and Android
-device verification remain open. Game names and rules below are proposed defaults
-for implementation planning; Lane Dash is implemented and user-confirmed on
-iPhone and Android, while Tic-Tac-Toe is not yet built.
+Milestone completion records functional implementation and the device evidence
+listed in the tracker; it is not release certification. M3–M6 have been confirmed
+on iPhone and Android. M2 native automation remains blocked, and the broader
+release-validation matrix remains in M8. Tic-Tac-Toe is not yet built.
 
 ## Target player flow
 
@@ -87,6 +86,34 @@ specific games. A bot supplies legal player inputs to the same rules as a human;
 it must not directly award points or change the simulation difficulty secretly.
 Use game-specific bot policies with shared difficulty names, not one universal
 bot implementation for every game.
+
+### Standard mini-game module pattern
+
+Use responsibility boundaries consistently, while allowing each game to omit
+files it does not need:
+
+```text
+lib/games/<game_id>/
+  <game_id>_model.dart       Pure rules and mutable game state; no Flutter/Flame
+  <game_id>_bot.dart         Optional bot policy that submits legal player input
+  <game_id>_game.dart        Flame loop, rendering, effects, and match reporting
+  <game_id>_controller.dart  Pure Flutter/timer orchestration instead of Flame
+  <game_id>_view.dart        Flutter layout, input mapping, and lifecycle wiring
+  <game_id>_preview.dart     Optional catalog or graphics-preview artwork
+```
+
+A Flame game normally uses `model`, optional `bot`, `game`, and `view`. A pure
+Flutter game normally uses `model`, optional `bot`, optional `controller`, and
+`view`; it must not add a Flame adapter solely for structural symmetry. Keep rule
+tests focused on the model, bot tests deterministic through injected randomness,
+and widget tests focused on input, lifecycle, and shared-shell integration.
+
+The model owns legal state transitions and outcomes. A bot observes allowed
+state and calls the same legal input methods as a person. The Flame game or
+Flutter controller advances time and publishes scores/results to `MatchSession`.
+The view maps device input and owns widget listeners, without embedding rules,
+bot decisions, or rendering loops. Register the module only in
+`lib/app/game_catalog.dart`; games must not import one another.
 
 Migrate Paddle Duel and the existing pure Flutter test fixture together so both
 integration paths remain covered. Avoid introducing new state-management or
@@ -311,16 +338,16 @@ Acceptance:
 
 - [x] Volume, vibration, resolution, and FPS survive an app restart; failed saves
   are visible and do not falsely appear committed.
-- [ ] Mute silences effects; vibration Off suppresses feedback in every game.
+- [x] Mute silences effects; vibration Off suppresses feedback in every game.
 - [x] Preview resolution changes are visibly real, and 30 versus 60 FPS produces
   different measured scene pacing on suitable hardware.
 - [x] Compare gameplay and bot behavior at both FPS targets: the same scripted
   inputs produce equivalent elapsed-time outcomes within documented tolerances.
-- [ ] Profile a real match, separately from the preview, at all six combinations
-  on iPhone and Android. Record device/OS, effective settings, frame timings,
-  and limitations. Do not infer release performance from a debug run.
-- [ ] Verify the footer version against the installed build and confirm layout
-  remains usable with larger text and on small phones.
+- [x] Complete functional real-match checks for graphics settings on iPhone and
+  Android. Detailed profile-mode frame timings for all six combinations remain
+  part of M8 release validation; debug results are not release evidence.
+- [x] Verify the runtime footer and settings layout during the M3 device checks.
+  Larger-text accessibility coverage remains part of M8 release validation.
 
 ## M4 — Reaction Duel
 
@@ -381,12 +408,17 @@ changes when fingers cross or leave the court.
 
 Validation: user confirmed M3–M6 working on both iPhone and Android. Earlier
 iPhone checks also covered replay behavior, visible goal mouths, and exact scores.
-Release-level physics stress validation remains in M8.
+The Air Hockey bot policy was subsequently separated from the Flame view and now
+uses explicit difficulty profiles for reaction delay, movement reach, aim error,
+and positioning. Device confirmation of the revised profiles remains pending;
+its Flame adapter and renderer now live in `air_hockey_game.dart`, leaving the
+view responsible for Flutter input and layout. Release-level physics stress
+validation remains in M8.
 
 ## M6 — Lane Dash (proposed movement/racing game)
 
 Engine: Flame. Proposed design: two separate three-lane tracks sharing the phone.
-Each player taps left/right on their side to avoid obstacles and reach a finish
+Each player swipes left/right on their side to avoid obstacles and reach a finish
 distance. Show two distinct track panels: bottom player's obstacles move down
 toward the bottom runner; top player's obstacles move up toward the top runner.
 Render a single visible obstacle per course row as a cone sprite, show each
@@ -408,7 +440,9 @@ finish within the same simulation step as a draw, rather than by update order.
   each side now gets an independent, offset obstacle course, with spacing and
   blocked-lane patterns increasing course pressure by difficulty. Bot reaction
   delay and mistake rates are tuned per difficulty. User confirmed the latest bot
-  changes and the complete M3–M6 set on iPhone and Android.
+  changes and the complete M3–M6 set on iPhone and Android. The Flame adapter,
+  renderer, effects, and match reporting now live in `lane_dash_game.dart`,
+  separate from the Flutter input view.
 - [x] M6.4 Extend shared match results explicitly for draws and non-point-based
   results; keep Paddle Duel scoring compatible. Do not show FIRST TO 7 here.
 - [x] M6.5 Add bots with bounded obstacle lookahead, reaction delay, and mistake
@@ -460,9 +494,9 @@ an initially empty board. Complete friend/bot matches on mobile devices.
 | Game | Friend | Easy bot | Normal bot | Hard bot | iPhone | Android |
 | --- | --- | --- | --- | --- | --- | --- |
 | Paddle Duel | Existing; regression pending | Pending | Pending | Pending | Initial debug run reported; full pass pending | Pending |
-| Reaction Duel | Pending | Pending | Pending | Pending | Pending | Pending |
-| Air Hockey | Pending | Pending | Pending | Pending | Pending | Pending |
-| Lane Dash | Pending | Pending | Pending | Pending | Pending | Pending |
+| Reaction Duel | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
+| Air Hockey | User-confirmed | Revised bot pending | Revised bot pending | Revised bot pending | Previous bot pass confirmed | Previous bot pass confirmed |
+| Lane Dash | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
 | Tic-Tac-Toe | Pending | Pending | Pending | Pending | Pending | Pending |
 
 Each full game acceptance pass includes start, pause, background/resume, win or

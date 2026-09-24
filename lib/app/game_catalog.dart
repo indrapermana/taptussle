@@ -20,8 +20,9 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         'down. The top runner faces the opposite way. Reach 1,200 m first to win.',
     botInstructions:
         'Swipe left or right across the bottom track to move the mint runner. '
-        'Hitting a cone slows you down. Bot difficulty changes its speed and '
-        'the density of the shared obstacle course.',
+        'Hitting a cone slows you down. Each runner gets a different course. '
+        'Higher difficulties add more obstacles while the bot reacts faster '
+        'and makes fewer mistakes.',
     icon: Icons.directions_run_rounded,
     supportedModes: const {PlayMode.friend, PlayMode.bot},
     matchLabel: (_) => 'DISTANCE • M',
