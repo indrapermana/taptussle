@@ -5,9 +5,23 @@ import '../core/match_options.dart';
 import '../games/paddle_duel/paddle_duel_view.dart';
 import '../games/paddle_duel/paddle_duel_preview.dart';
 import '../games/reaction_duel/reaction_duel_view.dart';
+import '../games/air_hockey/air_hockey_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'air-hockey',
+    title: 'Air Hockey',
+    subtitle: 'Fast puck. Faster hands.',
+    instructions:
+        'Sit at opposite ends. Drag your mallet only in your half and score through the opposing goal.',
+    icon: Icons.sports_hockey_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    botInstructions:
+        'You control the mint mallet at the bottom. Defend your goal and drive the puck past the bot.',
+    matchLabel: (o) => 'FIRST TO ${o.winningScore}',
+    build: (s, o) => AirHockeyView(session: s, options: o),
+  ),
   MiniGame(
     id: 'reaction-duel',
     matchLabel: (options) => 'FIRST TO ${options.winningScore}',

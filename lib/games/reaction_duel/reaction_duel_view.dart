@@ -22,6 +22,7 @@ class ReactionDuelView extends StatefulWidget {
 class _ReactionDuelViewState extends State<ReactionDuelView> {
   late final ReactionDuelController controller;
   int _reportedTotal = 0;
+  int _round = -1;
 
   @override
   void initState() {
@@ -33,6 +34,12 @@ class _ReactionDuelViewState extends State<ReactionDuelView> {
   }
 
   void _syncSession() {
+    if (_round != widget.session.round) {
+      _round = widget.session.round;
+      _reportedTotal = 0;
+      controller.resetMatch();
+      return;
+    }
     if (widget.session.phase == MatchPhase.playing &&
         controller.phase == ReactionPhase.waiting) {
       controller.resumeAfterPause();

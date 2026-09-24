@@ -162,11 +162,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 36),
           const Text(
-            'Paddle Duel',
+            'Match rules',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text('Points to win', style: TextStyle(color: Colors.white70)),
+          const Text(
+            'Points to win in score-based games',
+            style: TextStyle(color: Colors.white70),
+          ),
           const SizedBox(height: 10),
           ListenableBuilder(
             listenable: widget.settings,

@@ -130,6 +130,15 @@ class ReactionDuelController extends ChangeNotifier {
     phase = ReactionPhase.waiting;
   }
 
+  void resetMatch() {
+    _timer?.cancel();
+    scores.fillRange(0, 2, 0);
+    _firstTap = null;
+    _firstTapAt = null;
+    phase = ReactionPhase.waiting;
+    startRound();
+  }
+
   /// An interrupted waiting round never carries its old delay into a resume.
   void resumeAfterPause() => startRound();
 

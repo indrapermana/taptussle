@@ -26,10 +26,10 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | --- | --- | --- | --- | --- |
 | M0 | Foundation and Paddle Duel | — | Done | Existing implementation; initial 13 tests and web build passed; user confirmed first iPhone debug run |
 | M1 | Game setup, favourites, and Paddle Duel bots | M0 | Done | User verified friend mode plus Easy, Normal, and Hard bots on iPhone; difficulties were distinct |
-| M2 | UI automation and M1 usability follow-up | M1 | In progress | Native automation plan and user feedback recorded; implementation in progress |
-| M3 | Settings, audio, vibration, and live graphics comparison | M1, M2 | Not started | — |
-| M4 | Reaction Duel | M1, M2, M3 | Not started | — |
-| M5 | Air Hockey | M4 | Not started | — |
+| M2 | UI automation and M1 usability follow-up | M1 | Blocked | Native iPhone integration-test transport cannot attach; retry when the Flutter/iPhone debug transport issue is resolved |
+| M3 | Settings, audio, vibration, and live graphics comparison | M1, M2 | In progress | User verified on iPhone; Android profiling and final M3.6 device evidence remain |
+| M4 | Reaction Duel | M1, M2, M3 | In progress | Implemented and user verified on iPhone; retain device validation across bot difficulties |
+| M5 | Air Hockey | M4 | In progress | Core rink, puck, goals, controls, bot, match integration, and goal-mouth fix implemented; complete device and physics validation remain |
 | M6 | Lane Dash: simple racing/movement game | M5 | Not started | — |
 | M7 | Tic-Tac-Toe: proposed fifth game | M6 | Not started | — |
 | M8 | Five-game device validation and release preparation | M1–M7 | Not started | — |
@@ -211,8 +211,9 @@ and when an Android device is available.
 ## M3 — Settings and live graphics comparison
 
 Promote settings to a dedicated scrollable page. Proposed defaults: volume 70%,
-vibration On, High resolution, and target 60 FPS. Keep Paddle Duel's points-to-win
-control. Store choices locally and handle missing, invalid, or failed writes.
+vibration On, High resolution, and target 60 FPS. Keep one shared points-to-win
+control for every score-based game, including Paddle Duel, Reaction Duel, and Air
+Hockey. Store choices locally and handle missing, invalid, or failed writes.
 
 ### Sound, vibration, and version
 
@@ -352,6 +353,16 @@ matches in friend mode and all bot difficulties on both mobile platforms.
 Engine: Flame. Proposed rules: one mallet per half, one puck, first to 7 goals.
 Use simple circle/rail collision rules initially; assess Forge2D only if collision
 stability or contact requirements justify it. Do not inherit Paddle Duel rules.
+
+Implementation note: goal mouths are visible openings at both ends of the rink.
+The puck passes through an opening to score; it bounces from the end rail outside
+the opening. This is intentionally separate from Paddle Duel's scoring rules.
+The bot meets an incoming puck below and offset from its path, rather than
+centering against its back rail, so a defensive return gains a horizontal angle.
+Every new shared match round resets the puck, mallets, scores, and match-local
+collision state, while preserving the configured points-to-win value.
+The fixed-step simulation stops as soon as a winning goal is recorded, preventing
+multiple score increments from one puck crossing.
 
 - [ ] M5.1 Implement puck, mallets, rails, goal mouths, and deterministic reset.
 - [ ] M5.2 Constrain mallets to their own halves; support simultaneous dragging
