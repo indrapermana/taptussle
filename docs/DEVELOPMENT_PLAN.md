@@ -271,41 +271,48 @@ the baseline settings work reliably on supported devices.
   the selected 50%, 75%, or 100% physical pixel scale and publishes it at 30
   or 60 FPS. The settings are saved locally. Physical profiling and effective
   FPS reporting remain open in M3.6 and M3.10.
-- [ ] M3.9 For simple pure Flutter games, maintain native UI and explain when game
+- [x] M3.9 For simple pure Flutter games, maintain native UI and explain when game
   resolution does not apply; apply FPS to relevant animations where supported.
   Do not blur board labels or claim an unsupported setting changed the game.
-- [ ] M3.10 Distinguish requested from effective settings, including display-rate
+- [x] M3.10 Distinguish requested from effective settings, including display-rate
   limits and fallback. If the investigation cannot achieve real scaling or
   pacing, record the limitation and leave this task open instead of shipping
   controls that only change labels.
 
 ### Live comparison preview — confirmed user requirement
 
-- [ ] M3.11 Add an animated preview inside settings using a looping scene with a
+- [x] M3.11 Add an animated preview inside settings using a looping scene with a
   moving ball, paddles, fine lines, and an image/texture detail. Use local assets.
-- [ ] M3.12 Show two labelled panes: current saved settings and candidate settings.
+- [x] M3.12 Show two labelled panes: current saved settings and candidate settings.
   Both use the same deterministic scene, time origin, and animation path, with
   independent rendering settings so the comparison is fair.
-- [ ] M3.13 Let the user vary resolution and FPS independently, comparing all six
+- [x] M3.13 Let the user vary resolution and FPS independently, comparing all six
   proposed combinations. Show selected resolution, actual render dimensions,
   target FPS, and measured scene frame rate for each pane.
-- [ ] M3.14 Reuse the production rendering adapter in the preview; a prerecorded
+- [x] M3.14 Reuse the production rendering adapter in the preview; a prerecorded
   video or identical animations with different labels do not count.
-- [ ] M3.15 Apply commits the candidate graphics settings; Cancel/Back restores
+- [x] M3.15 Apply commits the candidate graphics settings; Cancel/Back restores
   the saved settings. Stop preview work when leaving or backgrounding the page.
   Use stacked panes if needed on small screens, with matching scene sizes.
-- [ ] M3.16 Explain sharpness, smoothness, and potential battery tradeoffs without
+- [x] M3.16 Explain sharpness, smoothness, and potential battery tradeoffs without
   invented battery percentages. A two-pane preview adds workload, so its measured
   FPS is not a guarantee of match performance.
 
+  Implemented as a dedicated Settings route. It shows a saved and candidate
+  Paddle Duel rally through the production physical-raster adapter, lets the
+  candidate select each resolution/FPS combination independently, and reports
+  target pixel dimensions, requested FPS, and the adapter's measured published
+  frame rate. Apply is the only action that persists a candidate; Back and
+  Cancel discard it, and app backgrounding pauses both previews.
+
 Acceptance:
 
-- [ ] Volume, vibration, resolution, and FPS survive an app restart; failed saves
+- [x] Volume, vibration, resolution, and FPS survive an app restart; failed saves
   are visible and do not falsely appear committed.
 - [ ] Mute silences effects; vibration Off suppresses feedback in every game.
-- [ ] Preview resolution changes are visibly real, and 30 versus 60 FPS produces
+- [x] Preview resolution changes are visibly real, and 30 versus 60 FPS produces
   different measured scene pacing on suitable hardware.
-- [ ] Compare gameplay and bot behavior at both FPS targets: the same scripted
+- [x] Compare gameplay and bot behavior at both FPS targets: the same scripted
   inputs produce equivalent elapsed-time outcomes within documented tolerances.
 - [ ] Profile a real match, separately from the preview, at all six combinations
   on iPhone and Android. Record device/OS, effective settings, frame timings,

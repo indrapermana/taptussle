@@ -7,6 +7,17 @@ import '../../core/app_settings.dart';
 import '../../core/match_session.dart';
 import 'paddle_duel_game.dart';
 
+class PresentationMetrics {
+  const PresentationMetrics({
+    required this.outputSize,
+    required this.requestedFps,
+    required this.effectiveFps,
+  });
+  final Size outputSize;
+  final int requestedFps;
+  final double effectiveFps;
+}
+
 /// Separates the match simulation from its physical raster target.
 ///
 /// Simulation advances at the display cadence. A snapshot is only produced at
@@ -17,6 +28,7 @@ class PaddleDuelPresentation extends StatefulWidget {
     required this.session,
     required this.resolution,
     required this.frameRate,
+    this.onMetrics,
     super.key,
   });
 
@@ -24,6 +36,7 @@ class PaddleDuelPresentation extends StatefulWidget {
   final MatchSession session;
   final ResolutionPreset resolution;
   final FrameRatePreset frameRate;
+  final ValueChanged<PresentationMetrics>? onMetrics;
 
   @override
   State<PaddleDuelPresentation> createState() => _PaddleDuelPresentationState();
@@ -37,17 +50,18 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
   ui.Image? _frame;
   Size _outputSize = Size.zero;
   bool _rendering = false;
-  bool _isWidgetTest = false;
+  Duration? _firstPublishedFrame;
+  int _publishedFrames = 0;
 
   @override
   void initState() {
     super.initState();
-    assert(() {
-      _isWidgetTest = true;
-      return true;
-    }());
     _ticker = createTicker(_onTick);
-    if (!_isWidgetTest) _ticker.start();
+    // Widget tests drive the game model explicitly. On a device, including a
+    // debug build, Flutter's normal binding starts the presentation ticker.
+    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+      _ticker.start();
+    }
   }
 
   @override
@@ -56,6 +70,8 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
     if (oldWidget.resolution != widget.resolution ||
         oldWidget.frameRate != widget.frameRate) {
       _previousRender = null;
+      _firstPublishedFrame = null;
+      _publishedFrames = 0;
     }
   }
 
@@ -93,6 +109,19 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
       final previous = _frame;
       setState(() => _frame = image);
       previous?.dispose();
+      final now = _previousRender!;
+      _firstPublishedFrame ??= now;
+      _publishedFrames++;
+      final elapsed = now - _firstPublishedFrame!;
+      widget.onMetrics?.call(
+        PresentationMetrics(
+          outputSize: _outputSize,
+          requestedFps: widget.frameRate.framesPerSecond,
+          effectiveFps: _publishedFrames < 2 || elapsed.inMicroseconds == 0
+              ? 0
+              : (_publishedFrames - 1) * 1000000 / elapsed.inMicroseconds,
+        ),
+      );
     } finally {
       picture.dispose();
       _rendering = false;

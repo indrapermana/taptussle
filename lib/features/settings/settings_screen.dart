@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/app_settings.dart';
 import '../../core/haptic_service.dart';
 import '../../core/sound_service.dart';
+import 'graphics_preview_screen.dart';
 import 'legal_document_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -18,8 +19,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late double volume;
   late bool vibrationEnabled;
-  late ResolutionPreset resolution;
-  late FrameRatePreset frameRate;
   bool saving = false;
 
   @override
@@ -27,8 +26,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     volume = widget.settings.effectsVolume;
     vibrationEnabled = widget.settings.vibrationEnabled;
-    resolution = widget.settings.resolution;
-    frameRate = widget.settings.frameRate;
   }
 
   Future<void> _saveVibration(bool value) async {
@@ -60,22 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not save effects volume.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => saving = false);
-    }
-  }
-
-  Future<void> _saveGraphics() async {
-    setState(() => saving = true);
-    try {
-      await widget.settings.setResolution(resolution);
-      await widget.settings.setFrameRate(frameRate);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not save graphics setting.')),
         );
       }
     } finally {
@@ -133,47 +114,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: TextStyle(color: Colors.white70, height: 1.4),
           ),
           const SizedBox(height: 16),
-          SegmentedButton<ResolutionPreset>(
-            key: const ValueKey('resolution-selector'),
-            segments: [
-              for (final option in ResolutionPreset.values)
-                ButtonSegment(
-                  value: option,
-                  label: Text(
-                    '${option.label}\n${(option.renderScale * 100).round()}%',
-                  ),
-                ),
-            ],
-            selected: {resolution},
-            onSelectionChanged: saving
-                ? null
-                : (selection) {
-                    SoundEffects.play(SoundEffect.click);
-                    setState(() => resolution = selection.single);
-                    _saveGraphics();
-                  },
+          ListenableBuilder(
+            listenable: widget.settings,
+            builder: (context, _) => _GraphicsPreview(
+              resolution: widget.settings.resolution,
+              frameRate: widget.settings.frameRate,
+            ),
           ),
-          const SizedBox(height: 16),
-          SegmentedButton<FrameRatePreset>(
-            key: const ValueKey('fps-selector'),
-            segments: [
-              for (final option in FrameRatePreset.values)
-                ButtonSegment(
-                  value: option,
-                  label: Text('${option.framesPerSecond} FPS'),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            key: const ValueKey('open-graphics-preview'),
+            onPressed: () {
+              SoundEffects.play(SoundEffect.click);
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      GraphicsPreviewScreen(settings: widget.settings),
                 ),
-            ],
-            selected: {frameRate},
-            onSelectionChanged: saving
-                ? null
-                : (selection) {
-                    SoundEffects.play(SoundEffect.click);
-                    setState(() => frameRate = selection.single);
-                    _saveGraphics();
-                  },
+              );
+            },
+            icon: const Icon(Icons.compare_rounded),
+            label: const Text('Compare and change graphics'),
           ),
-          const SizedBox(height: 16),
-          _GraphicsPreview(resolution: resolution, frameRate: frameRate),
           const SizedBox(height: 36),
           const Text(
             'Vibration',
