@@ -25,7 +25,7 @@ void main() {
     loading.complete(await SharedPreferences.getInstance());
     await tester.pumpAndSettle();
 
-    expect(find.text('PICK YOUR CHALLENGE'), findsOneWidget);
+    expect(find.text('CHOOSE YOUR BATTLE'), findsOneWidget);
     expect(find.byKey(const ValueKey('startup-progress')), findsNothing);
   });
 }

@@ -65,7 +65,17 @@ flutter:
 
   assets:
     - assets/branding/splash_screen.png
+    - assets/fonts/fredoka/OFL.txt
+    - assets/fonts/lilita_one/OFL.txt
     - assets/sounds/
+
+  fonts:
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/fredoka/Fredoka[wdth,wght].ttf
+    - family: Lilita One
+      fonts:
+        - asset: assets/fonts/lilita_one/LilitaOne-Regular.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

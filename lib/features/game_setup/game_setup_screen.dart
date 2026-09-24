@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/tap_tussle_theme.dart';
 import '../../core/app_settings.dart';
 import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
@@ -67,99 +68,136 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
       final favourite = widget.settings.isFavourite(widget.game.id);
       return Scaffold(
         appBar: AppBar(title: Text(widget.game.title)),
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  const Text(
-                    'How to play',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.game.instructions,
-                    style: const TextStyle(height: 1.6, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 12),
-                  if (widget.game.matchLabel != null)
-                    Text(
-                      widget.game.matchLabel!(
-                        MatchOptions.friend(
-                          winningScore: widget.settings.winningScore,
-                        ),
-                      ),
-                      style: const TextStyle(
-                        color: Color(0xFF9DF5CF),
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  const SizedBox(height: 28),
-                  OutlinedButton.icon(
-                    key: const ValueKey('favourite-toggle'),
-                    onPressed: saving
-                        ? null
-                        : () {
-                            SoundEffects.play(SoundEffect.click);
-                            _save(
-                              () => widget.settings.setFavourite(
-                                widget.game.id,
-                                !favourite,
+        body: TapTussleBackdrop(
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                  children: [
+                    ArcadePanel(
+                      accent: TapTussleColors.electricBlue,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _SectionHeading(
+                            icon: Icons.menu_book_rounded,
+                            title: 'How to play',
+                            color: TapTussleColors.electricBlue,
+                          ),
+                          const SizedBox(height: 13),
+                          Text(
+                            widget.game.instructions,
+                            style: const TextStyle(
+                              height: 1.55,
+                              color: TapTussleColors.mutedText,
+                            ),
+                          ),
+                          if (widget.game.matchLabel != null) ...[
+                            const SizedBox(height: 16),
+                            _RuleBadge(
+                              label: widget.game.matchLabel!(
+                                MatchOptions.friend(
+                                  winningScore: widget.settings.winningScore,
+                                ),
                               ),
-                            );
-                          },
-                    icon: Icon(
-                      favourite
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                    label: Text(
-                      favourite ? 'Remove favourite' : 'Add to favourites',
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Choose participants',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  _ModeButton(
-                    key: const ValueKey('play-vs-friend'),
-                    icon: Icons.people_alt_outlined,
-                    title: 'Play vs Friend',
-                    subtitle: 'Two players, one phone',
-                    onPressed: saving
-                        ? null
-                        : () {
-                            SoundEffects.play(SoundEffect.click);
-                            _startFriend();
-                          },
-                  ),
-                  if (widget.game.supportedModes.contains(PlayMode.bot)) ...[
-                    const SizedBox(height: 12),
-                    _ModeButton(
-                      key: const ValueKey('play-vs-bot'),
-                      icon: Icons.smart_toy_outlined,
-                      title: 'Play vs Bot',
-                      subtitle: 'Choose a difficulty next',
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      key: const ValueKey('favourite-toggle'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: favourite
+                            ? TapTussleColors.gold
+                            : TapTussleColors.text,
+                        side: BorderSide(
+                          color: favourite
+                              ? TapTussleColors.gold
+                              : TapTussleColors.panelBorder,
+                        ),
+                        backgroundColor: TapTussleColors.panel,
+                      ),
                       onPressed: saving
                           ? null
                           : () {
                               SoundEffects.play(SoundEffect.click);
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => BotDifficultyScreen(
-                                    game: widget.game,
-                                    settings: widget.settings,
-                                  ),
+                              _save(
+                                () => widget.settings.setFavourite(
+                                  widget.game.id,
+                                  !favourite,
                                 ),
                               );
                             },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            favourite
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              favourite
+                                  ? 'Remove favourite'
+                                  : 'Add to favourites',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 28),
+                    const _SectionHeading(
+                      icon: Icons.sports_esports_rounded,
+                      title: 'Choose participants',
+                      color: TapTussleColors.gold,
+                    ),
+                    const SizedBox(height: 12),
+                    _ModeButton(
+                      key: const ValueKey('play-vs-friend'),
+                      icon: Icons.people_alt_rounded,
+                      title: 'Play vs Friend',
+                      subtitle: 'Two rivals sharing one phone',
+                      accent: TapTussleColors.rivalRed,
+                      onPressed: saving
+                          ? null
+                          : () {
+                              SoundEffects.play(SoundEffect.click);
+                              _startFriend();
+                            },
+                    ),
+                    if (widget.game.supportedModes.contains(PlayMode.bot)) ...[
+                      const SizedBox(height: 12),
+                      _ModeButton(
+                        key: const ValueKey('play-vs-bot'),
+                        icon: Icons.smart_toy_rounded,
+                        title: 'Play vs Bot',
+                        subtitle: 'Challenge a local AI rival',
+                        accent: TapTussleColors.electricBlue,
+                        onPressed: saving
+                            ? null
+                            : () {
+                                SoundEffects.play(SoundEffect.click);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => BotDifficultyScreen(
+                                      game: widget.game,
+                                      settings: widget.settings,
+                                    ),
+                                  ),
+                                );
+                              },
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -199,6 +237,18 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
     BotDifficulty.hard => 'Quicker reactions and stronger decisions.',
   };
 
+  Color get difficultyColor => switch (difficulty) {
+    BotDifficulty.easy => TapTussleColors.electricBlue,
+    BotDifficulty.normal => TapTussleColors.gold,
+    BotDifficulty.hard => TapTussleColors.rivalRed,
+  };
+
+  IconData get difficultyIcon => switch (difficulty) {
+    BotDifficulty.easy => Icons.sentiment_satisfied_alt_rounded,
+    BotDifficulty.normal => Icons.local_fire_department_rounded,
+    BotDifficulty.hard => Icons.whatshot_rounded,
+  };
+
   Future<void> _play() async {
     setState(() => saving = true);
     try {
@@ -233,64 +283,171 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Bot difficulty')),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const Text(
-                'How tough should the bot be?',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 48),
-              Text(
-                difficulty.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 36,
-                  color: Color(0xFF9DF5CF),
-                  fontWeight: FontWeight.w900,
+    body: TapTussleBackdrop(
+      child: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              children: [
+                const _SectionHeading(
+                  icon: Icons.smart_toy_rounded,
+                  title: 'How tough should the bot be?',
+                  color: TapTussleColors.gold,
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                description,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, height: 1.5),
-              ),
-              const SizedBox(height: 28),
-              Slider(
-                key: const ValueKey('bot-difficulty-slider'),
-                value: difficulty.index.toDouble(),
-                min: 0,
-                max: 2,
-                divisions: 2,
-                label: difficulty.label,
-                onChanged: saving
-                    ? null
-                    : (value) => setState(
-                        () => difficulty = BotDifficulty.values[value.round()],
-                      ),
-              ),
-              const SizedBox(height: 48),
-              FilledButton.icon(
-                key: const ValueKey('start-bot-match'),
-                onPressed: saving
-                    ? null
-                    : () {
-                        SoundEffects.play(SoundEffect.click);
-                        _play();
-                      },
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text('Play ${difficulty.label}'),
-              ),
-            ],
+                const SizedBox(height: 18),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  child: ArcadePanel(
+                    accent: difficultyColor,
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+                    child: Column(
+                      children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          transitionBuilder: (child, animation) =>
+                              ScaleTransition(scale: animation, child: child),
+                          child: Container(
+                            key: ValueKey(difficulty),
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: difficultyColor.withValues(alpha: .14),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: difficultyColor,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: difficultyColor.withValues(alpha: .25),
+                                  blurRadius: 20,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              difficultyIcon,
+                              color: difficultyColor,
+                              size: 38,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          difficulty.label.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Lilita One',
+                            fontSize: 38,
+                            height: 1,
+                            color: difficultyColor,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          description,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: TapTussleColors.mutedText,
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: difficultyColor,
+                            thumbColor: difficultyColor,
+                            overlayColor: difficultyColor.withValues(
+                              alpha: .15,
+                            ),
+                          ),
+                          child: Slider(
+                            key: const ValueKey('bot-difficulty-slider'),
+                            value: difficulty.index.toDouble(),
+                            min: 0,
+                            max: 2,
+                            divisions: 2,
+                            label: difficulty.label,
+                            onChanged: saving
+                                ? null
+                                : (value) => setState(
+                                    () => difficulty =
+                                        BotDifficulty.values[value.round()],
+                                  ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'EASY',
+                                    style: _difficultyTickStyle,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'NORMAL',
+                                    style: _difficultyTickStyle,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    'HARD',
+                                    style: _difficultyTickStyle,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                FilledButton.icon(
+                  key: const ValueKey('start-bot-match'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: difficultyColor,
+                  ),
+                  onPressed: saving
+                      ? null
+                      : () {
+                          SoundEffects.play(SoundEffect.click);
+                          _play();
+                        },
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text('Play ${difficulty.label}'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     ),
+  );
+
+  static const _difficultyTickStyle = TextStyle(
+    color: TapTussleColors.mutedText,
+    fontSize: 10,
+    fontWeight: FontWeight.w800,
+    letterSpacing: .8,
   );
 }
 
@@ -300,46 +457,138 @@ class _ModeButton extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.accent,
     required this.onPressed,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color accent;
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => OutlinedButton(
-    onPressed: onPressed,
-    style: OutlinedButton.styleFrom(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.all(18),
+  Widget build(BuildContext context) => Material(
+    color: TapTussleColors.panel,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: BorderSide(color: accent.withValues(alpha: .72), width: 1.3),
     ),
-    child: Row(
-      children: [
-        Icon(icon),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: .14),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: accent.withValues(alpha: .7)),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              child: Icon(icon, color: accent, size: 27),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Lilita One',
+                      color: Colors.white,
+                      fontSize: 19,
+                      letterSpacing: .2,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: TapTussleColors.mutedText,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
+            Icon(Icons.arrow_forward_rounded, color: accent),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({
+    required this.icon,
+    required this.title,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String title;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: color.withValues(alpha: .65)),
+        ),
+        child: Icon(icon, color: color, size: 21),
+      ),
+      const SizedBox(width: 11),
+      Expanded(
+        child: Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontFamily: 'Lilita One',
+            color: Colors.white,
+            fontSize: 24,
+            height: 1.05,
           ),
         ),
-        const Icon(Icons.arrow_forward_rounded),
-      ],
+      ),
+    ],
+  );
+}
+
+class _RuleBadge extends StatelessWidget {
+  const _RuleBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+    decoration: BoxDecoration(
+      color: TapTussleColors.electricBlue.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: TapTussleColors.electricBlue.withValues(alpha: .55),
+      ),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        color: TapTussleColors.electricBlue,
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1,
+      ),
     ),
   );
 }

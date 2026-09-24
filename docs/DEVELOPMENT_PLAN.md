@@ -1,6 +1,6 @@
 # TapTussle development plan
 
-Last updated: 2026-09-24.
+Last updated: 2026-09-25.
 
 This is the working backlog for the next development phases. Paddle Duel,
 Reaction Duel, Air Hockey, Lane Dash, and Tic-Tac-Toe are implemented and have
@@ -33,7 +33,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M5 | Air Hockey | M4 | Done | User confirmed M3–M6 working on iPhone and Android |
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
-| M8 | Five-game device validation and release preparation | M1–M7 | In progress | M8.1 final iOS/Android app icons and attribution complete; Android debug and iOS simulator builds pass |
+| M8 | Five-game device validation and release preparation | M1–M7 | In progress | M8.1–M8.2 complete: final icons and attribution; all 82 automated tests and analysis pass; compact enlarged-text coverage added |
 
 Milestone completion records functional implementation and the device evidence
 listed in the tracker; it is not release certification. M3–M6 have been confirmed
@@ -496,7 +496,7 @@ an initially empty board. Complete friend/bot matches on mobile devices.
 
 - [x] M8.1 Add the final app icon for iOS and Android, verify every required icon
   size, and record attribution or original-asset ownership.
-- [ ] M8.2 Run analysis and relevant rule/widget tests for every completed
+- [x] M8.2 Run analysis and relevant rule/widget tests for every completed
   milestone; expand regression and persistence coverage where release-critical
   behavior is not yet protected.
 - [ ] M8.3 Profile graphics settings on physical devices and record frame-rate,
@@ -643,6 +643,70 @@ accessible progress bar, keeps the transition visible for a minimum of two
 seconds on fast devices, and offers Retry if initialization fails. A focused
 startup widget test, `flutter analyze`, Android debug APK build, iOS simulator
 debug build, and `git diff --check` pass.
+
+2026-09-24 — Began the post-M7 visual polish in the agreed sequence by bundling
+Lilita One for display headings and actions and Fredoka for readable interface
+and body text. Both fonts remain fully offline, their SIL Open Font License texts
+are bundled and registered with Flutter's license registry, and attribution is
+recorded under `assets/branding`. Focused theme/startup tests, `flutter analyze`,
+Android debug APK build, iOS simulator debug build, and `git diff --check` pass.
+The shared branded background and arcade game-picker redesign are next.
+
+2026-09-24 — Added the shared visual foundation for the menu redesign: a deep
+navy palette with electric-blue, rival-red, and gold accents; transparent app bars;
+coordinated buttons, cards, and sliders; a reusable low-contrast arena backdrop;
+and a translucent `ArcadePanel`. The backdrop uses static painted glows, beams,
+and sparks so it adds visual energy without a continuous animation cost. Focused
+theme/startup tests, `flutter analyze`, and `git diff --check` pass. Applying this
+foundation to the arcade game picker is next.
+
+2026-09-24 — Redesigned the game picker as an arcade lobby using the shared
+visual foundation. It now has a TT brand badge, local-arcade header, two-rivals
+banner, branded battle heading, illuminated two-column game panels, 2P/BOT mode
+badges, gold favourite stars and borders, and press-scale feedback. The settings
+action now uses the requested cogwheel icon. Existing game keys, original title
+labels, favourites-first ordering, and navigation remain intact. Responsive
+layouts pass at 320 px with enlarged text. All 11 focused home/setup/theme tests,
+`flutter analyze`, and `git diff --check` pass. Applying the branded background
+and panel treatment to participant and difficulty setup screens is next.
+
+2026-09-25 — Applied the shared arcade backdrop and panel treatment to game
+setup. How-to-play content now sits in an illuminated instruction panel with a
+compact rule badge; favourites use the shared gold-star language; Friend and Bot
+choices are distinct red/blue arcade cards. The difficulty screen now presents
+Easy, Normal, and Hard with matching blue, gold, and red feedback, animated bot
+emblems, a themed slider, and coordinated Play button. Existing labels, keys,
+saved choices, and match navigation remain compatible. All nine focused setup
+and navigation tests, including 320 px with enlarged text, `flutter analyze`, and
+`git diff --check` pass. Shared match, pause, and result overlays are next.
+
+2026-09-25 — Restyled the shared match shell while leaving each active game arena
+and its input surface unchanged. The score HUD now uses a compact arcade panel
+with blue/red rivals and a gold rule badge. Ready, pause, draw, win, and rematch
+states use a responsive illuminated panel with phase-specific iconography and
+color, branded action buttons, bot-difficulty badge, and preserved navigation
+actions. All existing automation keys and visible action labels remain stable.
+All 18 focused lifecycle, setup, scoring, rematch, draw, and Tic-Tac-Toe tests,
+`flutter analyze`, and `git diff --check` pass. Applying the shared theme to the
+settings screens is next.
+
+2026-09-25 — Applied the shared arcade backdrop and illuminated panel treatment
+to Settings, the live graphics comparison, Terms of Use, and Privacy Policy.
+Sound, graphics, vibration, match rules, legal navigation, runtime version text,
+graphics measurement, and apply/cancel behavior remain unchanged. The settings
+page now groups each control area with a clear icon and accent, while the legal
+pages use readable constrained panels. Focused settings, graphics, persistence,
+and navigation tests, `flutter analyze`, and `git diff --check` pass. Responsive
+and accessibility review across the complete visual refresh is next.
+
+2026-09-25 — Completed M8.2 and the responsive review of the refreshed shared
+UI. Automated coverage now exercises the arcade lobby, participant and bot setup,
+Settings, legal content, live graphics comparison, and ready/result match
+overlays at 320×568 with 150% text. Enlarged content remains reachable through
+the intended scroll surfaces without layout exceptions. The stale startup label
+assertion was aligned with the redesigned lobby. All 82 unit and widget tests,
+`flutter analyze`, and `git diff --check` pass. Physical-device graphics profiling
+for M8.3 is next.
 
 2026-09-24 — Added a distinct Paddle Duel paddle-hit effect and changed the
 effects-volume slider to 20% intervals (0%, 20%, 40%, 60%, 80%, 100%).

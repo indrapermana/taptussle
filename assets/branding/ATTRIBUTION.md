@@ -17,3 +17,11 @@ source file when regenerating or updating launcher icons.
 - Generated with OpenAI ChatGPT at the project owner's direction.
 - Used as the branded native launch artwork on iOS and supported Android launch
   screens. Android 12 and newer use the TT app icon within the system splash UI.
+
+## Bundled fonts
+
+- Lilita One by Juan Montoreano, licensed under the SIL Open Font License 1.1.
+- Fredoka by the Fredoka Project Authors, licensed under the SIL Open Font
+  License 1.1.
+- Font binaries and license texts come from the official Google Fonts repository.
+- The complete license texts are stored beside each font under `assets/fonts`.
