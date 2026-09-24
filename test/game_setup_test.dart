@@ -44,7 +44,12 @@ void main() {
       (tester) async {
         final settings = await settingsFor(tester);
         await tester.pumpWidget(TapTussleApp(settings: settings));
-        await tester.tap(find.byKey(const ValueKey('game-card-paddle-duel')));
+        final paddleDuelCard = find.byKey(
+          const ValueKey('game-card-paddle-duel'),
+        );
+        await tester.ensureVisible(paddleDuelCard);
+        await tester.pumpAndSettle();
+        await tester.tap(paddleDuelCard);
         await tester.pumpAndSettle();
         expect(find.text('How to play'), findsOneWidget);
         expect(find.text('Play vs Friend'), findsOneWidget);

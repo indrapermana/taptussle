@@ -2,8 +2,8 @@
 
 Offline, same-device mini-games for two players, built with Flutter and Flame.
 The current catalog includes **Paddle Duel**, **Reaction Duel**, **Air Hockey**,
-and **Lane Dash**, with friend and local-bot modes. Android and iOS are the mobile
-targets; web is included for quick desktop previews.
+**Lane Dash**, and **Tic-Tac-Toe**, with friend and local-bot modes. Android and
+iOS are the mobile targets; web is included for quick desktop previews.
 
 ## Development roadmap
 
@@ -95,6 +95,12 @@ The view maps touch input, owns widget listeners, and avoids game rules, bot
 decisions, and rendering loops. Inject randomness into models and bots so rule
 and difficulty tests remain deterministic.
 
+Bots should feel human. Turn-based bots wait for a visible, bounded thinking
+delay before moving, including on Hard. Real-time bots observe and react at
+bounded intervals. Pause, match completion, option changes, and disposal cancel
+pending actions; resume schedules a fresh action only when it remains the bot's
+turn. Use this behavior for every future game with bot mode.
+
 ## Add the next game
 
 1. Create `lib/games/<game_id>/` using the model/bot/game-or-controller/view
@@ -111,16 +117,18 @@ and difficulty tests remain deterministic.
 
 Avoid introducing a global game manager or requiring inheritance from an existing
 game. Shared code defines lifecycle and integration contracts; each module owns
-its rules and presentation. The next planned game is Tic-Tac-Toe in pure Flutter.
+its rules and presentation. The initial five-game catalog and its physical-device
+functional passes are complete. M8 release validation is next.
 
 ## Verification and remaining device checks
 
 Tests cover game rules, scoring/results, bot policies, rematches, settings,
 simultaneous input, lifecycle pausing, navigation, and layout behavior.
 
-Paddle Duel, Reaction Duel, Air Hockey, and Lane Dash have been exercised during
-development, with M3–M6 functionally confirmed on physical iPhone and Android
-devices. The newly revised Air Hockey bot profiles still need another device pass.
+Paddle Duel, Reaction Duel, Air Hockey, Lane Dash, and Tic-Tac-Toe have been
+exercised during development. M3–M7 are functionally confirmed on physical
+iPhone and Android devices. The newly revised Air Hockey bot profiles still need
+another device pass.
 Before release, M8 requires recorded device/build details, profile-mode graphics
 measurements, offline and interruption checks, accessibility/safe-area coverage,
 long-session checks, app icons, attribution, and release signing. Native UI

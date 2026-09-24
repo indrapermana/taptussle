@@ -3,8 +3,9 @@
 Last updated: 2026-09-24.
 
 This is the working backlog for the next development phases. Paddle Duel,
-Reaction Duel, Air Hockey, and Lane Dash are implemented. Tic-Tac-Toe is the
-next planned game. Update this file as each increment is implemented and verified.
+Reaction Duel, Air Hockey, Lane Dash, and Tic-Tac-Toe are implemented and have
+completed their milestone device passes. M8 release validation is next. Update
+this file as each increment is implemented and verified.
 
 ## Product scope
 
@@ -31,13 +32,14 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M4 | Reaction Duel | M1, M2, M3 | Done | User confirmed M3–M6 working on iPhone and Android |
 | M5 | Air Hockey | M4 | Done | User confirmed M3–M6 working on iPhone and Android |
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
-| M7 | Tic-Tac-Toe: proposed fifth game | M6 | Not started | — |
+| M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Five-game device validation and release preparation | M1–M7 | Not started | — |
 
 Milestone completion records functional implementation and the device evidence
 listed in the tracker; it is not release certification. M3–M6 have been confirmed
-on iPhone and Android. M2 native automation remains blocked, and the broader
-release-validation matrix remains in M8. Tic-Tac-Toe is not yet built.
+on iPhone and Android. M7 is also confirmed on both physical platforms. M2 native
+automation remains blocked, and the broader release-validation matrix remains
+in M8.
 
 ## Target player flow
 
@@ -86,6 +88,14 @@ specific games. A bot supplies legal player inputs to the same rules as a human;
 it must not directly award points or change the simulation difficulty secretly.
 Use game-specific bot policies with shared difficulty names, not one universal
 bot implementation for every game.
+
+Bots must feel human rather than responding instantly. Turn-based games schedule
+a visible, bounded thinking delay before submitting a move; every difficulty
+retains some delay, with harder profiles generally reacting sooner. Real-time
+games use bounded observation and reaction intervals instead of perfect
+frame-by-frame knowledge. Pending bot actions must be cancelled on pause, match
+end, option changes, and disposal, then safely rescheduled after resume when it
+is still the bot's turn. Apply this rule to every future game with a bot mode.
 
 ### Standard mini-game module pattern
 
@@ -457,21 +467,25 @@ move each runner in the intended direction, difficulty changes obstacle pressure
 and bot decision quality while keeping runner speed equal, finish/draw rules are
 independent of update order, and races complete in both modes at 30 and 60 FPS.
 
-## M7 — Tic-Tac-Toe (proposed fifth simple game)
+## M7 — Tic-Tac-Toe (fifth simple game)
 
 Engine: pure Flutter. Proposed rules: a 3×3 board, X/O alternate turns, three in a
 row wins, full board without a winner draws. One board is one match; rematch
 alternates the starting player. This validates turn-based games in the architecture.
 
-- [ ] M7.1 Implement pure board rules, legal moves, turn ownership, win detection,
-  and draw results using the shared result support introduced in M6.
-- [ ] M7.2 Build a readable board with clear current-player and occupied-cell states.
-- [ ] M7.3 Easy picks random legal moves; Normal takes immediate wins/blocks with
+- [x] M7.1 Implement pure board rules, legal moves, turn ownership, win detection,
+  and draw results that the Flutter controller can publish through the shared
+  result support introduced in M6. Player 1 owns X and Player 2 owns O; rematches
+  alternate the starting participant without changing mark ownership.
+- [x] M7.2 Build a readable board with clear current-player and occupied-cell
+  states, winning-line emphasis, a distinct full-board draw state, accessible
+  cell labels, and a compact portrait layout.
+- [x] M7.3 Easy picks random legal moves; Normal takes immediate wins/blocks with
   occasional weaker choices; Hard uses optimal search. Hard may be unbeatable
   here, but must still permit a draw and must never make an illegal move.
-- [ ] M7.4 Block human moves during the bot turn; cancel pending bot turns on
+- [x] M7.4 Block human moves during the bot turn; cancel pending bot turns on
   pause/dispose and resume safely without a duplicate move.
-- [ ] M7.5 Integrate setup, favourites, effects, and rematch. Mark game resolution
+- [x] M7.5 Integrate setup, favourites, effects, and rematch. Mark game resolution
   as not applicable to the native Flutter board; retain readable controls.
 
 Acceptance: cover all winning lines, draws, invalid input, alternating starters,
@@ -497,7 +511,7 @@ an initially empty board. Complete friend/bot matches on mobile devices.
 | Reaction Duel | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
 | Air Hockey | User-confirmed | Revised bot pending | Revised bot pending | Revised bot pending | Previous bot pass confirmed | Previous bot pass confirmed |
 | Lane Dash | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
-| Tic-Tac-Toe | Pending | Pending | Pending | Pending | Pending | Pending |
+| Tic-Tac-Toe | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
 
 Each full game acceptance pass includes start, pause, background/resume, win or
 draw where relevant, rematch, change options, exit, effects, supported graphics
@@ -561,6 +575,43 @@ and stop on backgrounding.
 remaining device evidence for graphics settings and Lane Dash's independent
 courses/bot difficulty behavior; M3–M6 are Done. M2 remains blocked on iPhone
 integration-test transport, and M8's release-validation matrix remains open.
+
+2026-09-24 — M7.1 implemented as a pure Dart Tic-Tac-Toe model with nine-cell
+state, player-indexed legal moves, explicit invalid-move results, all eight win
+lines, draws, terminal-state locking, and alternating rematch starters. All 14
+focused model tests and `flutter analyze` pass. M7.2 board UI is next.
+
+2026-09-24 — M7.2 implemented as a reusable pure Flutter board with participant
+badges, current-turn and mark labels, disabled occupied cells, highlighted win
+lines, a distinct draw treatment, cell semantics, and compact-phone coverage.
+All 19 Tic-Tac-Toe model/widget tests and `flutter analyze` pass. The board stays
+out of the catalog until bot behavior and lifecycle integration are complete.
+
+2026-09-24 — M7.3 implemented as a pure bot policy. Easy selects random legal
+cells; Normal takes immediate wins and blocks except for a bounded mistake chance;
+Hard uses full minimax with deterministic move ordering. Exhaustive tests branch
+through every human reply with Hard moving first and second and confirm it never
+loses or selects an illegal move. All 27 Tic-Tac-Toe tests and `flutter analyze`
+pass. M7.4 bot-turn lifecycle handling is next.
+
+2026-09-24 — M7.4 implemented with a session-aware pure Flutter controller.
+Every bot difficulty waits for a randomized human-like thinking interval, with
+Easy longest and Hard quickest while still visibly delayed. Human moves are
+blocked during bot turns; pause and disposal cancel pending timers; resume starts
+one fresh delay; rematches alternate the starter and schedule the bot when needed.
+All 32 Tic-Tac-Toe tests and `flutter analyze` pass. Natural, cancellable reaction
+time is now a documented requirement for every future bot game.
+
+2026-09-24 — M7.5 connected the controller to the board and registered
+Tic-Tac-Toe in the shared catalog for Friend and Easy/Normal/Hard bot setup.
+The board uses the shared participant labels and match result/rematch flow,
+plays move/result audio and haptic effects, visibly blocks input while the bot
+thinks, and participates in persisted favourites ordering. It remains a native
+Flutter board, so resolution scaling is not applicable. All 32 focused
+Tic-Tac-Toe tests plus shared setup/favourites coverage pass (45 tests in the
+focused run), `flutter analyze` reports no issues, and `git diff --check` passes.
+The user subsequently confirmed Friend and Easy, Normal, and Hard bot modes on
+physical iPhone and Android devices, completing M7.
 
 2026-09-24 — Added a distinct Paddle Duel paddle-hit effect and changed the
 effects-volume slider to 20% intervals (0%, 20%, 40%, 60%, 80%, 100%).

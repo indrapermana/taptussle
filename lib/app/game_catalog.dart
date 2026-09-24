@@ -7,9 +7,27 @@ import '../games/paddle_duel/paddle_duel_preview.dart';
 import '../games/reaction_duel/reaction_duel_view.dart';
 import '../games/air_hockey/air_hockey_view.dart';
 import '../games/lane_dash/lane_dash_view.dart';
+import '../games/tic_tac_toe/tic_tac_toe_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'tic-tac-toe',
+    title: 'Tic-Tac-Toe',
+    subtitle: 'Three marks. One winning line.',
+    instructions:
+        'Take turns placing X and O. Complete a horizontal, vertical, or '
+        'diagonal line of three marks to win. A full board without a line is '
+        'a draw. The starting player alternates after each match.',
+    botInstructions:
+        'You play X and the bot plays O. Complete a line of three before the '
+        'bot. The starting player alternates after each match.',
+    icon: Icons.grid_3x3_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    matchLabel: (_) => 'THREE IN A ROW',
+    build: (session, options) =>
+        TicTacToeView(session: session, options: options),
+  ),
   MiniGame(
     id: 'lane-dash',
     title: 'Lane Dash',

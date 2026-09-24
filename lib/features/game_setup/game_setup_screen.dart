@@ -194,9 +194,9 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
   }
 
   String get description => switch (difficulty) {
-    BotDifficulty.easy => 'Slower reactions and forgiving returns.',
-    BotDifficulty.normal => 'A balanced challenge with steady tracking.',
-    BotDifficulty.hard => 'Fast reactions and sharper, but beatable returns.',
+    BotDifficulty.easy => 'More time to react and more frequent mistakes.',
+    BotDifficulty.normal => 'Balanced decisions with occasional mistakes.',
+    BotDifficulty.hard => 'Quicker reactions and stronger decisions.',
   };
 
   Future<void> _play() async {
