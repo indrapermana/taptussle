@@ -36,8 +36,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass |
-| M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
+| M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
+| M10 | Memory Match | M9 | In progress | M10.1 pure Dart rules, deterministic decks, solo/two-player turns, completion, and rematches implemented; 10 focused tests pass |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
@@ -623,7 +623,7 @@ numbered levels, because replaying a known arrangement would undermine the memor
 challenge. Solo records rank fewer turns first and completion time second. Friend
 mode uses the selected grid size without an opening preview for either player.
 
-- [ ] M10.1 Implement deterministic deck generation, pair matching, turn rules,
+- [x] M10.1 Implement deterministic deck generation, pair matching, turn rules,
   move counting, completion, and rematch reshuffling in a pure Dart model.
 - [ ] M10.2 Build a responsive pure Flutter card grid with a short mismatch reveal
   delay, input locking during animations, pause/resume safety, and accessibility
@@ -1136,6 +1136,24 @@ manifest use distinct filenames beside the original pack documentation so both
 sets retain their ownership and usage notes. `snakeBoost` is future-ready but
 must remain unused in M16 because the confirmed Slither-style design has no boost
 mechanic. No current game behavior changed.
+
+2026-09-26 — User confirmed on a physical device that the current mini-games show
+their new catalog logos and that the migrated sound effects play successfully.
+This closes the practical artwork/audio check for M9.
+
+2026-09-26 — Completed M10.1. Added a pure Dart Memory Match model supporting
+Easy 3×4, Normal 4×4, and Hard 4×6 decks with their confirmed solo preview
+durations; friend mode exposes no opening preview. Seeded shuffling is deterministic
+for tests, every generated deck contains exactly two cards per pair, and every
+reset/rematch deals a different arrangement. A completed two-card attempt counts
+as one move. Matches score a pair and retain the turn; mismatches stay revealed
+and lock further selection until explicitly resolved, then pass the turn only in
+two-player mode. Completion reports a winner or equal-score draw, freezes further
+selection, and rematches clear all state while alternating the two-player starter.
+Ten focused tests cover layouts, deck invariants, validation, matching, mismatch
+resolution, solo/friend turns, scoring, completion, draws, immutability, and
+rematches. The complete 123-test suite passes, `flutter analyze` is clean, and
+`git diff --check` passes. M10.2 responsive Flutter board/controller work is next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after
