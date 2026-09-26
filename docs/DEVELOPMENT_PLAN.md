@@ -4,8 +4,10 @@ Last updated: 2026-09-25.
 
 This is the working backlog for the next development phases. Paddle Duel,
 Reaction Duel, Air Hockey, Lane Dash, and Tic-Tac-Toe are implemented and have
-completed their milestone device passes. M8 release validation is next. Update
-this file as each increment is implemented and verified.
+completed their milestone device passes. M8 validates that five-game foundation;
+the first store release is now planned after all 18 currently selected games are
+implemented and validated.
+Update this file as each increment is implemented and verified.
 
 ## Product scope
 
@@ -33,13 +35,27 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M5 | Air Hockey | M4 | Done | User confirmed M3–M6 working on iPhone and Android |
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
-| M8 | Five-game device validation and release preparation | M1–M7 | In progress | M8.1–M8.2 complete: final icons and attribution; all 82 automated tests and analysis pass; compact enlarged-text coverage added |
+| M8 | Five-game foundation validation | M1–M7 | In progress | M8.1–M8.2 complete with all 82 tests and analysis passing; M8.3 profile build now runs with a stable DevTools connection on iPad, while the six-setting measurement matrix and Android profile pass remain pending |
+| M9 | Player-count foundation and local records | M8 | Not started | Add catalog capabilities, player-count tabs, 1–4 participant setup, and reusable offline record storage before adding games that depend on them |
+| M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
+| M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
+| M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
+| M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
+| M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
+| M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
+| M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
+| M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
+| M18 | Ludo | M17 | Not started | Full 2–4-player board game with optional bots and standings |
+| M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
+| M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
+| M21 | Cangkulan | M20 | Not started | Indonesian card game after its exact rules variant is approved |
+| M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
+| M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
 listed in the tracker; it is not release certification. M3–M6 have been confirmed
 on iPhone and Android. M7 is also confirmed on both physical platforms. M2 native
-automation remains blocked, and the broader release-validation matrix remains
-in M8.
+automation remains blocked, and the five-game foundation matrix remains in M8.
 
 ## Target player flow
 
@@ -492,7 +508,7 @@ Acceptance: cover all winning lines, draws, invalid input, alternating starters,
 and bot legality. Exhaustive rule/search tests demonstrate Hard never loses from
 an initially empty board. Complete friend/bot matches on mobile devices.
 
-## M8 — Device validation and release preparation
+## M8 — Five-game foundation validation
 
 - [x] M8.1 Add the final app icon for iOS and Android, verify every required icon
   size, and record attribution or original-asset ownership.
@@ -507,10 +523,11 @@ an initially empty board. Complete friend/bot matches on mobile devices.
   and load sane defaults for newer storage keys.
 - [ ] M8.5 Complete the matrix below on a physical iPhone and Android device. Record
   the actual model, OS version, app build, result, and any defects.
-- [ ] M8.6 Configure Android and iOS release signing and produce release builds.
-  Local device testing does not require store publication.
-- [ ] M8.7 Close release-blocking defects, finalize the release version, and attach
-  build/test evidence to the tracker.
+- [ ] M8.6 Produce local profile builds on iOS and Android and record toolchain or
+  signing blockers. Final store signing and release artifacts move to M23.
+- [ ] M8.7 Close foundation-blocking defects and attach build/test evidence to the
+  tracker. Keep version `1.0.0+1` during local development; M23 owns the release
+  version decision.
 
 | Game | Friend | Easy bot | Normal bot | Hard bot | iPhone | Android |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -525,13 +542,430 @@ draw where relevant, rematch, change options, exit, effects, supported graphics
 settings, and favourites. The table is a summary; keep device evidence separately
 in milestone completion notes rather than marking an untested platform Done.
 
-## Monthly additions after the initial five
+## Expansion review and product decisions
 
-For each new game: specify rules and fair bot behavior → build the independent
-module → register it once in the catalog → integrate supported shared features →
-test both modes and three difficulties → profile on devices → release. Limit
-work in progress to one new game; maintenance and bug fixes may replace a monthly
-addition when necessary.
+The first ten games form an intermediate catalog checkpoint, while the first store
+release is planned after all 18 currently selected games. Game count alone is not
+the acceptance criterion. Each addition must have complete rules, lifecycle,
+device testing, and an appropriate bot or score system. Limit implementation to
+one game milestone at a time so unfinished games do not weaken completed games.
+
+The recommended next five are:
+
+1. **Memory Match** — supports one player and two local players. Solo records can
+   rank fewer moves first, then faster completion time. Two-player mode awards
+   matched pairs and gives another turn after a successful match.
+2. **Rock Paper Scissors** — supports friend and bot play. Same-device friend mode
+   must conceal each choice until both players lock in; a simple open button per
+   player would reveal choices and make the game unfair.
+3. **Snakes & Ladders** — supports two, three, or four local players, with optional
+   bots added only after the human turn flow is stable. Its setup validates player
+   count, names/colors, turn order, token movement, and multi-player results.
+4. **Sudoku** — solo only. Easy, Normal, and Hard describe puzzle difficulty rather
+   than bot strength. Record completion time and mistakes separately per difficulty.
+5. **Checkers** — supports friend and bot play. Implement mandatory captures,
+   multi-jumps, kings, win/stalemate rules, and bounded, delayed bot search.
+
+The other proposed games are tracked in the post-release backlog below rather
+than left as unnamed future ideas. Chess, Ludo, and Solitaire have substantially
+larger rule and UX surfaces. Slither-style Snakes is distinct from the board game
+Snakes & Ladders and would use a Flame real-time architecture.
+
+## M9 — Player-count foundation and local records
+
+- [ ] M9.1 Replace the two-player-only catalog assumption with immutable game
+  capabilities: supported player counts, solo/friend/bot modes, whether difficulty
+  represents a bot or a puzzle, and an optional record definition. Existing five
+  games remain `2 players` and retain their current setup and results.
+- [ ] M9.2 Add catalog tabs before the grid: **1 Player**, **2 Players**, and
+  **Up to 4 Players**. A game may appear in more than one tab when it supports
+  multiple counts. Favourites stay first within the active filtered list, followed
+  by stable catalog order. Persist the last selected tab and provide an intentional
+  empty state.
+- [ ] M9.3 Generalize match participants from the current fixed friend/bot pair to
+  an ordered list of one to four immutable participant descriptors: local human or
+  bot, display name, color/token, and optional bot difficulty. Do not infer game
+  rules from participant count.
+- [ ] M9.4 Add a shared participant setup flow that asks only for options supported
+  by the selected game. Two-player games keep the current fast Friend/Bot path;
+  multi-player games choose count first and configure each seat. Prevent duplicate
+  colors and require at least one human for offline play.
+- [ ] M9.5 Extend shared match outcomes beyond player indexes 0 and 1 so they can
+  represent a winner among four participants, a draw, completion without a winner,
+  and optional ordered standings. Preserve all existing score-based behavior.
+- [ ] M9.6 Add an offline record repository keyed by stable game ID, record type,
+  difficulty/rules variant, and local completion timestamp. Define whether higher
+  or lower values are better and support a secondary tie-breaker such as time or
+  moves. Keep record logic out of individual screens.
+- [ ] M9.7 Show **Daily Best**, **Weekly Best**, and **Overall Best** for supported
+  solo games. Daily means the current local calendar day; weekly means the current
+  local Monday–Sunday week. Recompute buckets from saved timestamped results so
+  rollover requires no scheduled job. Records remain local and device-clock based.
+- [ ] M9.8 Add migration and regression tests for existing favourites, remembered
+  two-player setup, points-to-win, and results. Add focused tests for overlapping
+  filters, 1–4 participants, standings, record ranking/ties, day/week rollover,
+  malformed saved data, and bounded history retention.
+
+Acceptance: all existing games behave unchanged; each catalog tab contains only
+compatible games; a fixture game can complete with one through four participants;
+records survive restart and roll into the correct local day/week; no network or
+account is introduced.
+
+## M10 — Memory Match
+
+Confirmed difficulty design:
+
+- **Easy:** 3×4 grid (6 pairs) with a three-second opening preview.
+- **Normal:** 4×4 grid (8 pairs) with a short 1.5-second opening preview.
+- **Hard:** 4×6 grid (12 pairs) without an opening preview.
+
+Memory Match uses a fresh shuffled board on every attempt rather than fixed
+numbered levels, because replaying a known arrangement would undermine the memory
+challenge. Solo records rank fewer turns first and completion time second. Friend
+mode uses the selected grid size without an opening preview for either player.
+
+- [ ] M10.1 Implement deterministic deck generation, pair matching, turn rules,
+  move counting, completion, and rematch reshuffling in a pure Dart model.
+- [ ] M10.2 Build a responsive pure Flutter card grid with a short mismatch reveal
+  delay, input locking during animations, pause/resume safety, and accessibility
+  labels that do not expose hidden cards.
+- [ ] M10.3 Add solo play with Easy/Normal/Hard board sizes and local move/time
+  records; add two-player play with pair scores and alternating turns.
+- [ ] M10.4 Integrate sounds, haptics, favourites, player-count filters, results,
+  records, and physical-device verification.
+
+## M11 — Rock Paper Scissors
+
+- [ ] M11.1 Implement round rules, draws, configured points-to-win, and deterministic
+  tests for every choice pairing.
+- [ ] M11.2 Create a fair pass-and-hide flow for two friends and delayed Easy,
+  Normal, and Hard bot policies without reading future human input.
+- [ ] M11.3 Integrate setup, effects, rematch, favourites, filters, lifecycle, and
+  physical-device verification.
+
+## M12 — Snakes & Ladders
+
+Confirmed board: 8×8 with squares 1–64 and square 64 as the finish. An **extra
+turn** would mean rolling again after a configured event such as rolling a six.
+A **token collision** rule decides whether landing on another token shares the
+square, sends that token back, or blocks the move. Confirmed TapTussle rules are:
+no extra turns, multiple tokens may share a square without capture, and reaching
+64 requires an exact roll; an oversized roll leaves the token in place.
+
+- [ ] M12.1 Freeze snake/ladder positions and confirm exact-roll finish, no extra
+  turns, and shared squares without collision. Implement the 1–64 path,
+  deterministic dice injection, transitions, and movement tests before UI work.
+- [ ] M12.2 Build a readable board and animated token path for two to four local
+  players, including clear current-turn and final-standings states.
+- [ ] M12.3 Add optional bots with visible roll delays and no dice advantage; bot
+  difficulty is not shown unless meaningful decisions exist in the chosen rules.
+- [ ] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
+  effects, and physical devices.
+
+## M13 — Sudoku
+
+Confirmed design: standard 9×9 Sudoku with 60 uniquely solvable puzzles per
+difficulty. Easy puzzles use singles and straightforward scanning; Normal adds
+locked candidates and pairs; Hard may require advanced techniques. Clue count is
+supporting metadata rather than the sole difficulty measure. Every puzzle must be
+validated by a solver that proves exactly one solution and records the techniques
+needed for its rating.
+
+Players have unlimited notes and erase actions. Incorrect final entries highlight
+conflicts and increment a mistake counter but do not end the game. Allow up to
+three hints; using a hint marks the result as assisted. Records rank highest level,
+then unassisted completion, fewer mistakes, and faster time within each difficulty.
+These rules and the 60-level count are confirmed.
+
+- [ ] M13.1 Implement board validation, candidates, completion, mistake policy,
+  deterministic puzzle loading/generation, and uniqueness verification.
+- [ ] M13.2 Build touch-first number entry, notes, erase, conflict highlighting,
+  pause-hidden timer, and resumable in-progress games.
+- [ ] M13.3 Provide Easy, Normal, and Hard puzzle difficulty and record completion
+  time plus mistakes per difficulty. Puzzle difficulty replaces bot difficulty.
+- [ ] M13.4 Verify persistence, records, accessibility, favourites, filters,
+  lifecycle, and physical devices.
+
+## M14 — Checkers
+
+American/English checkers uses an 8×8 board with 12 pieces each; regular pieces
+move and capture diagonally forward, kings move one square diagonally both ways,
+captures are mandatory, and kings do not fly across multiple empty squares.
+International draughts uses a 10×10 board with 20 pieces each, regular pieces may
+capture backward, kings are flying pieces, and the maximum available capture
+sequence is mandatory. TapTussle will use American/English checkers because it is
+more compact and easier to read on phones.
+
+- [ ] M14.1 Implement American/English legal moves, mandatory capture,
+  multi-jump continuation, promotion, win, stalemate, and draw protection in pure
+  Dart with rule tests.
+- [ ] M14.2 Build a readable Flutter board with legal-target, selected-piece,
+  capture-chain, king, current-player, and result states.
+- [ ] M14.3 Add delayed Easy, Normal, and Hard bots with bounded search and
+  difficulty-specific evaluation/search depth; cancel safely across lifecycle and
+  rematch events.
+- [ ] M14.4 Integrate effects, favourites, filters, setup/results, and exhaustive
+  device-sized widget plus physical-device checks.
+
+## M15 — Mancala
+
+Confirmed rules: standard two-player Kalah with six small pits and one store per
+player. Every small pit starts with four stones, for 48 stones total. A player owns
+the six pits on their side and the store to their right. Sowing moves one stone at
+a time counterclockwise, includes the active player's store, and skips the opposing
+store. Landing in the active player's store grants an extra turn. Landing in an
+empty owned pit captures that last stone plus every stone in the directly opposite
+pit, but only when the opposite pit is non-empty. The game ends as soon as either
+side's six pits are empty; the other side moves all remaining stones to its store.
+The larger store wins, and equal stores produce a draw.
+
+- [ ] M15.1 Implement the confirmed board setup, counterclockwise sowing,
+  opponent-store skipping, capture condition, extra turns, immediate side-empty
+  detection, final collection, winner, and draw in a deterministic pure Dart model.
+- [ ] M15.2 Build an accessible Flutter board with clear pit ownership, stone counts,
+  legal-pit emphasis, sowing animation, current-player state, and final stores.
+- [ ] M15.3 Add friend mode plus delayed Easy, Normal, and Hard bots. Use legal moves
+  through the model; vary search depth/evaluation and keep bounded thinking time.
+- [ ] M15.4 Integrate setup, results, rematch, effects, favourites, player filters,
+  pause/resume, and compact/large-screen layouts.
+- [ ] M15.5 Test sowing invariants, captures, extra turns, terminal collection, bot
+  legality/lifecycle, and complete every mode on physical iOS and Android devices.
+
+## M16 — Slither-style Snakes
+
+This is a solo real-time survival game, separate from Snakes & Ladders.
+
+Confirmed design: a bounded arena larger than the screen with a camera following the
+player. The snake moves continuously; dragging anywhere in the lower half steers
+toward the finger without arrow buttons. Eating food grows the snake and increases
+score. Hitting the arena wall or another snake ends the run. Touching or crossing
+the player's own body has no penalty. AI snakes also collect food; when one hits a
+body it becomes food. The first version omits speed boost to keep touch controls
+predictable.
+
+Easy uses two slower, less aggressive AI snakes and generous food; Normal uses four
+balanced AI snakes; Hard uses six quicker, more assertive AI snakes with scarcer
+food. Player steering and base speed remain consistent across difficulty. Grant a
+short spawn-protection period, then score food plus defeated AI bonuses. Daily,
+weekly, and overall records rank score first and survival time second. These arena,
+control, collision, and difficulty rules are confirmed.
+
+- [ ] M16.1 Define arena boundaries, steering, growth, food spawning, collision,
+  score, speed progression, and game-over rules; implement deterministic simulation
+  and seeded spawning independently from rendering.
+- [ ] M16.2 Build the Flame game with natural touch steering, camera/arena feedback,
+  readable snake and food artwork, pause safety, and stable fixed-step movement.
+- [ ] M16.3 Add Easy, Normal, and Hard challenge profiles through arena pressure,
+  speed progression, and obstacle/food balance without changing input semantics.
+- [ ] M16.4 Store daily, weekly, and overall high score with survival time as the
+  tie-breaker; show current score, personal best, and game-over comparison.
+- [ ] M16.5 Integrate effects, haptics, favourites, solo filter, lifecycle, rematch,
+  deterministic simulation tests, performance profiling, and physical devices.
+
+## M17 — Water Sort Puzzle
+
+Confirmed launch content: 60 levels per difficulty, for 180 Water Sort levels.
+Progress is independent within Easy, Normal, and Hard. Completing level `n` unlocks level
+`n + 1` in that difficulty; players may replay any completed level. Store compact,
+deterministic level definitions and solver metadata so later level packs do not
+require a persistence migration.
+
+Within each difficulty, levels 1–10 teach the rules, 11–30 establish the core
+patterns, 31–50 combine patterns, and 51–60 are mastery levels for that band.
+
+Difficulty targets:
+
+- **Easy:** 3–5 colors, two empty helper tubes, short solutions, low branching,
+  and an onboarding ramp across levels 1–10.
+- **Normal:** 5–8 colors, two empty helper tubes, longer solutions, fewer obvious
+  moves, and more temporary ungrouping.
+- **Hard:** 8–12 colors, one empty helper tube, long solutions, higher branching,
+  and moves that require temporarily breaking apparently useful groups.
+
+Level number increases complexity inside its difficulty band using color count,
+minimum verified solution length, and decision branching. A late Easy level must
+remain easier than a typical Normal level. Do not classify difficulty using only
+the number of colors.
+
+- [ ] M17.1 Define tube capacity, legal pours, completion, move counting, undo, and
+  restart; implement an immutable/testable puzzle model.
+- [ ] M17.2 Choose a curated or generated level source and prove every shipped level
+  is solvable. Ship 60 levels in each difficulty and record solver-verified minimum
+  solution length plus branching metadata used to validate the classification. A
+  catalog-wide automated test must solve every level, replay the returned move path
+  through the production model, and report the exact level ID on failure.
+- [ ] M17.3 Build a responsive Flutter tube interface with selected/source states,
+  pour animation, color/pattern accessibility, undo, restart, and optional hints.
+- [ ] M17.4 Persist unlocked/completed levels and the active puzzle. Daily, weekly,
+  and overall best rank the highest completed level per difficulty, then fewer moves
+  and faster completion on that level. Retain per-level personal bests for replay.
+- [ ] M17.5 Integrate effects, favourites, solo filter, lifecycle, model/solver and
+  persistence tests, then verify all difficulties on physical devices.
+
+## M18 — Ludo
+
+Confirmed rules: a six is required to move a token out of its starting box. Rolling
+a six or moving a token out of the box grants a bonus roll. Capturing an opposing
+token returns it to its box and grants the capturing player a bonus roll. Tokens on
+safe squares cannot be captured. Consecutive sixes are allowed without a three-six
+forfeit. Same-color tokens do not form blockades; opposing tokens may pass their
+square and normal landing/capture rules still apply. A token must roll the exact
+required number to reach its final home position; an oversized roll cannot move
+that token. When more than one token has a legal move, the player must choose which
+token to move rather than having the game select automatically.
+
+- [ ] M18.1 Implement six-to-enter, capture return, safe-square immunity, no
+  blockades, bonus rolls, unrestricted consecutive sixes, home movement, exact
+  finish, and win standings with deterministic dice injection and rule tests.
+- [ ] M18.2 Build an animated, readable Flutter board for two to four participants
+  with current-turn, selectable legal tokens, dice, home-path, and standings states.
+- [ ] M18.3 Support any valid mixture of local humans and bots with at least one
+  human. Require a human to choose among multiple legal tokens. Bots use the same
+  legal-move list with visible roll/move delays and never influence dice outcomes.
+- [ ] M18.4 If rule choices create meaningful decisions, differentiate Easy,
+  Normal, and Hard move selection; otherwise expose one honest bot profile rather
+  than artificial difficulty labels.
+- [ ] M18.5 Integrate participant setup, pause/resume, saved match restoration,
+  results, rematch, effects, favourites, filters, tests, and physical-device passes.
+
+## M19 — Nuts and Bolts
+
+Confirmed concept: separate mixed colored nuts from their bolts and move them so
+each completed bolt contains nuts of one color. Only the top nut on a bolt can
+move. It may move to an empty bolt or onto a top nut of the same color, provided
+the destination has capacity. Easy and Normal levels provide two empty helper
+bolts; Hard provides one. Difficulty also scales color count and solution length,
+and every shipped level must be solver-verified. A puzzle is complete when every
+non-empty bolt is full and contains only one color.
+
+Confirmed launch content: 60 levels per difficulty, for 180 Nuts and Bolts levels.
+Progress and replay follow the same independent per-difficulty unlock model as Water Sort.
+Use the same 1–10 onboarding, 11–30 core, 31–50 combined, and 51–60 mastery
+progression inside each difficulty.
+
+Difficulty targets:
+
+- **Easy:** 3–5 colors, three or four nuts per bolt, two empty helper bolts, short
+  solutions, and an onboarding ramp across levels 1–10.
+- **Normal:** 5–8 colors, four nuts per bolt, two empty helper bolts, longer
+  solutions, and more interleaved starting stacks.
+- **Hard:** 8–12 colors, four or five nuts per bolt, one empty helper bolt, long
+  solutions, and higher branching with more necessary temporary moves.
+
+Level number increases color count, minimum verified solution length, interleaving,
+and decision branching inside the selected difficulty band. Generation must begin
+from or prove reachability to a solved state, and a solver must reject impossible,
+duplicate, already-solved, or incorrectly classified levels.
+
+- [ ] M19.1 Implement bolt capacity, top-nut-only moves, empty/same-color
+  destinations, completion, undo, hint, and restart in a pure Dart puzzle model.
+- [ ] M19.2 Ship 60 solver-verified levels in each difficulty with deterministic IDs
+  and metadata. Reject duplicate, impossible, already-solved, or incorrectly
+  classified levels in automated validation. A catalog-wide automated test must
+  solve every level, replay the returned move path through the production model,
+  and report the exact level ID on failure.
+- [ ] M19.3 Build a touch-friendly Flutter interface with clear depth/order,
+  selection, legal targets, movement animation, color/pattern accessibility, undo,
+  restart, and hints.
+- [ ] M19.4 Persist unlocked/completed levels and the active puzzle. Daily, weekly,
+  and overall best rank the highest completed level per difficulty, then fewer moves
+  and faster completion on that level. Retain per-level personal bests for replay.
+- [ ] M19.5 Integrate solo filtering, favourites, effects, lifecycle, tests, and
+  physical-device validation across compact and tablet layouts.
+
+## M20 — Solitaire
+
+Confirmed variant: Klondike. Easy and Normal use draw-one; Hard uses draw-three.
+All difficulties allow unlimited stock recycling. The milestone must keep saved
+games and records separate by difficulty because draw count changes the game rules.
+
+- [ ] M20.1 Implement deck creation/shuffle injection, tableau, stock/waste,
+  foundations, draw-one/draw-three stock behavior, legal moves, flips, completion,
+  move count, and scoring in pure Dart.
+- [ ] M20.2 Add undo and a deterministic hint engine; test multi-card moves, kings,
+  aces, unlimited stock recycling, invalid moves, win detection, and no-move states.
+- [ ] M20.3 Build a responsive Flutter card table with drag/tap alternatives,
+  readable suits/ranks, animations, pause-safe timer, and accessibility semantics.
+- [ ] M20.4 Persist the active deal and track wins, fastest completion, and fewest
+  moves for daily, weekly, and overall views.
+- [ ] M20.5 Integrate effects, favourites, solo filter, lifecycle, restoration,
+  device-sized widget tests, and physical-device validation.
+
+## M21 — Cangkulan
+
+Confirmed core rules: use a standard 52-card deck without Jokers. The first card
+of each trick establishes the required suit. A player holding that suit may play
+any card of it. If they do not hold that suit, they repeatedly draw from the center
+pile until they draw a matching card, then play it. Cards rank
+`2 < 3 < 4 < 5 < 6 < 7 < 8 < 9 < 10 < J < Q < K < A`; only cards in the required
+suit compete, and the highest wins the trick and leads the next one. There are no
+special cards. The first player with an empty hand wins immediately; there is no
+end-game point calculation. The game supports two, three, or four players and play
+moves clockwise. Every player receives seven cards initially, regardless of player
+count, and the undealt cards form the center draw pile. If the draw pile is empty
+and a player cannot follow the required suit, that player is skipped for the
+current trick. Cangkulan appears in both the **2 Players** and **Up to 4 Players**
+catalog tabs.
+
+- [ ] M21.1 Turn the confirmed 2–4-player, seven-card deal, clockwise, follow-suit,
+  repeated-draw, exhausted-pile skip, Ace-high trick winner, next-leader, and
+  immediate empty-hand win examples into pure Dart rule tests.
+- [ ] M21.2 Implement deterministic deck/deal injection, hands, pile state, legal
+  actions, turn progression, round completion, and match results in a pure model.
+- [ ] M21.3 Build a privacy-aware same-device card UI with pass-device/hidden-hand
+  transitions so another participant cannot see a player's cards.
+- [ ] M21.4 Add optional bots with human-like delays and Easy, Normal, and Hard
+  policies only where the agreed rules permit meaningful decisions.
+- [ ] M21.5 Integrate 2–4 participant setup, restoration, results, rematch, effects,
+  favourites, filters, lifecycle tests, and physical-device validation.
+
+## M22 — Chess
+
+Use standard over-the-board rules without clocks, an online engine, or a network
+service in the first version.
+
+- [ ] M22.1 Implement board state, legal movement, check filtering, checkmate,
+  stalemate, castling, en passant, promotion, insufficient material, repetition,
+  and fifty-move draw state in a pure Dart model with notation-ready move history.
+- [ ] M22.2 Add exhaustive focused tests for special moves, illegal self-check,
+  checkmate/stalemate positions, draw state, undo/copy integrity, and perft-style
+  move-generation counts for selected depths.
+- [ ] M22.3 Build an accessible Flutter board with orientation, selection, legal
+  targets, last move, check, captured pieces, promotion choice, history, and result.
+- [ ] M22.4 Add friend mode and delayed Easy, Normal, and Hard bots using bounded
+  local search. Enforce time/node limits so Hard remains responsive on older phones.
+- [ ] M22.5 Integrate pause/resume, rematch, effects, favourites, filters,
+  lifecycle, performance profiling, and device passes. Do not include chess clocks
+  in the first version.
+
+## M23 — Eighteen-game release validation and store preparation
+
+- [ ] M23.1 Run the complete automated suite and a physical iPhone/iPad/Android
+  matrix for all 18 games, every supported player count, bot/puzzle difficulty,
+  records, persistence, offline launch, interruptions, and long sessions. Release
+  requires the catalog-wide solver tests to prove every shipped Water Sort, Nuts
+  and Bolts, and Sudoku level valid; no unverified level may enter a release build.
+- [ ] M23.2 Repeat profile-mode graphics measurements on representative iOS and
+  Android hardware, including the real-time Slither game, and close release-blocking
+  performance, memory, battery, or thermal defects.
+- [ ] M23.3 Audit game discoverability across all player tabs, setup consistency,
+  record accuracy, accessibility, safe areas, tablet layouts, privacy between local
+  card players, and migration from existing installations.
+- [ ] M23.4 Finalize privacy and terms content, store listing text/screenshots,
+  age/content declarations, attributions, support links, and all game instructions.
+- [ ] M23.5 Configure final Android and iOS store signing, choose the release
+  semantic version, increment the build number in `pubspec.yaml`, and produce the
+  release artifacts.
+- [ ] M23.6 Attach test/build/device evidence and complete the first public-release
+  checklist. Do not mark complete while any game has a known release-blocking defect.
+
+## Ongoing additions after the first release
+
+For each later game: specify rules and any bot, puzzle-difficulty, or record
+behavior → build the independent module → register it once in the catalog →
+integrate its supported shared features → test every declared player count and
+mode → profile on devices → release. Limit work in progress to one game;
+maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
 
@@ -551,6 +985,34 @@ build thereafter.
 
 For each increment append: date, task IDs, short change description, tests/device
 evidence, unresolved issues, and next task. Implementation starts with M1.1.
+
+2026-09-26 — Confirmed future-game rules for M15 and M19–M22. Mancala uses
+standard two-player Kalah with 6 pits, 4 stones per pit, store/skip, extra-turn,
+capture, side-empty collection, and draw rules. Nuts and Bolts groups nuts by
+color on matching bolts, with exact move/capacity rules still pending. Klondike
+Solitaire uses draw-one for Easy/Normal and draw-three for Hard. Cangkulan uses a
+52-card deck without Jokers, follow-suit tricks, repeated drawing until the suit
+is found, Ace-high ranking, trick-winner lead, and immediate empty-hand victory;
+deal and exhausted-pile behavior remain pending. Chess ships without clocks.
+
+2026-09-26 — Confirmed additional M19–M21 rules. Nuts and Bolts moves only a top
+nut onto an empty bolt or the same color, with two helper bolts on Easy/Normal and
+one on Hard. Klondike permits unlimited stock recycling. Cangkulan supports 2–4
+clockwise players, deals seven cards to each player, appears in both compatible
+catalog tabs, and skips a player for the trick when the draw pile is empty and they
+cannot follow suit. The Cangkulan rules needed for M21 are now fully specified.
+
+2026-09-26 — Approved the proposed Memory Match grids, 8×8 Snakes & Ladders rules,
+60-level Sudoku design, and American/English Checkers. Approved the proposed
+Slither arena, controls, AI difficulty, and scoring with one change: touching the
+player's own body is harmless. Confirmed Ludo six-to-enter, safe-square immunity,
+capture return and bonus roll, exit bonus roll, and unrestricted consecutive sixes;
+blockades and exact home-finish wording remain open.
+
+2026-09-26 — Finalized the remaining Ludo movement rules: same-color tokens do not
+create blockades, exact rolls are required to reach the final home position, and a
+player explicitly chooses which token moves whenever multiple tokens have legal
+moves. Bots choose from the same legal-move list after a visible delay.
 
 2026-09-24 — M1.1–M1.9 implemented. `flutter analyze` passed and 32 automated
 tests passed, covering setup, favourite persistence/order, all bot difficulties,
@@ -707,6 +1169,21 @@ the intended scroll surfaces without layout exceptions. The stale startup label
 assertion was aligned with the redesigned lobby. All 82 unit and widget tests,
 `flutter analyze`, and `git diff --check` pass. Physical-device graphics profiling
 for M8.3 is next.
+
+2026-09-25 — Began M8.3 with a signed profile build for the connected physical
+iPhone on app version `1.0.0+1` at revision `5c5bb4e`. Xcode built, signed, and
+installed the profile app, but Flutter lost its device connection immediately
+after launch, so no DevTools timing sample is claimed. No Android device was
+connected. Added `M8_GRAPHICS_PROFILE_RESULTS.md` with the repeatable warm-up,
+real-match timing procedure and separate six-combination result matrices for
+iPhone and Android. M8.3 remains open until both matrices contain measurements.
+
+2026-09-25 — Retried M8.3 on the physical iPad named Qpad running iPadOS 26.7
+(23H24). The signed profile build completed, installed, and launched, and the
+Dart VM Service and DevTools connection remained available throughout the smoke
+run. Added an iPad matrix to the profile record for optional large-screen iOS
+coverage. Per-setting frame measurements still require the six interactive
+Paddle Duel samples, and the required Android profile pass remains pending.
 
 2026-09-24 — Added a distinct Paddle Duel paddle-hit effect and changed the
 effects-volume slider to 20% intervals (0%, 20%, 40%, 60%, 80%, 100%).
