@@ -133,7 +133,7 @@ void main() {
     () {
       List<double> simulate(int fps) {
         final session = MatchSession(
-          options: const MatchOptions.bot(difficulty: BotDifficulty.normal),
+          options: MatchOptions.bot(difficulty: BotDifficulty.normal),
         );
         final game = PaddleDuelGame(session: session, botRandom: Random(8));
         game.resetMatch();

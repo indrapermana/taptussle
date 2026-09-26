@@ -35,10 +35,10 @@ class _GraphicsPreviewScreenState extends State<GraphicsPreviewScreen>
     candidateResolution = widget.settings.resolution;
     candidateFrameRate = widget.settings.frameRate;
     _savedSession = MatchSession(
-      options: const MatchOptions.friend(winningScore: 999),
+      options: MatchOptions.friend(winningScore: 999),
     )..start();
     _candidateSession = MatchSession(
-      options: const MatchOptions.friend(winningScore: 999),
+      options: MatchOptions.friend(winningScore: 999),
     )..start();
     _savedGame = PaddleDuelGame(session: _savedSession);
     _candidateGame = PaddleDuelGame(session: _candidateSession);

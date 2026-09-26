@@ -92,6 +92,12 @@ none), and optional ordered record metrics. Existing games remain explicit
 two-player friend/bot games. Record metadata defines comparison order only; record
 storage and catalog filtering are shared features introduced later in M9.
 
+`MatchOptions` carries an immutable ordered list of one to four participants.
+Each participant has a display name, human or bot ownership, a unique color and
+token, and an optional bot difficulty. The friend and bot factories retain the
+existing two-player defaults, while solo and custom factories support future game
+setups without making individual games own participant configuration.
+
 `MatchSession` provides ready → playing → paused/finished, immutable score
 snapshots, an optional winning player index (0 or 1), and a round counter for
 resets. The shell owns/disposes the session. Games listen to it, stop updates and

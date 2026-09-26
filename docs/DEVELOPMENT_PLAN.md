@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.2 add typed capabilities plus persisted 1 Player, 2 Players, and Up to 4 Players catalog tabs with overlapping membership, favourites-first ordering, and an empty state |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.3 add typed capabilities, persisted player-count catalog tabs, and immutable ordered participant lists for one to four human or bot seats |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -562,7 +562,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   multiple counts. Favourites stay first within the active filtered list, followed
   by stable catalog order. Persist the last selected tab and provide an intentional
   empty state.
-- [ ] M9.3 Generalize match participants from the current fixed friend/bot pair to
+- [x] M9.3 Generalize match participants from the current fixed friend/bot pair to
   an ordered list of one to four immutable participant descriptors: local human or
   bot, display name, color/token, and optional bot difficulty. Do not infer game
   rules from participant count.
@@ -1003,6 +1003,16 @@ visible count, derives player badges from metadata, and shows an intentional emp
 state. Invalid saved filters safely fall back to 2 Players. The complete 88-test
 suite and compact enlarged-text coverage pass; `flutter analyze` is clean. M9.3 is
 next.
+
+2026-09-26 — Completed M9.3. `MatchOptions` now owns an immutable ordered list of
+one to four participant descriptors. Each participant records a display name,
+human or bot ownership, a unique color and token, and bot difficulty only when it
+is a bot. Validated friend, bot, solo, and custom factories require at least one
+local human and preserve the existing two-player labels, result text, configured
+winning score, and bot-difficulty access used by all five current games. Focused
+coverage verifies ordering, defensive list copying, immutability, solo identity,
+legacy adapters, and invalid configurations. The complete 92-test suite passes and
+`flutter analyze` is clean. M9.4 shared participant setup is next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

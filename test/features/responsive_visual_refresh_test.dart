@@ -122,10 +122,7 @@ void main() {
     );
     await tester.pumpWidget(
       app(
-        MatchScreen(
-          game: game,
-          options: const MatchOptions.friend(winningScore: 5),
-        ),
+        MatchScreen(game: game, options: MatchOptions.friend(winningScore: 5)),
       ),
     );
     await tester.pumpAndSettle();

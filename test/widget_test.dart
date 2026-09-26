@@ -123,10 +123,7 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
-        home: MatchScreen(
-          game: definition,
-          options: const MatchOptions.friend(),
-        ),
+        home: MatchScreen(game: definition, options: MatchOptions.friend()),
       ),
     );
     await tester.tap(find.text('Start match'));

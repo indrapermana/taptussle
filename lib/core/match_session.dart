@@ -9,7 +9,8 @@ enum MatchOutcome { winner, draw }
 /// Engine-independent lifecycle. Games publish scores and results;
 /// the Flutter shell owns navigation and lifecycle controls.
 class MatchSession extends ChangeNotifier {
-  MatchSession({this.options = const MatchOptions.friend()});
+  MatchSession({MatchOptions? options})
+    : options = options ?? MatchOptions.friend();
 
   final MatchOptions options;
   MatchPhase get phase => _phase;

@@ -90,7 +90,7 @@ void main() {
   testWidgets('friend match reports a result and rematch alternates starter', (
     tester,
   ) async {
-    final session = MatchSession(options: const MatchOptions.friend())..start();
+    final session = MatchSession(options: MatchOptions.friend())..start();
     addTearDown(session.dispose);
     await tester.pumpWidget(
       MaterialApp(
@@ -119,7 +119,7 @@ void main() {
     tester,
   ) async {
     final session = MatchSession(
-      options: const MatchOptions.bot(difficulty: BotDifficulty.easy),
+      options: MatchOptions.bot(difficulty: BotDifficulty.easy),
     )..start();
     addTearDown(session.dispose);
     await tester.pumpWidget(
@@ -147,7 +147,7 @@ void main() {
     final game = gameCatalog.singleWhere((item) => item.id == 'tic-tac-toe');
 
     expect(game.supportedModes, {PlayMode.friend, PlayMode.bot});
-    expect(game.matchLabel!(const MatchOptions.friend()), 'THREE IN A ROW');
+    expect(game.matchLabel!(MatchOptions.friend()), 'THREE IN A ROW');
     expect(favouritesFirst(gameCatalog, {game.id}).first, same(game));
   });
 }

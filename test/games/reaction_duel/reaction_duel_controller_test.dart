@@ -7,9 +7,8 @@ import 'package:tap_tussle/games/reaction_duel/reaction_duel_controller.dart';
 
 void main() {
   test('false start awards the other player', () {
-    final session = MatchSession(
-      options: const MatchOptions.friend(winningScore: 5),
-    )..start();
+    final session = MatchSession(options: MatchOptions.friend(winningScore: 5))
+      ..start();
     final controller = ReactionDuelController(
       session: session,
       random: Random(1),
@@ -25,9 +24,8 @@ void main() {
   });
 
   test('near-simultaneous legal taps replay without a score', () async {
-    final session = MatchSession(
-      options: const MatchOptions.friend(winningScore: 5),
-    )..start();
+    final session = MatchSession(options: MatchOptions.friend(winningScore: 5))
+      ..start();
     final controller = ReactionDuelController(
       session: session,
       waitDelay: Duration.zero,
@@ -48,7 +46,7 @@ void main() {
 
   test('bot only reacts after the signal', () async {
     final session = MatchSession(
-      options: const MatchOptions.bot(difficulty: BotDifficulty.hard),
+      options: MatchOptions.bot(difficulty: BotDifficulty.hard),
     )..start();
     final controller = ReactionDuelController(
       session: session,

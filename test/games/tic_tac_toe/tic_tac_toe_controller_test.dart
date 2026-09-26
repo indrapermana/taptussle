@@ -11,7 +11,7 @@ void main() {
     'bot waits before moving and human input is blocked during its turn',
     () async {
       final session = MatchSession(
-        options: const MatchOptions.bot(difficulty: BotDifficulty.easy),
+        options: MatchOptions.bot(difficulty: BotDifficulty.easy),
       );
       final controller = TicTacToeController(
         session: session,
@@ -39,7 +39,7 @@ void main() {
     'pause cancels a bot turn and resume schedules one fresh delay',
     () async {
       final session = MatchSession(
-        options: const MatchOptions.bot(difficulty: BotDifficulty.normal),
+        options: MatchOptions.bot(difficulty: BotDifficulty.normal),
       );
       final controller = TicTacToeController(
         session: session,
@@ -67,7 +67,7 @@ void main() {
 
   test('dispose cancels a pending bot move', () async {
     final session = MatchSession(
-      options: const MatchOptions.bot(difficulty: BotDifficulty.hard),
+      options: MatchOptions.bot(difficulty: BotDifficulty.hard),
     );
     final controller = TicTacToeController(
       session: session,
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('friend moves publish a shared winner result', () {
-    final session = MatchSession(options: const MatchOptions.friend());
+    final session = MatchSession(options: MatchOptions.friend());
     final controller = TicTacToeController(session: session);
     addTearDown(controller.dispose);
     addTearDown(session.dispose);
@@ -104,7 +104,7 @@ void main() {
     'rematch alternates starter and schedules the bot when it starts',
     () async {
       final session = MatchSession(
-        options: const MatchOptions.bot(difficulty: BotDifficulty.easy),
+        options: MatchOptions.bot(difficulty: BotDifficulty.easy),
       );
       final controller = TicTacToeController(
         session: session,
