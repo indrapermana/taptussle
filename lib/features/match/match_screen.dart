@@ -177,65 +177,105 @@ class _ScoreHud extends StatelessWidget {
     child: ArcadePanel(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
       borderRadius: 18,
-      child: Row(
+      child: options.participants.length == 2
+          ? _twoPlayerHud()
+          : _flexibleParticipantHud(),
+    ),
+  );
+
+  Widget _twoPlayerHud() => Row(
+    children: [
+      Expanded(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            '${options.playerLabel(0)}  ${scores[0]}',
+            style: const TextStyle(
+              fontFamily: 'Lilita One',
+              color: TapTussleColors.electricBlue,
+              fontSize: 23,
+              letterSpacing: .4,
+            ),
+          ),
+        ),
+      ),
+      Flexible(child: _MatchLabel(label: matchLabel)),
+      Expanded(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerRight,
+          child: Text(
+            '${scores[1]}  ${options.playerLabel(1)}',
+            style: const TextStyle(
+              fontFamily: 'Lilita One',
+              color: TapTussleColors.rivalRed,
+              fontSize: 23,
+              letterSpacing: .4,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _flexibleParticipantHud() => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _MatchLabel(label: matchLabel),
+      const SizedBox(height: 8),
+      Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 10,
+        runSpacing: 4,
         children: [
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${options.playerLabel(0)}  ${scores[0]}',
-                style: const TextStyle(
-                  fontFamily: 'Lilita One',
-                  color: TapTussleColors.electricBlue,
-                  fontSize: 23,
-                  letterSpacing: .4,
-                ),
+          for (final entry in options.participants.indexed)
+            Text(
+              '${entry.$2.displayName}  ${entry.$1 < scores.length ? scores[entry.$1] : 0}',
+              style: TextStyle(
+                fontFamily: 'Lilita One',
+                color: _participantHudColors[entry.$1],
+                fontSize: 17,
               ),
             ),
-          ),
-          Flexible(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: TapTussleColors.gold.withValues(alpha: .1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: TapTussleColors.gold.withValues(alpha: .45),
-                ),
-              ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  matchLabel,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    color: TapTussleColors.gold,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Text(
-                '${scores[1]}  ${options.playerLabel(1)}',
-                style: const TextStyle(
-                  fontFamily: 'Lilita One',
-                  color: TapTussleColors.rivalRed,
-                  fontSize: 23,
-                  letterSpacing: .4,
-                ),
-              ),
-            ),
-          ),
         ],
+      ),
+    ],
+  );
+
+  static const _participantHudColors = [
+    Color(0xFF9DF5CF),
+    Color(0xFFFF968A),
+    TapTussleColors.gold,
+    Color(0xFFB388FF),
+  ];
+}
+
+class _MatchLabel extends StatelessWidget {
+  const _MatchLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.symmetric(horizontal: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(
+      color: TapTussleColors.gold.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: TapTussleColors.gold.withValues(alpha: .45)),
+    ),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        label,
+        maxLines: 1,
+        style: const TextStyle(
+          color: TapTussleColors.gold,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.1,
+        ),
       ),
     ),
   );
@@ -279,10 +319,11 @@ class _MatchOverlay extends StatelessWidget {
   }
 
   String get title => switch (phase) {
-    MatchPhase.ready =>
-      options.mode == PlayMode.friend
-          ? 'Take your sides'
-          : 'Ready to challenge the bot?',
+    MatchPhase.ready => switch (options.mode) {
+      PlayMode.solo => 'Ready to play?',
+      PlayMode.friend => 'Take your sides',
+      PlayMode.bot => 'Ready to challenge the bot?',
+    },
     MatchPhase.paused => 'Time out',
     MatchPhase.finished =>
       outcome == MatchOutcome.draw ? 'Draw!' : options.resultLabel(winner!),

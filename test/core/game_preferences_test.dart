@@ -94,24 +94,24 @@ void main() {
     }
   });
 
-  test(
-    'friend options exclude remembered bot difficulty and matches are frozen',
-    () {
-      final preferences = const GamePreferences(
-        mode: PlayMode.bot,
-        difficulty: BotDifficulty.hard,
-      );
-      final options = preferences.matchOptions(5);
-      final friend = preferences
-          .copyWith(mode: PlayMode.friend)
-          .matchOptions(7);
-      expect(options.botDifficulty, BotDifficulty.hard);
-      expect(options.winningScore, 5);
-      expect(friend.botDifficulty, isNull);
-      expect(friend.playerLabel(1), 'Player 2');
-      expect(options.playerLabel(0), 'You');
-      expect(options.resultLabel(0), 'You win!');
-      expect(options.resultLabel(1), 'Bot wins!');
-    },
-  );
+  test('preferences build compatible solo, friend and bot options', () {
+    final preferences = const GamePreferences(
+      mode: PlayMode.bot,
+      difficulty: BotDifficulty.hard,
+    );
+    final options = preferences.matchOptions(5);
+    final friend = preferences.copyWith(mode: PlayMode.friend).matchOptions(7);
+    final solo = preferences.copyWith(mode: PlayMode.solo).matchOptions(9);
+    expect(options.botDifficulty, BotDifficulty.hard);
+    expect(options.winningScore, 5);
+    expect(friend.botDifficulty, isNull);
+    expect(friend.playerLabel(1), 'Player 2');
+    expect(options.playerLabel(0), 'You');
+    expect(options.resultLabel(0), 'You win!');
+    expect(options.resultLabel(1), 'Bot wins!');
+    expect(solo.mode, PlayMode.solo);
+    expect(solo.participants, hasLength(1));
+    expect(solo.playerLabel(0), 'You');
+    expect(solo.winningScore, 9);
+  });
 }

@@ -98,6 +98,12 @@ token, and an optional bot difficulty. The friend and bot factories retain the
 existing two-player defaults, while solo and custom factories support future game
 setups without making individual games own participant configuration.
 
+Games supporting three or four players use the shared participant setup screen to
+choose a supported count and configure each ordered seat. It keeps at least one
+local human, prevents duplicate colors and tokens, and shows bot controls only
+when the game's capabilities allow them. Existing two-player games retain their
+short Friend/Bot flow, and solo-only games start through a dedicated solo action.
+
 `MatchSession` provides ready → playing → paused/finished, immutable score
 snapshots, an optional winning player index (0 or 1), and a round counter for
 resets. The shell owns/disposes the session. Games listen to it, stop updates and

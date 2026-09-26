@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.3 add typed capabilities, persisted player-count catalog tabs, and immutable ordered participant lists for one to four human or bot seats |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.4 add typed capabilities, player-count catalog tabs, immutable participant lists, and shared solo or 2–4-player setup |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -566,7 +566,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   an ordered list of one to four immutable participant descriptors: local human or
   bot, display name, color/token, and optional bot difficulty. Do not infer game
   rules from participant count.
-- [ ] M9.4 Add a shared participant setup flow that asks only for options supported
+- [x] M9.4 Add a shared participant setup flow that asks only for options supported
   by the selected game. Two-player games keep the current fast Friend/Bot path;
   multi-player games choose count first and configure each seat. Prevent duplicate
   colors and require at least one human for offline play.
@@ -1024,6 +1024,18 @@ winning score, and bot-difficulty access used by all five current games. Focused
 coverage verifies ordering, defensive list copying, immutability, solo identity,
 legacy adapters, and invalid configurations. The complete 92-test suite passes and
 `flutter analyze` is clean. M9.4 shared participant setup is next.
+
+2026-09-26 — Completed M9.4. Games that support three or four players now open a
+shared count-and-seat setup screen. Each seat has a name, unique color and token,
+human or bot ownership where the game supports both, and a difficulty selector
+only when bot difficulty applies. The first seat remains a local human, preventing
+bot-only offline matches. Solo games receive a direct supported action, while the
+existing five two-player games retain their fast Friend/Bot flow and separate bot
+difficulty page. The match HUD safely presents one through four configured names;
+multi-player scoring and results remain M9.5. New widget coverage verifies a
+three-seat mixed match, unique identity choices, remembered bot difficulty, and a
+solo-only launch. The complete 94-test suite and `flutter analyze` pass. M9.5
+shared match outcomes are next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

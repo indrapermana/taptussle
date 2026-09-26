@@ -6,6 +6,7 @@ import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
 import '../../core/sound_service.dart';
 import '../match/match_screen.dart';
+import 'participant_setup_screen.dart';
 
 class GameSetupScreen extends StatefulWidget {
   const GameSetupScreen({
@@ -49,6 +50,16 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     });
   }
 
+  void _startSolo() {
+    final preferences = widget.settings
+        .preferencesFor(widget.game.id)
+        .copyWith(mode: PlayMode.solo);
+    _save(() async {
+      await widget.settings.saveGamePreferences(widget.game.id, preferences);
+      if (mounted) _openMatch(preferences);
+    });
+  }
+
   void _openMatch(GamePreferences preferences) => Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => MatchScreen(
@@ -66,6 +77,12 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     listenable: widget.settings,
     builder: (context, _) {
       final favourite = widget.settings.isFavourite(widget.game.id);
+      final supportsSolo =
+          widget.game.supportedModes.contains(PlayMode.solo) &&
+          widget.game.supportsPlayerCount(PlayerCount.one);
+      final usesMultiPlayerSetup = widget.game.supportedPlayerCounts.any(
+        (count) => count.value > 2,
+      );
       return Scaffold(
         appBar: AppBar(title: Text(widget.game.title)),
         body: TapTussleBackdrop(
@@ -160,20 +177,62 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       color: TapTussleColors.gold,
                     ),
                     const SizedBox(height: 12),
-                    _ModeButton(
-                      key: const ValueKey('play-vs-friend'),
-                      icon: Icons.people_alt_rounded,
-                      title: 'Play vs Friend',
-                      subtitle: 'Two rivals sharing one phone',
-                      accent: TapTussleColors.rivalRed,
-                      onPressed: saving
-                          ? null
-                          : () {
-                              SoundEffects.play(SoundEffect.click);
-                              _startFriend();
-                            },
-                    ),
-                    if (widget.game.supportedModes.contains(PlayMode.bot)) ...[
+                    if (supportsSolo)
+                      _ModeButton(
+                        key: const ValueKey('play-solo'),
+                        icon: Icons.person_rounded,
+                        title: 'Play Solo',
+                        subtitle: 'Start a one-player game',
+                        accent: TapTussleColors.electricBlue,
+                        onPressed: saving
+                            ? null
+                            : () {
+                                SoundEffects.play(SoundEffect.click);
+                                _startSolo();
+                              },
+                      ),
+                    if (supportsSolo &&
+                        widget.game.supportedPlayerCounts.length > 1)
+                      const SizedBox(height: 12),
+                    if (usesMultiPlayerSetup)
+                      _ModeButton(
+                        key: const ValueKey('configure-participants'),
+                        icon: Icons.groups_rounded,
+                        title: 'Set Up Players',
+                        subtitle: 'Choose player count and configure each seat',
+                        accent: TapTussleColors.gold,
+                        onPressed: saving
+                            ? null
+                            : () {
+                                SoundEffects.play(SoundEffect.click);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => ParticipantSetupScreen(
+                                      game: widget.game,
+                                      settings: widget.settings,
+                                    ),
+                                  ),
+                                );
+                              },
+                      )
+                    else if (widget.game.supportsPlayerCount(PlayerCount.two) &&
+                        widget.game.supportedModes.contains(PlayMode.friend))
+                      _ModeButton(
+                        key: const ValueKey('play-vs-friend'),
+                        icon: Icons.people_alt_rounded,
+                        title: 'Play vs Friend',
+                        subtitle: 'Two rivals sharing one phone',
+                        accent: TapTussleColors.rivalRed,
+                        onPressed: saving
+                            ? null
+                            : () {
+                                SoundEffects.play(SoundEffect.click);
+                                _startFriend();
+                              },
+                      ),
+                    if (!usesMultiPlayerSetup &&
+                        widget.game.supportsPlayerCount(PlayerCount.two) &&
+                        widget.game.supportedModes.contains(PlayMode.bot)) ...[
                       const SizedBox(height: 12),
                       _ModeButton(
                         key: const ValueKey('play-vs-bot'),

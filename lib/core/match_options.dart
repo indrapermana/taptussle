@@ -206,8 +206,6 @@ class GamePreferences {
       difficulty: difficulty,
       winningScore: winningScore,
     ),
-    PlayMode.solo => throw StateError(
-      'Solo setup does not use two-player GamePreferences',
-    ),
+    PlayMode.solo => MatchOptions.solo(winningScore: winningScore),
   };
 }
