@@ -7,6 +7,7 @@ import '../../core/mini_game.dart';
 import '../../core/sound_service.dart';
 import '../game_setup/game_setup_screen.dart';
 import '../settings/settings_screen.dart';
+import 'game_artwork.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({required this.settings, required this.games, super.key});
@@ -523,8 +524,20 @@ class _GameTileState extends State<_GameTile> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  widget.game.preview?.call(context) ??
-                      _IconPreview(icon: widget.game.icon, accent: accent),
+                  if (widget.game.artworkAsset != null)
+                    GameArtwork(
+                      gameId: widget.game.id,
+                      assetPath: widget.game.artworkAsset,
+                      icon: widget.game.icon,
+                      accent: accent,
+                    )
+                  else
+                    widget.game.preview?.call(context) ??
+                        GameArtwork(
+                          gameId: widget.game.id,
+                          icon: widget.game.icon,
+                          accent: accent,
+                        ),
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -576,38 +589,6 @@ class _GameTileState extends State<_GameTile> {
       ),
     );
   }
-}
-
-class _IconPreview extends StatelessWidget {
-  const _IconPreview({required this.icon, required this.accent});
-
-  final IconData icon;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      gradient: RadialGradient(
-        center: const Alignment(0, -.15),
-        radius: .82,
-        colors: [accent.withValues(alpha: .52), TapTussleColors.navy],
-      ),
-    ),
-    child: Center(
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: TapTussleColors.midnight.withValues(alpha: .62),
-          shape: BoxShape.circle,
-          border: Border.all(color: accent.withValues(alpha: .8)),
-          boxShadow: [
-            BoxShadow(color: accent.withValues(alpha: .25), blurRadius: 20),
-          ],
-        ),
-        child: Icon(icon, size: 50, color: Colors.white),
-      ),
-    ),
-  );
 }
 
 class _ModeBadges extends StatelessWidget {

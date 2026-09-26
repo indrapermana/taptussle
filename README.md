@@ -88,7 +88,9 @@ that widget may contain a Flame `GameWidget` or ordinary Flutter widgets.
 
 Each `MiniGame` also declares supported one-to-four player counts, supported
 solo/friend/bot modes, what its difficulty changes (bot, puzzle, challenge, or
-none), and optional ordered record metrics. Existing games remain explicit
+none), optional catalog artwork, and optional ordered record metrics. Catalog
+artwork uses a shared stable-ID map with 1×/2× assets, readable contain fitting,
+and an icon fallback when an asset cannot load. Existing games remain explicit
 two-player friend/bot games. Record metadata defines comparison order. The shared
 offline repository stores immutable results by game ID, record type, and
 difficulty/rules variant, using device-local completion timestamps. It ranks the

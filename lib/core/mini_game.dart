@@ -42,6 +42,7 @@ class MiniGame {
     required this.build,
     this.buildWithPresentation,
     this.preview,
+    this.artworkAsset,
     this.matchLabel,
     this.botInstructions,
     Set<PlayMode> supportedModes = const {PlayMode.friend},
@@ -80,6 +81,7 @@ class MiniGame {
   final MiniGameBuilder build;
   final MiniGamePresentationBuilder? buildWithPresentation;
   final WidgetBuilder? preview;
+  final String? artworkAsset;
   final String Function(MatchOptions options)? matchLabel;
 }
 

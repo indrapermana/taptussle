@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.8 add typed capabilities, shared 1–4-player setup/results, offline ranked records, local best windows, migration/regression coverage, and bounded history |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.9 add typed capabilities, shared 1–4-player setup/results, offline records, local best windows, regression coverage, bounded history, and the complete catalog artwork map |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -585,7 +585,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   two-player setup, points-to-win, and results. Add focused tests for overlapping
   filters, 1–4 participants, standings, record ranking/ties, day/week rollover,
   malformed saved data, and bounded history retention.
-- [ ] M9.9 Replace the mini-game catalog artwork with the 18 supplied game logos.
+- [x] M9.9 Replace the mini-game catalog artwork with the 18 supplied game logos.
   The original PNGs are staged under `assets/game_logos/` with normalized filenames
   and a source manifest. Optimize their delivery variants, map each image to its
   stable game ID, and use the same reusable image treatment for current and future
@@ -1098,6 +1098,19 @@ tests continue to cover overlapping filters, one-to-four participants, standings
 two-player results/rematches, ranking ties, local day/week rollover, and malformed
 saved data. The complete 107-test suite passes, `flutter analyze` is clean, and
 `git diff --check` passes. M9.9 catalog artwork replacement is next.
+
+2026-09-26 — Completed M9.9. All 18 supplied mini-game logos now have stable
+game-ID mappings ready for current and future catalog entries. The five playable
+games use the new artwork immediately. Each source image remains preserved, while
+the application bundles a 280 px 1× catalog image and the supplied 561 px image as
+its Flutter 2× resolution variant. The reusable card renderer uses contain fitting
+within the portrait card so the horizontal logo artwork remains readable on phones
+and tablets, retains the existing title and mode badges, and safely falls back to
+the game's icon when an image cannot load. Attribution and delivery details are
+recorded beside the source assets. Tests verify all 18 unique mappings, both bundled
+variants, current catalog integration, missing-asset fallback, and compact-screen
+layout. The complete 110-test suite passes, `flutter analyze` is clean, and
+`git diff --check` passes. M9.10 shared sound-pack migration is next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

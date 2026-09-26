@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../core/mini_game.dart';
 import '../core/match_options.dart';
+import 'game_logo_assets.dart';
 import '../games/paddle_duel/paddle_duel_view.dart';
-import '../games/paddle_duel/paddle_duel_preview.dart';
 import '../games/reaction_duel/reaction_duel_view.dart';
 import '../games/air_hockey/air_hockey_view.dart';
 import '../games/lane_dash/lane_dash_view.dart';
@@ -13,6 +13,7 @@ import '../games/tic_tac_toe/tic_tac_toe_view.dart';
 final gameCatalog = List<MiniGame>.unmodifiable([
   MiniGame(
     id: 'tic-tac-toe',
+    artworkAsset: gameLogoAssets['tic-tac-toe'],
     title: 'Tic-Tac-Toe',
     subtitle: 'Three marks. One winning line.',
     instructions:
@@ -32,6 +33,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
   ),
   MiniGame(
     id: 'lane-dash',
+    artworkAsset: gameLogoAssets['lane-dash'],
     title: 'Lane Dash',
     subtitle: 'Dodge, switch, finish.',
     instructions:
@@ -53,6 +55,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
   ),
   MiniGame(
     id: 'air-hockey',
+    artworkAsset: gameLogoAssets['air-hockey'],
     title: 'Air Hockey',
     subtitle: 'Fast puck. Faster hands.',
     instructions:
@@ -68,6 +71,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
   ),
   MiniGame(
     id: 'reaction-duel',
+    artworkAsset: gameLogoAssets['reaction-duel'],
     matchLabel: (options) => 'FIRST TO ${options.winningScore}',
     supportedModes: const {PlayMode.friend, PlayMode.bot},
     supportedPlayerCounts: const {PlayerCount.two},
@@ -84,7 +88,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
   ),
   MiniGame(
     id: 'paddle-duel',
-    preview: (_) => const CustomPaint(painter: PaddleDuelPreview()),
+    artworkAsset: gameLogoAssets['paddle-duel'],
     matchLabel: (options) => 'FIRST TO ${options.winningScore}',
     supportedModes: const {PlayMode.friend, PlayMode.bot},
     supportedPlayerCounts: const {PlayerCount.two},

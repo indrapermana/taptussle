@@ -2,8 +2,9 @@
 
 - Provided by the Tap Tussle project owner on 2026-09-26.
 - Intended for the Tap Tussle mini-game catalog.
-- These files preserve the supplied PNG artwork. M9.9 will create any optimized
-  delivery variants after the final catalog-card dimensions are established.
+- `catalog/` contains 280 px 1× delivery assets. Its `2.0x/` directory preserves
+  the supplied 561 px originals as Flutter resolution-aware variants. The
+  catalog directory is bundled in the application.
 
 | Game | Asset |
 | --- | --- |
