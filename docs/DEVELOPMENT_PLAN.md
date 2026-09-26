@@ -37,7 +37,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
-| M10 | Memory Match | M9 | In progress | M10.1 pure Dart rules, deterministic decks, solo/two-player turns, completion, and rematches implemented; 10 focused tests pass |
+| M10 | Memory Match | M9 | In progress | M10.1–M10.2 rules, lifecycle-safe reveal controller, responsive card grid, input locking, and hidden-card accessibility implemented; 16 focused tests pass |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
@@ -625,7 +625,7 @@ mode uses the selected grid size without an opening preview for either player.
 
 - [x] M10.1 Implement deterministic deck generation, pair matching, turn rules,
   move counting, completion, and rematch reshuffling in a pure Dart model.
-- [ ] M10.2 Build a responsive pure Flutter card grid with a short mismatch reveal
+- [x] M10.2 Build a responsive pure Flutter card grid with a short mismatch reveal
   delay, input locking during animations, pause/resume safety, and accessibility
   labels that do not expose hidden cards.
 - [ ] M10.3 Add solo play with Easy/Normal/Hard board sizes and local move/time
@@ -1154,6 +1154,22 @@ Ten focused tests cover layouts, deck invariants, validation, matching, mismatch
 resolution, solo/friend turns, scoring, completion, draws, immutability, and
 rematches. The complete 123-test suite passes, `flutter analyze` is clean, and
 `git diff --check` passes. M10.2 responsive Flutter board/controller work is next.
+
+2026-09-26 — Completed M10.2. Added a Memory Match controller that owns the
+opening-preview and mismatch-reveal timers, blocks card selection while either
+reveal is active, cancels callbacks on pause, rematch, and disposal, and resumes
+an interrupted reveal with a fresh bounded delay. Added a non-scrolling pure
+Flutter card grid that derives its columns, rows, spacing, and card aspect ratio
+from the selected difficulty and available screen size. Its status panel shows
+preview, mismatch, completion, solo move/pair progress, or the active two-player
+turn and pair scores. Hidden-card semantics identify only the card position;
+pair identity is exposed only after reveal. Six controller/widget tests cover
+preview locking, delayed mismatch resolution, pause/resume, rematch timer
+cancellation, disposal safety, compact-phone layout, and hidden-card semantics.
+Together with M10.1, all 16 focused Memory Match tests and the complete 129-test
+suite pass; `flutter analyze` is clean, formatting is unchanged, and
+`git diff --check` passes. M10.3 solo records and full solo/two-player game-flow
+integration are next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after
