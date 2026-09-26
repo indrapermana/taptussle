@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | Not started | Add catalog capabilities, player-count tabs, 1–4 participant setup, and reusable offline record storage before adding games that depend on them |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1 adds typed 1–4 player counts, solo/friend/bot modes, difficulty purpose, and ordered optional record metrics while preserving the existing two-player catalog |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -553,7 +553,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
 
 ## M9 — Player-count foundation and local records
 
-- [ ] M9.1 Replace the two-player-only catalog assumption with immutable game
+- [x] M9.1 Replace the two-player-only catalog assumption with immutable game
   capabilities: supported player counts, solo/friend/bot modes, whether difficulty
   represents a bot or a puzzle, and an optional record definition. Existing five
   games remain `2 players` and retain their current setup and results.
@@ -986,6 +986,14 @@ build thereafter.
 
 For each increment append: date, task IDs, short change description, tests/device
 evidence, unresolved issues, and next task. Implementation starts with M1.1.
+
+2026-09-26 — Completed M9.1. `MiniGame` now declares enum-backed supported player
+counts, solo/friend/bot modes, bot/puzzle/challenge difficulty purpose, and an
+optional ordered record definition with a required primary metric and tie-breakers.
+All five existing games explicitly remain two-player friend/bot games with bot
+difficulty and no records. Defaults preserve existing friend-only two-player test
+fixtures. Three focused metadata tests, the complete 85-test suite, and
+`flutter analyze` pass. M9.2 catalog tabs are next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

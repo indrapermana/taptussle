@@ -1,4 +1,4 @@
-enum PlayMode { friend, bot }
+enum PlayMode { friend, bot, solo }
 
 enum BotDifficulty {
   easy('Easy'),
@@ -54,7 +54,14 @@ class GamePreferences {
         difficulty: difficulty ?? this.difficulty,
       );
 
-  MatchOptions matchOptions(int winningScore) => mode == PlayMode.friend
-      ? MatchOptions.friend(winningScore: winningScore)
-      : MatchOptions.bot(difficulty: difficulty, winningScore: winningScore);
+  MatchOptions matchOptions(int winningScore) => switch (mode) {
+    PlayMode.friend => MatchOptions.friend(winningScore: winningScore),
+    PlayMode.bot => MatchOptions.bot(
+      difficulty: difficulty,
+      winningScore: winningScore,
+    ),
+    PlayMode.solo => throw StateError(
+      'Solo setup does not use two-player GamePreferences',
+    ),
+  };
 }

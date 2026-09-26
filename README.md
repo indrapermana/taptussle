@@ -83,6 +83,12 @@ Dependencies flow from `app` into modules, and from modules into `core`.
 import each other. A game exposes a Flutter widget through `MiniGame.build`;
 that widget may contain a Flame `GameWidget` or ordinary Flutter widgets.
 
+Each `MiniGame` also declares supported one-to-four player counts, supported
+solo/friend/bot modes, what its difficulty changes (bot, puzzle, challenge, or
+none), and optional ordered record metrics. Existing games remain explicit
+two-player friend/bot games. Record metadata defines comparison order only; record
+storage and catalog filtering are shared features introduced later in M9.
+
 `MatchSession` provides ready → playing → paused/finished, immutable score
 snapshots, an optional winning player index (0 or 1), and a round counter for
 resets. The shell owns/disposes the session. Games listen to it, stop updates and
