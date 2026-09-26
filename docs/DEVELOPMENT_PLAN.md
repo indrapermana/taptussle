@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.5 add typed capabilities, player-count catalog tabs, shared 1–4-player setup, and generalized scores, outcomes, and standings |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.6 add typed capabilities, shared 1–4-player setup/results, and an offline timestamped record repository with metadata-driven ranking |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -573,7 +573,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
 - [x] M9.5 Extend shared match outcomes beyond player indexes 0 and 1 so they can
   represent a winner among four participants, a draw, completion without a winner,
   and optional ordered standings. Preserve all existing score-based behavior.
-- [ ] M9.6 Add an offline record repository keyed by stable game ID, record type,
+- [x] M9.6 Add an offline record repository keyed by stable game ID, record type,
   difficulty/rules variant, and local completion timestamp. Define whether higher
   or lower values are better and support a secondary tie-breaker such as time or
   moves. Keep record logic out of individual screens.
@@ -1057,6 +1057,19 @@ The complete 98-test suite and `flutter analyze` pass. The supplied Shared Sound
 Pack v1 is staged unchanged with its README and manifest under
 `assets/audio/shared/`; its service migration is tracked as M9.10. M9.6 offline
 records are next.
+
+2026-09-26 — Completed M9.6. Added a shared offline record repository backed by
+`SharedPreferences`. Every immutable entry is keyed by stable game ID, record type,
+and rules/difficulty variant, carries a device-local completion timestamp, and
+stores exactly the metrics declared by the game's record definition. Ranking
+compares the primary metric followed by ordered tie-breakers, honoring each
+metric's higher-is-better or lower-is-better direction. Exact metric ties share a
+competition rank, while completion time gives their display a deterministic order.
+Writes are serialized and committed atomically in memory only after persistence
+succeeds; invalid keys/metrics are rejected and malformed stored rows are skipped.
+Four repository tests cover restart persistence, key isolation, mixed-direction
+ranking and ties, immutability, validation, and malformed data. The complete
+102-test suite and `flutter analyze` pass. M9.7 record time windows and UI are next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

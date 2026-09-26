@@ -89,8 +89,12 @@ that widget may contain a Flame `GameWidget` or ordinary Flutter widgets.
 Each `MiniGame` also declares supported one-to-four player counts, supported
 solo/friend/bot modes, what its difficulty changes (bot, puzzle, challenge, or
 none), and optional ordered record metrics. Existing games remain explicit
-two-player friend/bot games. Record metadata defines comparison order only; record
-storage and catalog filtering are shared features introduced later in M9.
+two-player friend/bot games. Record metadata defines comparison order. The shared
+offline repository stores immutable results by game ID, record type, and
+difficulty/rules variant, using device-local completion timestamps. It ranks the
+primary metric and tie-breakers in their declared direction; duration metric values
+are stored in milliseconds. Games submit results without owning persistence or
+ranking logic.
 
 `MatchOptions` carries an immutable ordered list of one to four participants.
 Each participant has a display name, human or bot ownership, a unique color and
