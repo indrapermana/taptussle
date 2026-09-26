@@ -84,6 +84,7 @@ class _TapTussleBootstrapState extends State<TapTussleBootstrap> {
 
   void _retry() {
     _settings?.removeListener(_applyFeedbackSettings);
+    _sounds?.dispose();
     setState(() {
       _settings = null;
       _sounds = null;
@@ -98,6 +99,7 @@ class _TapTussleBootstrapState extends State<TapTussleBootstrap> {
   @override
   void dispose() {
     _settings?.removeListener(_applyFeedbackSettings);
+    _sounds?.dispose();
     super.dispose();
   }
 

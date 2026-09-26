@@ -43,10 +43,8 @@ class _TicTacToeViewState extends State<TicTacToeView> {
     _reportedMoves = moves;
     if (controller.model.isFinished && !_reportedResult) {
       _reportedResult = true;
-      SoundEffects.play(SoundEffect.result);
-    } else {
-      SoundEffects.play(SoundEffect.click);
     }
+    SoundEffects.play(SoundEffect.pieceMove);
     HapticEffects.preview();
   }
 

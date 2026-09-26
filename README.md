@@ -109,6 +109,15 @@ token, and an optional bot difficulty. The friend and bot factories retain the
 existing two-player defaults, while solo and custom factories support future game
 setups without making individual games own participant configuration.
 
+All UI and gameplay audio routes through the shared `SoundEffects` facade and
+the bundled TapTussle Shared Sound Pack. The typed map includes UI, countdown,
+round, scoring, impact, movement, card, dice, puzzle, and result cues. The match
+shell emits one start and one final-result sound per round; games emit only their
+own moves, collisions, countdowns, and non-final score cues. Warm/cool scoring
+follows participant color, while bot matches distinguish human wins and losses.
+The service respects the master volume, suppresses near-simultaneous duplicate
+cues, stops playback in the background, and disposes its players with the app.
+
 Games supporting three or four players use the shared participant setup screen to
 choose a supported count and configure each ordered seat. It keeps at least one
 local human, prevents duplicate colors and tokens, and shows bot controls only

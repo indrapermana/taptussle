@@ -28,12 +28,15 @@ class MatchScreen extends StatefulWidget {
 class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
   late final MatchSession session;
   late final Widget gameView;
+  var _observedRound = 0;
+  var _observedPhase = MatchPhase.ready;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     session = MatchSession(options: widget.options);
+    session.addListener(_playSessionEffects);
     gameView =
         widget.game.buildWithPresentation?.call(
           session,
@@ -45,6 +48,25 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
     if (widget.startImmediately) session.start();
   }
 
+  void _playSessionEffects() {
+    if (session.round != _observedRound &&
+        session.phase == MatchPhase.playing) {
+      _observedRound = session.round;
+      SoundEffects.play(SoundEffect.roundStart);
+    }
+    if (_observedPhase != MatchPhase.finished &&
+        session.phase == MatchPhase.finished) {
+      SoundEffects.play(
+        resultEffectForMatch(
+          options: widget.options,
+          outcome: session.outcome,
+          winner: session.winner,
+        ),
+      );
+    }
+    _observedPhase = session.phase;
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) session.pause();
@@ -53,6 +75,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    session.removeListener(_playSessionEffects);
     session.dispose();
     super.dispose();
   }
@@ -71,7 +94,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
             tooltip: 'Change options',
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () {
-              SoundEffects.play(SoundEffect.click);
+              SoundEffects.play(SoundEffect.uiBack);
               if (session.phase == MatchPhase.playing) {
                 session.pause();
               } else {
@@ -92,7 +115,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
               IconButton(
                 tooltip: 'Pause match',
                 onPressed: () {
-                  SoundEffects.play(SoundEffect.click);
+                  SoundEffects.play(SoundEffect.uiTap);
                   session.pause();
                 },
                 icon: const Icon(Icons.pause_rounded),
@@ -129,7 +152,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                               standings: session.standings,
                               resultDetails: session.resultDetails,
                               onPrimaryAction: () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiConfirm);
                                 if (session.phase == MatchPhase.paused) {
                                   session.resume();
                                 } else {
@@ -137,11 +160,11 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                                 }
                               },
                               onChangeOptions: () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiBack);
                                 Navigator.of(context).pop();
                               },
                               onBackToGames: () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiBack);
                                 Navigator.of(
                                   context,
                                 ).popUntil((route) => route.isFirst);

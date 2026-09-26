@@ -230,7 +230,7 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
                   key: const ValueKey('start-configured-match'),
                   onPressed: _canPlay && !_saving
                       ? () {
-                          SoundEffects.play(SoundEffect.click);
+                          SoundEffects.play(SoundEffect.uiConfirm);
                           _play();
                         }
                       : null,

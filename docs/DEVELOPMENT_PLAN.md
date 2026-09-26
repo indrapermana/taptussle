@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.9 add typed capabilities, shared 1–4-player setup/results, offline records, local best windows, regression coverage, bounded history, and the complete catalog artwork map |
+| M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -595,7 +595,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   Solitaire, Cangkulan, and Chess. Preserve readable cropping at supported phone
   and tablet sizes, provide a safe fallback for a missing asset, record the source
   attribution, and add an asset/catalog test covering all 18 mappings.
-- [ ] M9.10 Replace the current shared UI and gameplay sounds with the supplied
+- [x] M9.10 Replace the current shared UI and gameplay sounds with the supplied
   TapTussle Shared Sound Pack v1, staged under `assets/audio/shared/`. Follow its
   included README and manifest: distinct tap/confirm/back/invalid cues, countdown
   and round-start cues, warm/cool scoring, light/heavy impacts, movement and
@@ -1111,6 +1111,22 @@ recorded beside the source assets. Tests verify all 18 unique mappings, both bun
 variants, current catalog integration, missing-asset fallback, and compact-screen
 layout. The complete 110-test suite passes, `flutter analyze` is clean, and
 `git diff --check` passes. M9.10 shared sound-pack migration is next.
+
+2026-09-26 — Completed M9.10 and M9. The shared sound service now maps all 20
+cues in TapTussle Shared Sound Pack v1: tap, confirm, back, invalid, countdown,
+round start, warm/cool scoring, soft/heavy impacts, movement, collection, cards,
+dice, matching, puzzle completion, and win/draw/lose results. The shared match
+shell owns round-start and final-result playback so games cannot emit duplicate
+result cues. Current games use color-aware scoring, branded collision sounds,
+Tic-Tac-Toe piece movement, Reaction Duel's signal cue, and Lane Dash countdown
+and crash cues. Bot results distinguish a human win from a loss; friend results
+remain celebratory. The three-player offline mixer still follows the 20% volume
+setting, stops on backgrounding, rate-limits duplicate cues, and now disposes its
+players with the app. Mapping/routing tests verify every enum value has one bundled
+asset and cover volume forwarding and result selection. The four superseded WAV
+files and their obsolete generator were removed. The complete 113-test suite
+passes, `flutter analyze` is clean, and `git diff --check` passes. M10 Memory Match
+is next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

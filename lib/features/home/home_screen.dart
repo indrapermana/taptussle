@@ -140,7 +140,7 @@ class _PlayerFilterTabs extends StatelessWidget {
 
   Future<void> _select(BuildContext context, CatalogPlayerFilter filter) async {
     if (filter == settings.catalogPlayerFilter) return;
-    SoundEffects.play(SoundEffect.click);
+    SoundEffects.play(SoundEffect.uiTap);
     try {
       await settings.setCatalogPlayerFilter(filter);
     } catch (_) {
@@ -334,7 +334,7 @@ class _LobbyHeader extends StatelessWidget {
         child: IconButton(
           tooltip: 'Settings',
           onPressed: () {
-            SoundEffects.play(SoundEffect.click);
+            SoundEffects.play(SoundEffect.uiTap);
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => SettingsScreen(settings: settings),
@@ -471,7 +471,7 @@ class _GameTileState extends State<_GameTile> {
   };
 
   void _open() {
-    SoundEffects.play(SoundEffect.click);
+    SoundEffects.play(SoundEffect.uiTap);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>

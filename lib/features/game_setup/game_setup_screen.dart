@@ -150,7 +150,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       onPressed: saving
                           ? null
                           : () {
-                              SoundEffects.play(SoundEffect.click);
+                              SoundEffects.play(SoundEffect.uiTap);
                               _save(
                                 () => widget.settings.setFavourite(
                                   widget.game.id,
@@ -196,7 +196,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                         onPressed: saving
                             ? null
                             : () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiConfirm);
                                 _startSolo();
                               },
                       ),
@@ -213,7 +213,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                         onPressed: saving
                             ? null
                             : () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiTap);
                                 Navigator.of(context).push(
                                   MaterialPageRoute<void>(
                                     builder: (_) => ParticipantSetupScreen(
@@ -235,7 +235,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                         onPressed: saving
                             ? null
                             : () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiConfirm);
                                 _startFriend();
                               },
                       ),
@@ -252,7 +252,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                         onPressed: saving
                             ? null
                             : () {
-                                SoundEffects.play(SoundEffect.click);
+                                SoundEffects.play(SoundEffect.uiTap);
                                 Navigator.of(context).push(
                                   MaterialPageRoute<void>(
                                     builder: (_) => BotDifficultyScreen(
@@ -497,7 +497,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
                   onPressed: saving
                       ? null
                       : () {
-                          SoundEffects.play(SoundEffect.click);
+                          SoundEffects.play(SoundEffect.uiConfirm);
                           _play();
                         },
                   icon: const Icon(Icons.play_arrow_rounded),

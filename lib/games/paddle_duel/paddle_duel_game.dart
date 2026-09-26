@@ -50,20 +50,23 @@ class PaddleDuelGame extends Game {
     var remaining = math.min(dt, .1);
     while (remaining > .000001) {
       final step = math.min(remaining, 1 / 120);
-      final oldTotal = model.scores[0] + model.scores[1];
+      final oldScores = List<int>.of(model.scores);
       final oldPaddleHits = model.paddleHitCount;
       bot?.update(model, step);
       model.update(step);
       remaining -= step;
       if (oldPaddleHits != model.paddleHitCount) {
-        SoundEffects.play(SoundEffect.paddleHit);
+        SoundEffects.play(SoundEffect.impactSoft);
         HapticEffects.paddleHit();
       }
-      if (oldTotal != model.scores[0] + model.scores[1]) {
+      if (oldScores[0] != model.scores[0] || oldScores[1] != model.scores[1]) {
         bot?.reset();
-        SoundEffects.play(
-          model.winner == null ? SoundEffect.score : SoundEffect.result,
-        );
+        if (model.winner == null) {
+          final scoringPlayer = model.scores[0] > oldScores[0] ? 0 : 1;
+          SoundEffects.play(
+            scoreEffectForParticipant(session.options, scoringPlayer),
+          );
+        }
         session.reportScore(
           model.scores[0],
           model.scores[1],

@@ -69,7 +69,6 @@ flutter:
     - assets/fonts/fredoka/OFL.txt
     - assets/game_logos/catalog/
     - assets/fonts/lilita_one/OFL.txt
-    - assets/sounds/
 
   fonts:
     - family: Fredoka

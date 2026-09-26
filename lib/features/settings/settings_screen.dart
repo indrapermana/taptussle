@@ -112,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         key: const ValueKey('preview-sound'),
                         onPressed: volume == 0
                             ? null
-                            : () => SoundEffects.play(SoundEffect.click),
+                            : () => SoundEffects.play(SoundEffect.uiTap),
                         icon: const Icon(Icons.play_arrow_rounded),
                         label: const Text('Preview sound'),
                       ),
@@ -153,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           backgroundColor: TapTussleColors.gold,
                         ),
                         onPressed: () {
-                          SoundEffects.play(SoundEffect.click);
+                          SoundEffects.play(SoundEffect.uiTap);
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => GraphicsPreviewScreen(
@@ -236,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onSelectionChanged: saving
                               ? null
                               : (selection) async {
-                                  SoundEffects.play(SoundEffect.click);
+                                  SoundEffects.play(SoundEffect.uiTap);
                                   await widget.settings.setWinningScore(
                                     selection.single,
                                   );

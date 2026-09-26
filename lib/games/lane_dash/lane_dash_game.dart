@@ -21,12 +21,16 @@ class LaneDashGame extends Game {
   final LaneDashModel model;
   final LaneDashBot? bot;
   final _reportedProgress = [0, 0];
+  final _reportedCollisions = [0, 0];
+  var _reportedCountdown = 3;
   bool _stopped = false;
 
   void resetMatch() {
     model.reset();
     bot?.reset();
     _reportedProgress[0] = _reportedProgress[1] = 0;
+    _reportedCollisions[0] = _reportedCollisions[1] = 0;
+    _reportedCountdown = 3;
   }
 
   void stopMatch() {
@@ -44,10 +48,22 @@ class LaneDashGame extends Game {
     if (_stopped || session.phase != MatchPhase.playing) return;
     bot?.update(model, dt);
     model.update(dt);
+    final countdown = model.countdown.ceil();
+    if (countdown != _reportedCountdown) {
+      _reportedCountdown = countdown;
+      SoundEffects.play(
+        countdown == 0 ? SoundEffect.countdownGo : SoundEffect.countdownTick,
+      );
+    }
+    if (model.collisionCount[0] != _reportedCollisions[0] ||
+        model.collisionCount[1] != _reportedCollisions[1]) {
+      _reportedCollisions[0] = model.collisionCount[0];
+      _reportedCollisions[1] = model.collisionCount[1];
+      SoundEffects.play(SoundEffect.impactHeavy);
+    }
     final progress = [model.distance[0].round(), model.distance[1].round()];
     final result = model.result;
     if (result == LaneDashResult.draw || result == LaneDashResult.timeout) {
-      SoundEffects.play(SoundEffect.result);
       session.reportNonPointResult(
         winner: null,
         scores: progress,
@@ -57,7 +73,6 @@ class LaneDashGame extends Game {
       );
     } else if (result == LaneDashResult.playerOne ||
         result == LaneDashResult.playerTwo) {
-      SoundEffects.play(SoundEffect.result);
       final winner = result == LaneDashResult.playerOne ? 0 : 1;
       final loser = 1 - winner;
       session.reportNonPointResult(

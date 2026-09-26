@@ -45,15 +45,18 @@ class AirHockeyGame extends Game {
     model.update(dt);
     if (model.hitCount != _hits) {
       _hits = model.hitCount;
-      SoundEffects.play(SoundEffect.paddleHit);
+      SoundEffects.play(SoundEffect.impactSoft);
       HapticEffects.paddleHit();
     }
     final next = model.scores[0] + model.scores[1];
     if (next != _total) {
       _total = next;
-      SoundEffects.play(
-        model.winner == null ? SoundEffect.score : SoundEffect.result,
-      );
+      if (model.winner == null) {
+        final scoringPlayer = model.scores[0] > session.scores[0] ? 0 : 1;
+        SoundEffects.play(
+          scoreEffectForParticipant(session.options, scoringPlayer),
+        );
+      }
       session.reportScore(
         model.scores[0],
         model.scores[1],

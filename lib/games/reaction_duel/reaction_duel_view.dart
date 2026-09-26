@@ -22,6 +22,8 @@ class ReactionDuelView extends StatefulWidget {
 class _ReactionDuelViewState extends State<ReactionDuelView> {
   late final ReactionDuelController controller;
   int _reportedTotal = 0;
+  final _reportedScores = [0, 0];
+  var _reportedPhase = ReactionPhase.waiting;
   int _round = -1;
 
   @override
@@ -37,6 +39,7 @@ class _ReactionDuelViewState extends State<ReactionDuelView> {
     if (_round != widget.session.round) {
       _round = widget.session.round;
       _reportedTotal = 0;
+      _reportedScores[0] = _reportedScores[1] = 0;
       controller.resetMatch();
       return;
     }
@@ -49,14 +52,23 @@ class _ReactionDuelViewState extends State<ReactionDuelView> {
   }
 
   void _playEffects() {
+    if (controller.phase != _reportedPhase) {
+      _reportedPhase = controller.phase;
+      if (controller.phase == ReactionPhase.signal) {
+        SoundEffects.play(SoundEffect.countdownGo);
+      }
+    }
     final total = controller.scores[0] + controller.scores[1];
     if (total <= _reportedTotal) return;
     _reportedTotal = total;
-    SoundEffects.play(
-      widget.session.phase == MatchPhase.finished
-          ? SoundEffect.result
-          : SoundEffect.score,
-    );
+    if (widget.session.phase != MatchPhase.finished) {
+      final scoringPlayer = controller.scores[0] > _reportedScores[0] ? 0 : 1;
+      SoundEffects.play(
+        scoreEffectForParticipant(widget.options, scoringPlayer),
+      );
+    }
+    _reportedScores[0] = controller.scores[0];
+    _reportedScores[1] = controller.scores[1];
     HapticEffects.preview();
   }
 
