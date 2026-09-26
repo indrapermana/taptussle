@@ -45,6 +45,9 @@ services with an animated progress bar before opening the game catalog.
 Choose a game, then select **Play vs Friend** or **Play vs Bot**. Bot mode offers
 Easy, Normal, and Hard. Game setup also lets you favourite a game. Saved favourites
 appear first in the selection list while the remaining games retain catalog order.
+The catalog tabs filter games by **1 Player**, **2 Players**, or **Up to 4 Players**
+and remember the last selection. Games that support both two and three/four players
+appear in both compatible tabs; favourites remain first inside the active tab.
 
 Paddle Duel uses these controls and match rules:
 

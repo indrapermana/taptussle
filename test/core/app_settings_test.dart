@@ -14,6 +14,7 @@ void main() {
     expect(settings.vibrationEnabled, isTrue);
     expect(settings.resolution, ResolutionPreset.native);
     expect(settings.frameRate, FrameRatePreset.fps60);
+    expect(settings.catalogPlayerFilter, CatalogPlayerFilter.twoPlayers);
     await settings.setWinningScore(5);
     await settings.setEffectsVolume(.35);
     final restored = AppSettings(prefs);
@@ -28,9 +29,24 @@ void main() {
     expect(settings.vibrationEnabled, isFalse);
     await settings.setResolution(ResolutionPreset.balanced);
     await settings.setFrameRate(FrameRatePreset.fps30);
+    await settings.setCatalogPlayerFilter(CatalogPlayerFilter.upToFourPlayers);
     final graphicsRestored = AppSettings(prefs);
     addTearDown(graphicsRestored.dispose);
     expect(graphicsRestored.resolution, ResolutionPreset.balanced);
     expect(graphicsRestored.frameRate, FrameRatePreset.fps30);
+    expect(
+      graphicsRestored.catalogPlayerFilter,
+      CatalogPlayerFilter.upToFourPlayers,
+    );
+  });
+
+  test('invalid catalog filter falls back to two players', () async {
+    SharedPreferences.setMockInitialValues({
+      'catalogPlayerFilter': 'removed-filter',
+    });
+    final settings = AppSettings(await SharedPreferences.getInstance());
+    addTearDown(settings.dispose);
+
+    expect(settings.catalogPlayerFilter, CatalogPlayerFilter.twoPlayers);
   });
 }

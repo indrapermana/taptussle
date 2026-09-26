@@ -23,6 +23,15 @@ enum FrameRatePreset {
   final int framesPerSecond;
 }
 
+enum CatalogPlayerFilter {
+  onePlayer('1 Player'),
+  twoPlayers('2 Players'),
+  upToFourPlayers('Up to 4 Players');
+
+  const CatalogPlayerFilter(this.label);
+  final String label;
+}
+
 class AppSettings extends ChangeNotifier {
   AppSettings(this._preferences) {
     final saved = _preferences.get('winningScore');
@@ -44,6 +53,10 @@ class AppSettings extends ChangeNotifier {
       (value) => value.name == _preferences.getString('frameRatePreset'),
       orElse: () => FrameRatePreset.fps60,
     );
+    _catalogPlayerFilter = CatalogPlayerFilter.values.firstWhere(
+      (value) => value.name == _preferences.getString('catalogPlayerFilter'),
+      orElse: () => CatalogPlayerFilter.twoPlayers,
+    );
   }
 
   static const allowedScores = [5, 7, 11];
@@ -62,6 +75,8 @@ class AppSettings extends ChangeNotifier {
   ResolutionPreset get resolution => _resolution;
   late FrameRatePreset _frameRate;
   FrameRatePreset get frameRate => _frameRate;
+  late CatalogPlayerFilter _catalogPlayerFilter;
+  CatalogPlayerFilter get catalogPlayerFilter => _catalogPlayerFilter;
 
   // Serialize writes so rapid callers cannot overwrite each other's favourites.
   Future<void> _write(Future<void> Function() action) {
@@ -121,6 +136,15 @@ class AppSettings extends ChangeNotifier {
     _frameRate = value;
     notifyListeners();
   });
+
+  Future<void> setCatalogPlayerFilter(CatalogPlayerFilter value) =>
+      _write(() async {
+        if (!await _preferences.setString('catalogPlayerFilter', value.name)) {
+          throw StateError('Could not save player filter');
+        }
+        _catalogPlayerFilter = value;
+        notifyListeners();
+      });
 
   final Map<String, GamePreferences> _gamePreferences = {};
 

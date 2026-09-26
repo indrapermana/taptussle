@@ -184,6 +184,78 @@ void main() {
     expect(restoredAlpha.left, lessThan(restoredBeta.left));
   });
 
+  testWidgets('player tabs filter overlaps and keep favourites first', (
+    tester,
+  ) async {
+    final settings = await settingsFor(tester, size: const Size(390, 1000));
+    MiniGame fixture(String id, Set<PlayerCount> counts) => MiniGame(
+      id: id,
+      title: id,
+      subtitle: 'Test game',
+      instructions: 'Test',
+      icon: Icons.games,
+      supportedPlayerCounts: counts,
+      build: (_, options) => const SizedBox(),
+    );
+    final games = [
+      fixture('Solo', {PlayerCount.one}),
+      fixture('Two', {PlayerCount.two}),
+      fixture('Flexible', {
+        PlayerCount.two,
+        PlayerCount.three,
+        PlayerCount.four,
+      }),
+      fixture('Four', {PlayerCount.four}),
+    ];
+    await settings.setFavourite('Flexible', true);
+    await tester.pumpWidget(TapTussleApp(settings: settings, games: games));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('game-card-Solo')), findsNothing);
+    expect(find.byKey(const ValueKey('game-card-Two')), findsOneWidget);
+    expect(find.text('2–4P'), findsOneWidget);
+    final flexible = tester.getRect(
+      find.byKey(const ValueKey('game-card-Flexible')),
+    );
+    final two = tester.getRect(find.byKey(const ValueKey('game-card-Two')));
+    expect(flexible.left, lessThan(two.left));
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('game-card-Solo')), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-card-Flexible')), findsNothing);
+    expect(find.text('1P'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('player-filter-upToFourPlayers')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('game-card-Solo')), findsNothing);
+    expect(find.byKey(const ValueKey('game-card-Two')), findsNothing);
+    expect(find.byKey(const ValueKey('game-card-Flexible')), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-card-Four')), findsOneWidget);
+
+    final restored = AppSettings(await SharedPreferences.getInstance());
+    addTearDown(restored.dispose);
+    expect(restored.catalogPlayerFilter, CatalogPlayerFilter.upToFourPlayers);
+  });
+
+  testWidgets('empty player filter shows an intentional empty state', (
+    tester,
+  ) async {
+    final settings = await settingsFor(tester);
+    await tester.pumpWidget(TapTussleApp(settings: settings));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('empty-game-catalog')), findsOneWidget);
+    expect(find.text('0 GAMES'), findsOneWidget);
+    expect(find.text('MORE GAMES ARE COMING'), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
+  });
+
   testWidgets('saved bot selection opens on the separate difficulty page', (
     tester,
   ) async {

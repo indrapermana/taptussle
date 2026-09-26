@@ -17,88 +17,242 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: settings,
-    builder: (context, _) => Scaffold(
-      body: TapTussleBackdrop(
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: CustomScrollView(
-                key: const PageStorageKey('game-selection'),
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _LobbyHeader(settings: settings),
-                          const SizedBox(height: 22),
-                          const _RivalBanner(),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.sports_esports_rounded,
-                                size: 19,
-                                color: TapTussleColors.gold,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'CHOOSE YOUR BATTLE',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(
-                                        fontFamily: 'Lilita One',
-                                        color: Colors.white,
-                                        letterSpacing: 1.1,
-                                      ),
+    builder: (context, _) {
+      final visibleGames = favouritesFirst(
+        games
+            .where((game) => _matchesFilter(game, settings.catalogPlayerFilter))
+            .toList(),
+        settings.favouriteIds,
+      );
+      return Scaffold(
+        body: TapTussleBackdrop(
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: CustomScrollView(
+                  key: const PageStorageKey('game-selection'),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _LobbyHeader(settings: settings),
+                            const SizedBox(height: 22),
+                            const _RivalBanner(),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.sports_esports_rounded,
+                                  size: 19,
+                                  color: TapTussleColors.gold,
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                '${games.length} GAMES',
-                                style: const TextStyle(
-                                  color: TapTussleColors.mutedText,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'CHOOSE YOUR BATTLE',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontFamily: 'Lilita One',
+                                          color: Colors.white,
+                                          letterSpacing: 1.1,
+                                        ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 10),
+                                Text(
+                                  '${visibleGames.length} GAMES',
+                                  style: const TextStyle(
+                                    color: TapTussleColors.mutedText,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            _PlayerFilterTabs(settings: settings),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 260,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: .86,
+                    if (visibleGames.isEmpty)
+                      const SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverToBoxAdapter(child: _EmptyCatalog()),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 260,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                childAspectRatio: .86,
+                              ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _GameTile(
+                              game: visibleGames[index],
+                              settings: settings,
+                            ),
+                            childCount: visibleGames.length,
                           ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final game = favouritesFirst(
-                          games,
-                          settings.favouriteIds,
-                        )[index];
-                        return _GameTile(game: game, settings: settings);
-                      }, childCount: games.length),
-                    ),
-                  ),
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 28)),
-                ],
+                        ),
+                      ),
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 28)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+bool _matchesFilter(
+  MiniGame game,
+  CatalogPlayerFilter filter,
+) => switch (filter) {
+  CatalogPlayerFilter.onePlayer => game.supportsPlayerCount(PlayerCount.one),
+  CatalogPlayerFilter.twoPlayers => game.supportsPlayerCount(PlayerCount.two),
+  CatalogPlayerFilter.upToFourPlayers =>
+    game.supportsPlayerCount(PlayerCount.three) ||
+        game.supportsPlayerCount(PlayerCount.four),
+};
+
+class _PlayerFilterTabs extends StatelessWidget {
+  const _PlayerFilterTabs({required this.settings});
+
+  final AppSettings settings;
+
+  Future<void> _select(BuildContext context, CatalogPlayerFilter filter) async {
+    if (filter == settings.catalogPlayerFilter) return;
+    SoundEffects.play(SoundEffect.click);
+    try {
+      await settings.setCatalogPlayerFilter(filter);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save player filter.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+      color: TapTussleColors.panel,
+      borderRadius: BorderRadius.circular(17),
+      border: Border.all(color: TapTussleColors.panelBorder),
+    ),
+    child: Row(
+      children: CatalogPlayerFilter.values
+          .map(
+            (filter) => Expanded(
+              child: _PlayerFilterTab(
+                filter: filter,
+                selected: filter == settings.catalogPlayerFilter,
+                onPressed: () => _select(context, filter),
+              ),
+            ),
+          )
+          .toList(),
+    ),
+  );
+}
+
+class _PlayerFilterTab extends StatelessWidget {
+  const _PlayerFilterTab({
+    required this.filter,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final CatalogPlayerFilter filter;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    button: true,
+    label: filter.label,
+    child: Material(
+      color: selected ? TapTussleColors.gold : Colors.transparent,
+      borderRadius: BorderRadius.circular(13),
+      child: InkWell(
+        key: ValueKey('player-filter-${filter.name}'),
+        borderRadius: BorderRadius.circular(13),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              filter.label.toUpperCase(),
+              maxLines: 1,
+              style: TextStyle(
+                color: selected
+                    ? TapTussleColors.midnight
+                    : TapTussleColors.mutedText,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: .5,
               ),
             ),
           ),
         ),
       ),
+    ),
+  );
+}
+
+class _EmptyCatalog extends StatelessWidget {
+  const _EmptyCatalog();
+
+  @override
+  Widget build(BuildContext context) => const ArcadePanel(
+    key: ValueKey('empty-game-catalog'),
+    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 34),
+    child: Column(
+      children: [
+        Icon(
+          Icons.sports_esports_outlined,
+          color: TapTussleColors.electricBlue,
+          size: 46,
+        ),
+        SizedBox(height: 14),
+        Text(
+          'MORE GAMES ARE COMING',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Lilita One',
+            color: Colors.white,
+            fontSize: 20,
+            letterSpacing: .7,
+          ),
+        ),
+        SizedBox(height: 7),
+        Text(
+          'Choose another player tab to keep playing.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: TapTussleColors.mutedText, height: 1.4),
+        ),
+      ],
     ),
   );
 }
@@ -461,11 +615,19 @@ class _ModeBadges extends StatelessWidget {
 
   final MiniGame game;
 
+  String get playerLabel {
+    final counts =
+        game.supportedPlayerCounts.map((count) => count.value).toList()..sort();
+    return counts.first == counts.last
+        ? '${counts.first}P'
+        : '${counts.first}–${counts.last}P';
+  }
+
   @override
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      const _TinyBadge(label: '2P'),
+      _TinyBadge(label: playerLabel),
       if (game.supportedModes.contains(PlayMode.bot)) ...[
         const SizedBox(width: 5),
         const _TinyBadge(label: 'BOT'),

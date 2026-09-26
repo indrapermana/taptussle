@@ -75,7 +75,9 @@ class MiniGame {
     Set<PlayerCount> supportedPlayerCounts = const {PlayerCount.two},
     this.difficultyType = DifficultyType.none,
     this.recordDefinition,
-  }) : supportedModes = Set.unmodifiable(supportedModes),
+  }) : assert(supportedModes.isNotEmpty),
+       assert(supportedPlayerCounts.isNotEmpty),
+       supportedModes = Set.unmodifiable(supportedModes),
        supportedPlayerCounts = Set.unmodifiable(supportedPlayerCounts);
 
   final String id;

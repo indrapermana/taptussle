@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1 adds typed 1–4 player counts, solo/friend/bot modes, difficulty purpose, and ordered optional record metrics while preserving the existing two-player catalog |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.2 add typed capabilities plus persisted 1 Player, 2 Players, and Up to 4 Players catalog tabs with overlapping membership, favourites-first ordering, and an empty state |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -557,7 +557,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   capabilities: supported player counts, solo/friend/bot modes, whether difficulty
   represents a bot or a puzzle, and an optional record definition. Existing five
   games remain `2 players` and retain their current setup and results.
-- [ ] M9.2 Add catalog tabs before the grid: **1 Player**, **2 Players**, and
+- [x] M9.2 Add catalog tabs before the grid: **1 Player**, **2 Players**, and
   **Up to 4 Players**. A game may appear in more than one tab when it supports
   multiple counts. Favourites stay first within the active filtered list, followed
   by stable catalog order. Persist the last selected tab and provide an intentional
@@ -994,6 +994,15 @@ All five existing games explicitly remain two-player friend/bot games with bot
 difficulty and no records. Defaults preserve existing friend-only two-player test
 fixtures. Three focused metadata tests, the complete 85-test suite, and
 `flutter analyze` pass. M9.2 catalog tabs are next.
+
+2026-09-26 — Completed M9.2. The arcade catalog now opens on the backward-compatible
+2 Players tab and persists selection among 1 Player, 2 Players, and Up to 4 Players.
+Games supporting two plus three/four players appear in both compatible tabs. The
+home screen filters before applying favourites-first stable ordering, reports the
+visible count, derives player badges from metadata, and shows an intentional empty
+state. Invalid saved filters safely fall back to 2 Players. The complete 88-test
+suite and compact enlarged-text coverage pass; `flutter analyze` is clean. M9.3 is
+next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after
