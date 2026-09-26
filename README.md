@@ -110,13 +110,18 @@ existing two-player defaults, while solo and custom factories support future gam
 setups without making individual games own participant configuration.
 
 All UI and gameplay audio routes through the shared `SoundEffects` facade and
-the bundled TapTussle Shared Sound Pack. The typed map includes UI, countdown,
+the bundled TapTussle sound packs. The typed map includes UI, countdown,
 round, scoring, impact, movement, card, dice, puzzle, and result cues. The match
 shell emits one start and one final-result sound per round; games emit only their
 own moves, collisions, countdowns, and non-final score cues. Warm/cool scoring
 follows participant color, while bot matches distinguish human wins and losses.
 The service respects the master volume, suppresses near-simultaneous duplicate
 cues, stops playback in the background, and disposes its players with the app.
+The v2 additions in the same shared audio directory provide card
+draw/place/shuffle, board capture,
+round reveal, liquid pour, metal movement, snake collection/collision, Ludo home,
+and level-up cues for M10–M22. `snakeBoost` is mapped but must remain unused in
+M16 because the confirmed Slither-style Snakes design has no boost mechanic.
 
 Games supporting three or four players use the shared participant setup screen to
 choose a supported count and configure each ordered seat. It keeps at least one

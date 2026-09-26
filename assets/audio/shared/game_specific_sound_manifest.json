@@ -1,0 +1,92 @@
+{
+  "pack_name": "TapTussle Game-Specific Sound Pack",
+  "version": "2.0-addon",
+  "format": "WAV, mono, 16-bit PCM, 44.1 kHz",
+  "notes": [
+    "Original synthesized effects; no third-party samples.",
+    "Designed to complement TapTussle Shared Sound Pack v1.",
+    "snake_boost.wav is future-ready only because the current M16 plan omits speed boost."
+  ],
+  "sounds": [
+    {
+      "file": "card_draw.wav",
+      "games": [
+        "Solitaire",
+        "Cangkulan"
+      ]
+    },
+    {
+      "file": "card_place.wav",
+      "games": [
+        "Solitaire",
+        "Cangkulan"
+      ]
+    },
+    {
+      "file": "card_shuffle.wav",
+      "games": [
+        "Solitaire",
+        "Cangkulan"
+      ]
+    },
+    {
+      "file": "board_capture.wav",
+      "games": [
+        "Checkers",
+        "Chess",
+        "Mancala",
+        "Ludo"
+      ]
+    },
+    {
+      "file": "round_reveal.wav",
+      "games": [
+        "Rock Paper Scissors"
+      ]
+    },
+    {
+      "file": "liquid_pour.wav",
+      "games": [
+        "Water Sort Puzzle"
+      ]
+    },
+    {
+      "file": "metal_slide.wav",
+      "games": [
+        "Nuts and Bolts"
+      ]
+    },
+    {
+      "file": "snake_eat.wav",
+      "games": [
+        "Slither-style Snakes"
+      ]
+    },
+    {
+      "file": "snake_boost.wav",
+      "games": [
+        "Slither-style Snakes"
+      ],
+      "status": "future/unused in current M16"
+    },
+    {
+      "file": "snake_crash.wav",
+      "games": [
+        "Slither-style Snakes"
+      ]
+    },
+    {
+      "file": "token_home.wav",
+      "games": [
+        "Ludo"
+      ]
+    },
+    {
+      "file": "level_up.wav",
+      "games": [
+        "Nuts and Bolts",
+        "Water Sort Puzzle"
+      ]
+    }
+  ]
+}

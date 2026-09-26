@@ -18,7 +18,7 @@ class _RecordingSoundPlayer implements SoundPlayer {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('every shared sound effect resolves to one bundled asset', () async {
+  test('every mapped sound effect resolves to one bundled asset', () async {
     expect(soundEffectAssets.keys.toSet(), SoundEffect.values.toSet());
     expect(
       soundEffectAssets.values.toSet(),

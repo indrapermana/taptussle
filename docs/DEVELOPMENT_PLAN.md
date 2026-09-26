@@ -1128,6 +1128,15 @@ files and their obsolete generator were removed. The complete 113-test suite
 passes, `flutter analyze` is clean, and `git diff --check` passes. M10 Memory Match
 is next.
 
+2026-09-26 — Staged TapTussle Game-Specific Sound Pack v2 for M10–M22 in the
+existing `assets/audio/shared/` directory and extended the typed sound map with all
+12 new cues: card draw/place/shuffle, board capture, round reveal, liquid pour,
+metal slide, snake eat/boost/crash, token home, and level up. Its README and
+manifest use distinct filenames beside the original pack documentation so both
+sets retain their ownership and usage notes. `snakeBoost` is future-ready but
+must remain unused in M16 because the confirmed Slither-style design has no boost
+mechanic. No current game behavior changed.
+
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after
 M22. M8 is Done as the branding and automated foundation checkpoint: final icons
