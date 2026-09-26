@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tap_tussle/core/app_settings.dart';
+import 'package:tap_tussle/core/game_record_repository.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/mini_game.dart';
 
@@ -114,4 +115,52 @@ void main() {
     expect(solo.playerLabel(0), 'You');
     expect(solo.winningScore, 9);
   });
+
+  test(
+    'record storage preserves settings written by earlier versions',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'winningScore': 11,
+        'favouriteGameIds': ['paddle-duel', 'air-hockey'],
+        'catalogPlayerFilter': CatalogPlayerFilter.twoPlayers.name,
+        'gameSetup.paddle-duel': '{"mode":"bot","difficulty":"hard"}',
+      });
+      final preferences = await SharedPreferences.getInstance();
+      final settings = AppSettings(preferences);
+      addTearDown(settings.dispose);
+
+      await settings.recordRepository.addRecord(
+        definition: recordDefinition,
+        record: GameRecord(
+          key: const GameRecordKey(
+            gameId: 'future-solo-game',
+            recordType: 'solo',
+            variant: 'normal',
+          ),
+          completedAt: DateTime(2026, 9, 26, 10),
+          metrics: const {'score': 42},
+        ),
+      );
+
+      final restored = AppSettings(preferences);
+      addTearDown(restored.dispose);
+      expect(restored.winningScore, 11);
+      expect(restored.favouriteIds, {'paddle-duel', 'air-hockey'});
+      expect(restored.catalogPlayerFilter, CatalogPlayerFilter.twoPlayers);
+      expect(restored.preferencesFor('paddle-duel').mode, PlayMode.bot);
+      expect(
+        restored.preferencesFor('paddle-duel').difficulty,
+        BotDifficulty.hard,
+      );
+    },
+  );
 }
+
+final recordDefinition = GameRecordDefinition(
+  primaryMetric: const RecordMetricDefinition(
+    id: 'score',
+    label: 'Score',
+    format: RecordMetricFormat.integer,
+    sortOrder: RecordSortOrder.higherIsBetter,
+  ),
+);

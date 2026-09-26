@@ -107,12 +107,21 @@ class GameRecordBests {
 }
 
 class GameRecordRepository extends ChangeNotifier {
-  GameRecordRepository(this._preferences)
-    : _records = _readRecords(_preferences);
+  GameRecordRepository(this._preferences, {this.maxRecordsPerKey = 250})
+    : _records = _readRecords(_preferences) {
+    if (maxRecordsPerKey <= 0) {
+      throw ArgumentError.value(
+        maxRecordsPerKey,
+        'maxRecordsPerKey',
+        'Must be positive',
+      );
+    }
+  }
 
   static const storageKey = 'gameRecords.v1';
 
   final SharedPreferences _preferences;
+  final int maxRecordsPerKey;
   List<GameRecord> _records;
   Future<void> _pendingWrite = Future.value();
 
@@ -126,6 +135,11 @@ class GameRecordRepository extends ChangeNotifier {
     _validateKey(record.key);
     _validateMetrics(definition, record.metrics);
     final next = List<GameRecord>.of(_records)..add(record);
+    _retainBoundedHistory(
+      records: next,
+      key: record.key,
+      definition: definition,
+    );
     final encoded = jsonEncode(next.map((entry) => entry.toJson()).toList());
     if (!await _preferences.setString(storageKey, encoded)) {
       throw StateError('Could not save game record');
@@ -231,6 +245,30 @@ class GameRecordRepository extends ChangeNotifier {
     final result = _pendingWrite.then((_) => action());
     _pendingWrite = result.catchError((Object _) {});
     return result;
+  }
+
+  void _retainBoundedHistory({
+    required List<GameRecord> records,
+    required GameRecordKey key,
+    required GameRecordDefinition definition,
+  }) {
+    final matching = records.where((record) => record.key == key).toList();
+    if (matching.length <= maxRecordsPerKey) return;
+
+    // Keep the all-time best even when it is old, then fill the remaining
+    // capacity with the newest attempts used by the daily and weekly windows.
+    final best = matching.reduce(
+      (left, right) =>
+          _compareMetrics(definition, left, right) <= 0 ? left : right,
+    );
+    final retained = Set<GameRecord>.identity()..add(best);
+    for (final candidate in matching.reversed) {
+      if (retained.length == maxRecordsPerKey) break;
+      retained.add(candidate);
+    }
+    records.removeWhere(
+      (candidate) => candidate.key == key && !retained.contains(candidate),
+    );
   }
 
   static List<GameRecord> _readRecords(SharedPreferences preferences) {

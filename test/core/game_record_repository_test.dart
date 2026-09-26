@@ -205,4 +205,51 @@ void main() {
       expect(nextMonday.overall!.record.metrics['level'], 10);
     },
   );
+
+  test(
+    'bounded history preserves the all-time best and newest attempts per key',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final preferences = await SharedPreferences.getInstance();
+      final repository = GameRecordRepository(preferences, maxRecordsPerKey: 3);
+      const normalKey = GameRecordKey(
+        gameId: 'water-sort',
+        recordType: 'solo-level',
+        variant: 'normal',
+      );
+
+      for (final record in [
+        result(20, level: 20, moves: 40, timeMs: 120000),
+        result(21, level: 2, moves: 30, timeMs: 100000),
+        result(22, level: 3, moves: 20, timeMs: 90000),
+        result(23, level: 4, moves: 10, timeMs: 80000),
+      ]) {
+        await repository.addRecord(
+          definition: recordDefinition,
+          record: record,
+        );
+      }
+      await repository.addRecord(
+        definition: recordDefinition,
+        record: result(24, level: 1, moves: 10, timeMs: 60000, key: normalKey),
+      );
+
+      expect(
+        repository.recordsFor(easyKey).map((record) => record.completedAt.day),
+        [20, 22, 23],
+      );
+      expect(repository.recordsFor(normalKey), hasLength(1));
+      expect(
+        repository
+            .bestRecord(key: easyKey, definition: recordDefinition)!
+            .record
+            .metrics['level'],
+        20,
+      );
+
+      final restored = GameRecordRepository(preferences, maxRecordsPerKey: 3);
+      expect(restored.recordsFor(easyKey), hasLength(3));
+      expect(restored.recordsFor(normalKey), hasLength(1));
+    },
+  );
 }

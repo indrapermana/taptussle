@@ -97,7 +97,9 @@ are stored in milliseconds. Games submit results without owning persistence or
 ranking logic. For solo games with records, the shared setup panel derives Daily
 Best from the current local date, Weekly Best from Monday–Sunday, and Overall Best
 from the matching history. These windows are recomputed from timestamps when read,
-so calendar rollover does not require a background job.
+so calendar rollover does not require a background job. History is capped at 250
+attempts per game, record type, and variant. Retention keeps the all-time best and
+the newest attempts, preserving Overall Best while bounding local storage.
 
 `MatchOptions` carries an immutable ordered list of one to four participants.
 Each participant has a display name, human or bot ownership, a unique color and

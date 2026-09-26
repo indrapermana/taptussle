@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.7 add typed capabilities, shared 1–4-player setup/results, offline ranked records, and local Daily/Weekly/Overall best presentation |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.8 add typed capabilities, shared 1–4-player setup/results, offline ranked records, local best windows, migration/regression coverage, and bounded history |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -581,7 +581,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   solo games. Daily means the current local calendar day; weekly means the current
   local Monday–Sunday week. Recompute buckets from saved timestamped results so
   rollover requires no scheduled job. Records remain local and device-clock based.
-- [ ] M9.8 Add migration and regression tests for existing favourites, remembered
+- [x] M9.8 Add migration and regression tests for existing favourites, remembered
   two-player setup, points-to-win, and results. Add focused tests for overlapping
   filters, 1–4 participants, standings, record ranking/ties, day/week rollover,
   malformed saved data, and bounded history retention.
@@ -1085,6 +1085,19 @@ while games may override their stable variant mapping. Window-boundary and widge
 tests cover Monday rollover, empty states, live refresh, integer/duration display,
 and setup integration. The complete 105-test suite and `flutter analyze` pass.
 M9.8 migration, regression, and retention coverage is next.
+
+2026-09-26 — Completed M9.8. Record history is now bounded to 250 attempts per
+game ID, record type, and variant. When a bucket reaches its limit, retention keeps
+its all-time best result plus the newest attempts so Daily/Weekly windows remain
+useful without losing Overall Best. Focused retention coverage verifies independent
+variant limits, persistence after restart, and preservation of an older best.
+Migration regression coverage seeds settings written before local records existed,
+writes a record, and confirms favourites, remembered two-player bot difficulty,
+points-to-win, and the persisted catalog filter remain unchanged. Existing focused
+tests continue to cover overlapping filters, one-to-four participants, standings,
+two-player results/rematches, ranking ties, local day/week rollover, and malformed
+saved data. The complete 107-test suite passes, `flutter analyze` is clean, and
+`git diff --check` passes. M9.9 catalog artwork replacement is next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after
