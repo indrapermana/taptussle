@@ -585,11 +585,22 @@ Snakes & Ladders and would use a Flame real-time architecture.
   two-player setup, points-to-win, and results. Add focused tests for overlapping
   filters, 1–4 participants, standings, record ranking/ties, day/week rollover,
   malformed saved data, and bounded history retention.
+- [ ] M9.9 Replace the mini-game catalog artwork with the 18 supplied game logos.
+  The original PNGs are staged under `assets/game_logos/` with normalized filenames
+  and a source manifest. Optimize their delivery variants, map each image to its
+  stable game ID, and use the same reusable image treatment for current and future
+  catalog cards. Include Paddle Duel, Reaction Duel, Air Hockey, Lane Dash,
+  Tic-Tac-Toe, Memory Match, Rock Paper Scissors, Snakes & Ladders, Sudoku,
+  Checkers, Mancala, Slither-style Snakes, Water Sort Puzzle, Ludo, Nuts & Bolts,
+  Solitaire, Cangkulan, and Chess. Preserve readable cropping at supported phone
+  and tablet sizes, provide a safe fallback for a missing asset, record the source
+  attribution, and add an asset/catalog test covering all 18 mappings.
 
 Acceptance: all existing games behave unchanged; each catalog tab contains only
 compatible games; a fixture game can complete with one through four participants;
-records survive restart and roll into the correct local day/week; no network or
-account is introduced.
+records survive restart and roll into the correct local day/week; all 18 catalog
+entries resolve to their supplied logo without clipping key artwork; no network
+or account is introduced.
 
 ## M10 — Memory Match
 

@@ -66,6 +66,7 @@ flutter:
   assets:
     - assets/branding/splash_screen.png
     - assets/fonts/fredoka/OFL.txt
+    - assets/game_logos/
     - assets/fonts/lilita_one/OFL.txt
     - assets/sounds/
 
