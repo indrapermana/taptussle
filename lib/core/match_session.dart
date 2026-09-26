@@ -27,6 +27,8 @@ class MatchSession extends ChangeNotifier {
   List<int> _standings = const [];
   String? get resultDetails => _resultDetails;
   String? _resultDetails;
+  Map<String, num>? get recordMetrics => _recordMetrics;
+  Map<String, num>? _recordMetrics;
 
   List<int> _emptyScores() =>
       List<int>.unmodifiable(List<int>.filled(options.participants.length, 0));
@@ -39,6 +41,7 @@ class MatchSession extends ChangeNotifier {
     _outcome = null;
     _standings = const [];
     _resultDetails = null;
+    _recordMetrics = null;
     _phase = MatchPhase.playing;
     notifyListeners();
   }
@@ -92,12 +95,14 @@ class MatchSession extends ChangeNotifier {
     String? details,
     List<int>? scores,
     List<int> standings = const [],
+    Map<String, num>? recordMetrics,
   }) {
     reportResult(
       outcome: MatchOutcome.completed,
       scores: scores ?? _scores,
       details: details,
       standings: standings,
+      recordMetrics: recordMetrics,
     );
   }
 
@@ -107,6 +112,7 @@ class MatchSession extends ChangeNotifier {
     int? winner,
     String? details,
     List<int> standings = const [],
+    Map<String, num>? recordMetrics,
   }) {
     if (_phase != MatchPhase.playing) return;
     if (outcome == MatchOutcome.winner) {
@@ -128,13 +134,29 @@ class MatchSession extends ChangeNotifier {
     }
     final nextScores = _validateScores(scores);
     final nextStandings = _validateStandings(standings);
+    final nextRecordMetrics = _validateRecordMetrics(recordMetrics);
     _scores = nextScores;
     _standings = nextStandings;
     _winner = winner;
     _outcome = outcome;
     _resultDetails = details;
+    _recordMetrics = nextRecordMetrics;
     _phase = MatchPhase.finished;
     notifyListeners();
+  }
+
+  Map<String, num>? _validateRecordMetrics(Map<String, num>? metrics) {
+    if (metrics == null) return null;
+    if (metrics.isEmpty ||
+        metrics.keys.any((key) => key.trim().isEmpty) ||
+        metrics.values.any((value) => !value.isFinite || value < 0)) {
+      throw ArgumentError.value(
+        metrics,
+        'recordMetrics',
+        'Record metrics must have non-empty IDs and finite non-negative values',
+      );
+    }
+    return Map<String, num>.unmodifiable(metrics);
   }
 
   /// Completes a race or other result that is not a point score.

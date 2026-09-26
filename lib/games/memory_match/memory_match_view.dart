@@ -1,18 +1,101 @@
 import 'package:flutter/material.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/match_options.dart';
+import '../../core/match_session.dart';
+import '../../core/haptic_service.dart';
+import '../../core/sound_service.dart';
 import 'memory_match_controller.dart';
 import 'memory_match_model.dart';
+
+class MemoryMatchView extends StatefulWidget {
+  const MemoryMatchView({
+    required this.session,
+    required this.options,
+    super.key,
+  });
+
+  final MatchSession session;
+  final MatchOptions options;
+
+  @override
+  State<MemoryMatchView> createState() => _MemoryMatchViewState();
+}
+
+class _MemoryMatchViewState extends State<MemoryMatchView> {
+  late final MemoryMatchController controller;
+  late int _observedRound;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = MemoryMatchController(
+      session: widget.session,
+      difficulty: MemoryMatchDifficulty.values[widget.options.difficulty.index],
+    );
+    _observedRound = widget.session.round;
+    widget.session.addListener(_handleSessionChange);
+    SoundEffects.play(SoundEffect.cardShuffle);
+  }
+
+  void _handleSessionChange() {
+    if (widget.session.round == _observedRound) return;
+    _observedRound = widget.session.round;
+    SoundEffects.play(SoundEffect.cardShuffle);
+  }
+
+  void _handleSelection(MemorySelectionResult result) {
+    switch (result) {
+      case MemorySelectionResult.firstCard:
+        SoundEffects.play(SoundEffect.cardFlip);
+        HapticEffects.preview();
+      case MemorySelectionResult.matched:
+      case MemorySelectionResult.completed:
+        SoundEffects.play(SoundEffect.cardFlip);
+        SoundEffects.play(SoundEffect.matchPair);
+        HapticEffects.paddleHit();
+      case MemorySelectionResult.mismatch:
+        SoundEffects.play(SoundEffect.cardFlip);
+        SoundEffects.play(SoundEffect.uiInvalid);
+        HapticEffects.preview();
+      case MemorySelectionResult.invalidPlayer:
+      case MemorySelectionResult.outOfBounds:
+      case MemorySelectionResult.wrongTurn:
+      case MemorySelectionResult.unavailable:
+      case MemorySelectionResult.awaitingMismatchResolution:
+      case MemorySelectionResult.matchFinished:
+        break;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_handleSessionChange);
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MemoryMatchBoard(
+    controller: controller,
+    playerLabels: widget.options.participants
+        .map((participant) => participant.displayName)
+        .toList(growable: false),
+    onSelection: _handleSelection,
+  );
+}
 
 class MemoryMatchBoard extends StatelessWidget {
   const MemoryMatchBoard({
     required this.controller,
     required this.playerLabels,
+    this.onSelection,
     super.key,
   }) : assert(playerLabels.length > 0 && playerLabels.length <= 2);
 
   final MemoryMatchController controller;
   final List<String> playerLabels;
+  final ValueChanged<MemorySelectionResult>? onSelection;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -47,10 +130,10 @@ class MemoryMatchBoard extends StatelessWidget {
                               (gridConstraints.maxHeight -
                                   spacing * (rows - 1)) /
                               rows;
-                          final aspectRatio = (cardWidth / cardHeight).clamp(
-                            .62,
-                            1.08,
-                          );
+                          // Use the exact available cell ratio so every row is
+                          // reachable even after the shared match HUD reduces
+                          // the board height on compact screens.
+                          final aspectRatio = cardWidth / cardHeight;
                           return GridView.builder(
                             key: const ValueKey('memory-card-grid'),
                             physics: const NeverScrollableScrollPhysics(),
@@ -67,7 +150,10 @@ class MemoryMatchBoard extends StatelessWidget {
                               card: model.cardAt(index),
                               faceUp: controller.isCardFaceUp(index),
                               enabled: controller.acceptsInput,
-                              onTap: () => controller.selectCard(index),
+                              onTap: () {
+                                final result = controller.selectCard(index);
+                                onSelection?.call(result);
+                              },
                             ),
                           );
                         },

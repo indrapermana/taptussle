@@ -8,9 +8,12 @@ void main() {
   Widget buildPlaceholder(_, _) => const SizedBox.shrink();
 
   test('existing catalog keeps its two-player bot capabilities', () {
-    expect(gameCatalog, hasLength(5));
+    final existingGames = gameCatalog.where(
+      (game) => game.id != 'memory-match',
+    );
+    expect(gameCatalog, hasLength(6));
 
-    for (final game in gameCatalog) {
+    for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
       expect(game.supportsPlayerCount(PlayerCount.two), isTrue);
       expect(game.supportsPlayerCount(PlayerCount.one), isFalse);
@@ -18,6 +21,26 @@ void main() {
       expect(game.difficultyType, DifficultyType.bot);
       expect(game.recordDefinition, isNull);
     }
+  });
+
+  test('Memory Match supports solo records and two-player friend mode', () {
+    final game = gameCatalog.singleWhere((game) => game.id == 'memory-match');
+
+    expect(game.supportedPlayerCounts, {PlayerCount.one, PlayerCount.two});
+    expect(game.supportedModes, {PlayMode.solo, PlayMode.friend});
+    expect(game.difficultyType, DifficultyType.challenge);
+    expect(game.recordDefinition!.primaryMetric.id, 'moves');
+    expect(
+      game.recordDefinition!.primaryMetric.sortOrder,
+      RecordSortOrder.lowerIsBetter,
+    );
+    expect(game.recordDefinition!.tieBreakers.single.id, 'time');
+    expect(
+      game.recordVariantFor(
+        const GamePreferences(difficulty: BotDifficulty.hard),
+      ),
+      'hard',
+    );
   });
 
   test('defaults preserve the original friend-only two-player contract', () {

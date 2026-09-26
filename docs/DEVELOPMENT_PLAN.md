@@ -37,7 +37,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
-| M10 | Memory Match | M9 | In progress | M10.1–M10.2 rules, lifecycle-safe reveal controller, responsive card grid, input locking, and hidden-card accessibility implemented; 16 focused tests pass |
+| M10 | Memory Match | M9 | In progress | M10.1–M10.4 complete with 136 passing tests; M10.5 adds fair Easy/Normal/Hard bots, then M10.6 closes physical iPhone/Android verification |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
@@ -45,10 +45,10 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
-| M18 | Ludo | M17 | Not started | Full 2–4-player board game with optional bots and standings |
+| M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
-| M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with seven-card deal and draw-until-match rules |
+| M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
@@ -138,6 +138,10 @@ and widget tests focused on input, lifecycle, and shared-shell integration.
 The model owns legal state transitions and outcomes. A bot observes allowed
 state and calls the same legal input methods as a person. The Flame game or
 Flutter controller advances time and publishes scores/results to `MatchSession`.
+Solo games publish immutable record metrics with their completed match result;
+the shared match shell validates and persists those metrics using the catalog's
+record definition and selected difficulty variant. Game views do not write to
+local storage directly.
 The view maps device input and owns widget listeners, without embedding rules,
 bot decisions, or rendering loops. Register the module only in
 `lib/app/game_catalog.dart`; games must not import one another.
@@ -530,6 +534,15 @@ the acceptance criterion. Each addition must have complete rules, lifecycle,
 device testing, and an appropriate bot or score system. Limit implementation to
 one game milestone at a time so unfinished games do not weaken completed games.
 
+For M10–M22, every game supporting two or more participants must include a bot
+option as well as same-device friend play. Bots must use only information legally
+available to a human, act after a visible human-like delay, submit moves through
+the same rule model, and cancel pending actions across pause, result, rematch, and
+disposal. Show Easy, Normal, and Hard only when the game contains meaningful
+decisions that can produce honest difficulty differences; chance-only games use
+one transparent bot profile. This requirement does not apply to solo-only games:
+Sudoku, Slither-style Snakes, Water Sort Puzzle, Nuts and Bolts, and Solitaire.
+
 The recommended next five are:
 
 1. **Memory Match** — supports one player and two local players. Solo records can
@@ -538,9 +551,10 @@ The recommended next five are:
 2. **Rock Paper Scissors** — supports friend and bot play. Same-device friend mode
    must conceal each choice until both players lock in; a simple open button per
    player would reveal choices and make the game unfair.
-3. **Snakes & Ladders** — supports two, three, or four local players, with optional
-   bots added only after the human turn flow is stable. Its setup validates player
-   count, names/colors, turn order, token movement, and multi-player results.
+3. **Snakes & Ladders** — supports two, three, or four participants and requires
+   bots after the human turn flow is stable. Its setup validates player count,
+   names/colors, turn order, token movement, and multi-player results. The bot uses
+   one honest profile because the confirmed rules provide no strategic move choice.
 4. **Sudoku** — solo only. Easy, Normal, and Hard describe puzzle difficulty rather
    than bot strength. Record completion time and mistakes separately per difficulty.
 5. **Checkers** — supports friend and bot play. Implement mandatory captures,
@@ -628,10 +642,19 @@ mode uses the selected grid size without an opening preview for either player.
 - [x] M10.2 Build a responsive pure Flutter card grid with a short mismatch reveal
   delay, input locking during animations, pause/resume safety, and accessibility
   labels that do not expose hidden cards.
-- [ ] M10.3 Add solo play with Easy/Normal/Hard board sizes and local move/time
+- [x] M10.3 Add solo play with Easy/Normal/Hard board sizes and local move/time
   records; add two-player play with pair scores and alternating turns.
-- [ ] M10.4 Integrate sounds, haptics, favourites, player-count filters, results,
-  records, and physical-device verification.
+- [x] M10.4 Integrate sounds, haptics, favourites, player-count filters, results,
+  records, rematch, and automated end-to-end coverage.
+- [ ] M10.5 Add Play vs Bot with human-like delays and fair Easy, Normal, and
+  Hard memory policies. Bots may remember only cards they have legitimately seen:
+  Easy retains a small, fallible recent memory; Normal retains more observations
+  with occasional forgetting; Hard retains every revealed card but never reads
+  hidden identities. Cancel pending bot selections safely on pause, result,
+  rematch, change-options, and disposal, and test that every chosen move is legal.
+- [ ] M10.6 Verify solo, friend, and all three bot difficulties on physical iPhone
+  and Android devices, including previews, turn changes, results, rematch,
+  favourites, records, sounds, vibration-on/off, and lifecycle interruption.
 
 ## M11 — Rock Paper Scissors
 
@@ -656,8 +679,9 @@ no extra turns, multiple tokens may share a square without capture, and reaching
   deterministic dice injection, transitions, and movement tests before UI work.
 - [ ] M12.2 Build a readable board and animated token path for two to four local
   players, including clear current-turn and final-standings states.
-- [ ] M12.3 Add optional bots with visible roll delays and no dice advantage; bot
-  difficulty is not shown unless meaningful decisions exist in the chosen rules.
+- [ ] M12.3 Add required bot support with visible roll delays and no dice
+  advantage. Because the confirmed rules contain no move decision beyond rolling,
+  expose one honest bot profile rather than artificial Easy/Normal/Hard choices.
 - [ ] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
   effects, and physical devices.
 
@@ -913,8 +937,9 @@ catalog tabs.
   actions, turn progression, round completion, and match results in a pure model.
 - [ ] M21.3 Build a privacy-aware same-device card UI with pass-device/hidden-hand
   transitions so another participant cannot see a player's cards.
-- [ ] M21.4 Add optional bots with human-like delays and Easy, Normal, and Hard
-  policies only where the agreed rules permit meaningful decisions.
+- [ ] M21.4 Add required bots for any supported 2–4-player mixture containing at
+  least one local human. Use human-like delays and Easy, Normal, and Hard card
+  selection policies without reading hidden hands or future draw-pile order.
 - [ ] M21.5 Integrate 2–4 participant setup, restoration, results, rematch, effects,
   favourites, filters, lifecycle tests, and physical-device validation.
 
@@ -1170,6 +1195,56 @@ Together with M10.1, all 16 focused Memory Match tests and the complete 129-test
 suite pass; `flutter analyze` is clean, formatting is unchanged, and
 `git diff --check` passes. M10.3 solo records and full solo/two-player game-flow
 integration are next.
+
+2026-09-26 — Completed M10.3. Registered Memory Match in both the 1 Player and
+2 Players catalog tabs and added a shared challenge-difficulty route so solo and
+friend modes can select Easy, Normal, or Hard before starting. The immutable
+match options now carry that selection independently of bot configuration.
+Memory Match maps it to the 3×4, 4×4, or 4×6 board, reports live pair scores,
+and publishes solo completion, two-player winner, or draw results through the
+shared match session. Solo timing counts active play only, excluding paused app
+time, and the result includes move count and elapsed milliseconds. The match
+shell persists exactly one record per completed solo round, keyed by game,
+record type, and difficulty; ranking uses fewer moves first and shorter time as
+the tie-breaker. The shared setup records panel therefore presents Daily,
+Weekly, and Overall bests for the selected difficulty. Compact match-shell
+layout now sizes every card row from the exact available height. New coverage
+verifies result metrics, solo timing, two-player scores/winner, both setup
+routes, selected grid size, and difficulty-specific persistence. All 39 affected
+tests and the complete 135-test suite pass; `flutter analyze` is clean and
+`git diff --check` passes. M10.4 effects and automated integration checks are next.
+
+2026-09-27 — Completed the M10.4 implementation and automated integration work.
+Memory Match now plays the shared card-shuffle cue on each deal, card-flip cues
+for accepted selections, the pair-match cue with stronger haptic feedback for a
+match, and the invalid cue with light feedback for a mismatch. All feedback uses
+the shared volume and vibration services, so mute and vibration-off settings are
+respected. Added an injectable haptic interface for deterministic verification
+without changing the production platform implementation. The Memory Match flow
+tests now cover those event mappings alongside solo/friend difficulty, results,
+records, compact layout, and rematch behavior. Added a focused device integration
+journey covering the 1 Player filter, favourite toggle, Easy solo setup, full
+completion, saved record, result overlay, and rematch. All 136 host tests pass.
+
+Physical iPhone attempt: Flutter detected the connected iPhone `Indra` running
+iOS 26.6.2 (23G90), signed the application with team `ZFKPMMVU35`, and completed
+the focused integration-test Xcode build in 57.5 seconds. The Dart test runner
+did not attach after more than three minutes. A separate normal debug build also
+completed in 30.8 seconds but Xcode could not finish launching/attaching and
+returned `osascript: -2`. Flutter reported that Xcode was taking longer than
+expected to start debugging, matching the open M2 native test-transport blocker.
+No physical Android device was connected. Physical confirmation is tracked in
+M10.6; the M10.4 implementation and runnable integration journey are complete.
+
+2026-09-27 — Expanded Memory Match with M10.5 for fair Easy, Normal, and Hard
+bots and M10.6 for final solo/friend/bot physical-device verification. Audited
+M11–M22 and made bot play a requirement for every multiplayer game. Rock Paper
+Scissors, Checkers, Mancala, Ludo, and Chess already specified bots. Snakes &
+Ladders now requires a single honest delayed bot profile because its confirmed
+rules contain no strategic choice. Cangkulan now requires mixed human/bot support
+for two to four participants with fair hidden-information policies. Sudoku,
+Slither-style Snakes, Water Sort Puzzle, Nuts and Bolts, and Solitaire remain
+solo-only and therefore do not add a separate Play vs Bot mode.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

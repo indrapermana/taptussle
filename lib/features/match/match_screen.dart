@@ -6,6 +6,7 @@ import '../../core/match_options.dart';
 import '../../core/app_settings.dart';
 import '../../core/mini_game.dart';
 import '../../core/sound_service.dart';
+import '../../core/game_record_repository.dart';
 
 class MatchScreen extends StatefulWidget {
   const MatchScreen({
@@ -14,6 +15,8 @@ class MatchScreen extends StatefulWidget {
     this.resolution = ResolutionPreset.native,
     this.frameRate = FrameRatePreset.fps60,
     this.startImmediately = false,
+    this.recordRepository,
+    this.recordVariant,
     super.key,
   });
   final MiniGame game;
@@ -21,6 +24,8 @@ class MatchScreen extends StatefulWidget {
   final ResolutionPreset resolution;
   final FrameRatePreset frameRate;
   final bool startImmediately;
+  final GameRecordRepository? recordRepository;
+  final String? recordVariant;
   @override
   State<MatchScreen> createState() => _MatchScreenState();
 }
@@ -30,6 +35,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
   late final Widget gameView;
   var _observedRound = 0;
   var _observedPhase = MatchPhase.ready;
+  var _recordedRound = 0;
 
   @override
   void initState() {
@@ -63,8 +69,43 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
           winner: session.winner,
         ),
       );
+      _saveRecordIfAvailable();
     }
     _observedPhase = session.phase;
+  }
+
+  Future<void> _saveRecordIfAvailable() async {
+    final repository = widget.recordRepository;
+    final definition = widget.game.recordDefinition;
+    final metrics = session.recordMetrics;
+    if (repository == null ||
+        definition == null ||
+        metrics == null ||
+        widget.options.mode != PlayMode.solo ||
+        _recordedRound == session.round) {
+      return;
+    }
+    _recordedRound = session.round;
+    try {
+      await repository.addRecord(
+        definition: definition,
+        record: GameRecord(
+          key: GameRecordKey(
+            gameId: widget.game.id,
+            recordType: definition.recordType,
+            variant: widget.recordVariant ?? widget.options.difficulty.name,
+          ),
+          completedAt: DateTime.now(),
+          metrics: metrics,
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save this record.')),
+        );
+      }
+    }
   }
 
   @override

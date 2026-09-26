@@ -43,7 +43,10 @@ class MatchParticipant {
 /// Frozen at match creation. Games receive the same ordered participant list for
 /// solo, friend, bot, and future mixed multiplayer matches.
 class MatchOptions {
-  factory MatchOptions.friend({int winningScore = 7}) => MatchOptions._(
+  factory MatchOptions.friend({
+    int winningScore = 7,
+    BotDifficulty difficulty = BotDifficulty.normal,
+  }) => MatchOptions._(
     mode: PlayMode.friend,
     participants: const [
       MatchParticipant.human(
@@ -58,6 +61,7 @@ class MatchOptions {
       ),
     ],
     winningScore: winningScore,
+    difficulty: difficulty,
   );
 
   factory MatchOptions.bot({
@@ -79,6 +83,7 @@ class MatchOptions {
       ),
     ],
     winningScore: winningScore,
+    difficulty: difficulty,
   );
 
   factory MatchOptions.solo({
@@ -86,6 +91,7 @@ class MatchOptions {
     ParticipantColor color = ParticipantColor.mint,
     ParticipantToken token = ParticipantToken.circle,
     int winningScore = 7,
+    BotDifficulty difficulty = BotDifficulty.normal,
   }) => MatchOptions._(
     mode: PlayMode.solo,
     participants: [
@@ -96,22 +102,26 @@ class MatchOptions {
       ),
     ],
     winningScore: winningScore,
+    difficulty: difficulty,
   );
 
   factory MatchOptions.custom({
     required PlayMode mode,
     required List<MatchParticipant> participants,
     int winningScore = 7,
+    BotDifficulty difficulty = BotDifficulty.normal,
   }) => MatchOptions._(
     mode: mode,
     participants: participants,
     winningScore: winningScore,
+    difficulty: difficulty,
   );
 
   MatchOptions._({
     required this.mode,
     required List<MatchParticipant> participants,
     required this.winningScore,
+    required this.difficulty,
   }) : participants = List.unmodifiable(participants) {
     if (winningScore <= 0) {
       throw ArgumentError.value(
@@ -168,6 +178,10 @@ class MatchOptions {
   final List<MatchParticipant> participants;
   final int winningScore;
 
+  /// Easy/Normal/Hard selection for puzzle and challenge games. Bot matches
+  /// use the same value as their configured bot participant.
+  final BotDifficulty difficulty;
+
   /// Compatibility accessor for the existing one-bot games.
   BotDifficulty? get botDifficulty {
     for (final participant in participants) {
@@ -201,11 +215,17 @@ class GamePreferences {
       );
 
   MatchOptions matchOptions(int winningScore) => switch (mode) {
-    PlayMode.friend => MatchOptions.friend(winningScore: winningScore),
+    PlayMode.friend => MatchOptions.friend(
+      winningScore: winningScore,
+      difficulty: difficulty,
+    ),
     PlayMode.bot => MatchOptions.bot(
       difficulty: difficulty,
       winningScore: winningScore,
     ),
-    PlayMode.solo => MatchOptions.solo(winningScore: winningScore),
+    PlayMode.solo => MatchOptions.solo(
+      winningScore: winningScore,
+      difficulty: difficulty,
+    ),
   };
 }

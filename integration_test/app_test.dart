@@ -4,10 +4,12 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tap_tussle/app/tap_tussle_app.dart';
 import 'package:tap_tussle/core/app_settings.dart';
+import 'package:tap_tussle/core/game_record_repository.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_game.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
+import 'package:tap_tussle/games/memory_match/memory_match_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -126,5 +128,63 @@ void main() {
       settings.preferencesFor('paddle-duel').difficulty,
       BotDifficulty.hard,
     );
+  });
+
+  testWidgets('Memory Match solo journey saves a record and rematches', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('game-card-memory-match')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-solo')));
+    await tester.pumpAndSettle();
+    await setDifficulty(tester, BotDifficulty.easy);
+    await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+
+    var board = tester.widget<MemoryMatchBoard>(find.byType(MemoryMatchBoard));
+    for (var pair = 0; pair < board.controller.model.pairCount; pair++) {
+      final indexes = <int>[];
+      for (var index = 0; index < board.controller.model.cardCount; index++) {
+        if (board.controller.model.deck[index] == pair) indexes.add(index);
+      }
+      await tester.tap(find.byKey(ValueKey('memory-card-${indexes[0]}')));
+      await tester.pump();
+      await tester.tap(find.byKey(ValueKey('memory-card-${indexes[1]}')));
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Complete!'), findsOneWidget);
+    expect(
+      settings.recordRepository.recordsFor(
+        const GameRecordKey(
+          gameId: 'memory-match',
+          recordType: 'solo',
+          variant: 'easy',
+        ),
+      ),
+      hasLength(1),
+    );
+    await tester.tap(find.byKey(const ValueKey('play-again')));
+    await tester.pump();
+    board = tester.widget<MemoryMatchBoard>(find.byType(MemoryMatchBoard));
+    expect(board.controller.model.moveCount, 0);
+
+    await tester.tap(find.byTooltip('Pause match'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('change-options')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('game-record-bests')), findsOneWidget);
+    expect(find.text('Remove favourite'), findsOneWidget);
   });
 }

@@ -13,12 +13,14 @@ class MemoryMatchController extends ChangeNotifier {
     Random? random,
     this.mismatchRevealDuration = const Duration(milliseconds: 850),
     Duration? openingPreviewDuration,
+    DateTime Function()? now,
   }) : model = MemoryMatchModel(
          difficulty: difficulty,
          playerCount: session.options.participants.length,
          random: random,
        ),
-       _openingPreviewDuration = openingPreviewDuration {
+       _openingPreviewDuration = openingPreviewDuration,
+       _now = now ?? DateTime.now {
     session.addListener(_syncSession);
     _syncSession();
   }
@@ -27,6 +29,7 @@ class MemoryMatchController extends ChangeNotifier {
   final MemoryMatchModel model;
   final Duration mismatchRevealDuration;
   final Duration? _openingPreviewDuration;
+  final DateTime Function() _now;
   Timer? _previewTimer;
   Timer? _mismatchTimer;
   var _previewing = false;
@@ -34,6 +37,8 @@ class MemoryMatchController extends ChangeNotifier {
   var _observedPhase = MatchPhase.ready;
   var _hasStartedRound = false;
   var _disposed = false;
+  var _elapsedBeforeActive = Duration.zero;
+  DateTime? _activeStartedAt;
 
   bool get isPreviewing => _previewing;
   bool get isResolvingMismatch => _mismatchTimer?.isActive ?? false;
@@ -47,6 +52,12 @@ class MemoryMatchController extends ChangeNotifier {
   bool isCardFaceUp(int index) =>
       _previewing || model.cardAt(index).state != MemoryCardState.hidden;
 
+  Duration get elapsed {
+    final startedAt = _activeStartedAt;
+    return _elapsedBeforeActive +
+        (startedAt == null ? Duration.zero : _now().difference(startedAt));
+  }
+
   MemorySelectionResult selectCard(int index) {
     if (!acceptsInput) return MemorySelectionResult.unavailable;
     final result = model.selectCard(model.currentPlayer, index);
@@ -54,11 +65,21 @@ class MemoryMatchController extends ChangeNotifier {
       _scheduleMismatchResolution();
     }
     notifyListeners();
+    if (result == MemorySelectionResult.matched) {
+      session.reportScores(model.scores);
+    } else if (result == MemorySelectionResult.completed) {
+      _publishResult();
+    }
     return result;
   }
 
   void _syncSession() {
     if (_disposed) return;
+    final previousPhase = _observedPhase;
+    if (previousPhase == MatchPhase.playing &&
+        session.phase != MatchPhase.playing) {
+      _stopElapsedClock();
+    }
     final roundChanged = session.round != _observedRound;
     if (roundChanged) {
       _cancelTimers();
@@ -69,6 +90,8 @@ class MemoryMatchController extends ChangeNotifier {
         } else {
           _hasStartedRound = true;
         }
+        _elapsedBeforeActive = Duration.zero;
+        _activeStartedAt = null;
         _previewing = _previewDuration > Duration.zero;
       }
     }
@@ -78,6 +101,7 @@ class MemoryMatchController extends ChangeNotifier {
     if (session.phase != MatchPhase.playing) {
       _cancelTimers();
     } else if (roundChanged || phaseChanged) {
+      _activeStartedAt ??= _now();
       if (_previewing) {
         _schedulePreviewEnd();
       } else if (model.hasPendingMismatch) {
@@ -85,6 +109,50 @@ class MemoryMatchController extends ChangeNotifier {
       }
     }
     if (roundChanged || phaseChanged) notifyListeners();
+  }
+
+  void _stopElapsedClock() {
+    final startedAt = _activeStartedAt;
+    if (startedAt == null) return;
+    _elapsedBeforeActive += _now().difference(startedAt);
+    _activeStartedAt = null;
+  }
+
+  void _publishResult() {
+    _stopElapsedClock();
+    final elapsedMilliseconds = elapsed.inMilliseconds;
+    final details = model.playerCount == 1
+        ? 'Completed in ${model.moveCount} moves • '
+              '${_formatElapsed(elapsedMilliseconds)} • Play again?'
+        : '${session.options.playerLabel(0)} ${model.scores[0]}  •  '
+              '${session.options.playerLabel(1)} ${model.scores[1]}  •  '
+              'Play again?';
+    if (model.playerCount == 1) {
+      session.reportCompletion(
+        scores: model.scores,
+        details: details,
+        recordMetrics: {'moves': model.moveCount, 'time': elapsedMilliseconds},
+      );
+    } else if (model.isDraw) {
+      session.reportDrawScores(model.scores, details: details);
+    } else {
+      session.reportResult(
+        outcome: MatchOutcome.winner,
+        scores: model.scores,
+        winner: model.winner,
+        details: details,
+      );
+    }
+  }
+
+  String _formatElapsed(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+    final tenths = duration.inMilliseconds.remainder(1000) ~/ 100;
+    return minutes > 0
+        ? '$minutes:${seconds.toString().padLeft(2, '0')}'
+        : '$seconds.${tenths}s';
   }
 
   Duration get _previewDuration =>

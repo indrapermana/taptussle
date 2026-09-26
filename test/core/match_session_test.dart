@@ -119,4 +119,23 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('completion record metrics are immutable, validated, and reset', () {
+    final session = MatchSession(options: MatchOptions.solo())..start();
+    addTearDown(session.dispose);
+
+    session.reportCompletion(
+      scores: const [6],
+      recordMetrics: const {'moves': 9, 'time': 4200},
+    );
+    expect(session.recordMetrics, {'moves': 9, 'time': 4200});
+    expect(() => session.recordMetrics!['moves'] = 2, throwsUnsupportedError);
+
+    session.start();
+    expect(session.recordMetrics, isNull);
+    expect(
+      () => session.reportCompletion(recordMetrics: const {'time': -1}),
+      throwsArgumentError,
+    );
+  });
 }

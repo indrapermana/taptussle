@@ -240,9 +240,7 @@ void main() {
     expect(restored.catalogPlayerFilter, CatalogPlayerFilter.upToFourPlayers);
   });
 
-  testWidgets('empty player filter shows an intentional empty state', (
-    tester,
-  ) async {
+  testWidgets('one-player filter shows Memory Match only', (tester) async {
     final settings = await settingsFor(tester);
     await tester.pumpWidget(TapTussleApp(settings: settings));
     await tester.pumpAndSettle();
@@ -250,9 +248,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('empty-game-catalog')), findsOneWidget);
-    expect(find.text('0 GAMES'), findsOneWidget);
-    expect(find.text('MORE GAMES ARE COMING'), findsOneWidget);
+    expect(find.byKey(const ValueKey('empty-game-catalog')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('game-card-memory-match')),
+      findsOneWidget,
+    );
+    expect(find.text('1 GAME'), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 

@@ -42,6 +42,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 
   void _startFriend() {
+    if (widget.game.difficultyType == DifficultyType.challenge ||
+        widget.game.difficultyType == DifficultyType.puzzle) {
+      _openDifficulty(PlayMode.friend);
+      return;
+    }
     final preferences = widget.settings
         .preferencesFor(widget.game.id)
         .copyWith(mode: PlayMode.friend);
@@ -52,6 +57,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 
   void _startSolo() {
+    if (widget.game.difficultyType == DifficultyType.challenge ||
+        widget.game.difficultyType == DifficultyType.puzzle) {
+      _openDifficulty(PlayMode.solo);
+      return;
+    }
     final preferences = widget.settings
         .preferencesFor(widget.game.id)
         .copyWith(mode: PlayMode.solo);
@@ -61,6 +71,16 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     });
   }
 
+  void _openDifficulty(PlayMode mode) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => BotDifficultyScreen(
+        game: widget.game,
+        settings: widget.settings,
+        mode: mode,
+      ),
+    ),
+  );
+
   void _openMatch(GamePreferences preferences) => Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => MatchScreen(
@@ -69,6 +89,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
         resolution: widget.settings.resolution,
         frameRate: widget.settings.frameRate,
         startImmediately: true,
+        recordRepository: widget.settings.recordRepository,
+        recordVariant: widget.game.recordVariantFor(preferences),
       ),
     ),
   );
@@ -279,11 +301,13 @@ class BotDifficultyScreen extends StatefulWidget {
   const BotDifficultyScreen({
     required this.game,
     required this.settings,
+    this.mode = PlayMode.bot,
     super.key,
   });
 
   final MiniGame game;
   final AppSettings settings;
+  final PlayMode mode;
 
   @override
   State<BotDifficultyScreen> createState() => _BotDifficultyScreenState();
@@ -299,11 +323,19 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
     difficulty = widget.settings.preferencesFor(widget.game.id).difficulty;
   }
 
-  String get description => switch (difficulty) {
-    BotDifficulty.easy => 'More time to react and more frequent mistakes.',
-    BotDifficulty.normal => 'Balanced decisions with occasional mistakes.',
-    BotDifficulty.hard => 'Quicker reactions and stronger decisions.',
-  };
+  String get description => widget.mode == PlayMode.bot
+      ? switch (difficulty) {
+          BotDifficulty.easy =>
+            'More time to react and more frequent mistakes.',
+          BotDifficulty.normal =>
+            'Balanced decisions with occasional mistakes.',
+          BotDifficulty.hard => 'Quicker reactions and stronger decisions.',
+        }
+      : switch (difficulty) {
+          BotDifficulty.easy => 'A smaller board with more time to memorize.',
+          BotDifficulty.normal => 'A balanced board and a short preview.',
+          BotDifficulty.hard => 'The largest board with no opening preview.',
+        };
 
   Color get difficultyColor => switch (difficulty) {
     BotDifficulty.easy => TapTussleColors.electricBlue,
@@ -322,7 +354,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
     try {
       final preferences = widget.settings
           .preferencesFor(widget.game.id)
-          .copyWith(mode: PlayMode.bot, difficulty: difficulty);
+          .copyWith(mode: widget.mode, difficulty: difficulty);
       await widget.settings.saveGamePreferences(widget.game.id, preferences);
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -333,6 +365,8 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
               resolution: widget.settings.resolution,
               frameRate: widget.settings.frameRate,
               startImmediately: true,
+              recordRepository: widget.settings.recordRepository,
+              recordVariant: widget.game.recordVariantFor(preferences),
             ),
           ),
         );
@@ -350,7 +384,11 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Bot difficulty')),
+    appBar: AppBar(
+      title: Text(
+        widget.mode == PlayMode.bot ? 'Bot difficulty' : 'Game difficulty',
+      ),
+    ),
     body: TapTussleBackdrop(
       child: SafeArea(
         child: Center(
@@ -359,9 +397,13 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
               children: [
-                const _SectionHeading(
-                  icon: Icons.smart_toy_rounded,
-                  title: 'How tough should the bot be?',
+                _SectionHeading(
+                  icon: widget.mode == PlayMode.bot
+                      ? Icons.smart_toy_rounded
+                      : Icons.grid_view_rounded,
+                  title: widget.mode == PlayMode.bot
+                      ? 'How tough should the bot be?'
+                      : 'Choose your board',
                   color: TapTussleColors.gold,
                 ),
                 const SizedBox(height: 18),

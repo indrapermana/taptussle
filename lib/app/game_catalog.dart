@@ -8,9 +8,46 @@ import '../games/reaction_duel/reaction_duel_view.dart';
 import '../games/air_hockey/air_hockey_view.dart';
 import '../games/lane_dash/lane_dash_view.dart';
 import '../games/tic_tac_toe/tic_tac_toe_view.dart';
+import '../games/memory_match/memory_match_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'memory-match',
+    artworkAsset: gameLogoAssets['memory-match'],
+    title: 'Memory Match',
+    subtitle: 'Flip, remember, pair them all.',
+    instructions:
+        'Choose a difficulty, then flip two cards at a time. Matching cards '
+        'stay open. In solo play, find every pair in as few moves and as '
+        'little time as possible. With a friend, a match keeps your turn and '
+        'a mismatch passes it; the most pairs wins.',
+    icon: Icons.style_rounded,
+    supportedModes: const {PlayMode.solo, PlayMode.friend},
+    supportedPlayerCounts: const {PlayerCount.one, PlayerCount.two},
+    difficultyType: DifficultyType.challenge,
+    recordDefinition: GameRecordDefinition(
+      primaryMetric: const RecordMetricDefinition(
+        id: 'moves',
+        label: 'Moves',
+        format: RecordMetricFormat.integer,
+        sortOrder: RecordSortOrder.lowerIsBetter,
+      ),
+      tieBreakers: const [
+        RecordMetricDefinition(
+          id: 'time',
+          label: 'Time',
+          format: RecordMetricFormat.duration,
+          sortOrder: RecordSortOrder.lowerIsBetter,
+        ),
+      ],
+    ),
+    matchLabel: (options) => options.mode == PlayMode.solo
+        ? options.difficulty.label.toUpperCase()
+        : '${options.difficulty.label.toUpperCase()} • MOST PAIRS',
+    build: (session, options) =>
+        MemoryMatchView(session: session, options: options),
+  ),
   MiniGame(
     id: 'tic-tac-toe',
     artworkAsset: gameLogoAssets['tic-tac-toe'],

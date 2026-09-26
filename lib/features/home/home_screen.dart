@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
-                                  '${visibleGames.length} GAMES',
+                                  '${visibleGames.length} ${visibleGames.length == 1 ? 'GAME' : 'GAMES'}',
                                   style: const TextStyle(
                                     color: TapTussleColors.mutedText,
                                     fontSize: 11,
