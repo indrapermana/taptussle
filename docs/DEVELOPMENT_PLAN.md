@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.4 add typed capabilities, player-count catalog tabs, immutable participant lists, and shared solo or 2–4-player setup |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.5 add typed capabilities, player-count catalog tabs, shared 1–4-player setup, and generalized scores, outcomes, and standings |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -570,7 +570,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   by the selected game. Two-player games keep the current fast Friend/Bot path;
   multi-player games choose count first and configure each seat. Prevent duplicate
   colors and require at least one human for offline play.
-- [ ] M9.5 Extend shared match outcomes beyond player indexes 0 and 1 so they can
+- [x] M9.5 Extend shared match outcomes beyond player indexes 0 and 1 so they can
   represent a winner among four participants, a draw, completion without a winner,
   and optional ordered standings. Preserve all existing score-based behavior.
 - [ ] M9.6 Add an offline record repository keyed by stable game ID, record type,
@@ -595,6 +595,14 @@ Snakes & Ladders and would use a Flame real-time architecture.
   Solitaire, Cangkulan, and Chess. Preserve readable cropping at supported phone
   and tablet sizes, provide a safe fallback for a missing asset, record the source
   attribution, and add an asset/catalog test covering all 18 mappings.
+- [ ] M9.10 Replace the current shared UI and gameplay sounds with the supplied
+  TapTussle Shared Sound Pack v1, staged under `assets/audio/shared/`. Follow its
+  included README and manifest: distinct tap/confirm/back/invalid cues, countdown
+  and round-start cues, warm/cool scoring, light/heavy impacts, movement and
+  collection, card/dice/puzzle sounds, and separate win/draw/lose results. Keep
+  volume and lifecycle behavior compatible, avoid overlapping duplicate cues, map
+  each sound through the shared audio service, and add focused mapping/playback
+  tests before removing superseded files from `assets/sounds/`.
 
 Acceptance: all existing games behave unchanged; each catalog tab contains only
 compatible games; a fixture game can complete with one through four participants;
@@ -1036,6 +1044,19 @@ multi-player scoring and results remain M9.5. New widget coverage verifies a
 three-seat mixed match, unique identity choices, remembered bot difficulty, and a
 solo-only launch. The complete 94-test suite and `flutter analyze` pass. M9.5
 shared match outcomes are next.
+
+2026-09-26 — Completed M9.5. `MatchSession` now initializes one score per
+configured participant and accepts participant-ordered score updates for one to
+four players. Finished results distinguish a winner, a draw, and successful
+completion without a winner, with an optional validated ordering containing every
+participant exactly once. The shared result overlay displays winners at any seat,
+winnerless completion, multi-player scores, and ordered standings. Existing
+`reportScore`, `reportDraw`, and `reportNonPointResult` entry points remain intact,
+so all five current two-player games preserve their scoring and rematch behavior.
+The complete 98-test suite and `flutter analyze` pass. The supplied Shared Sound
+Pack v1 is staged unchanged with its README and manifest under
+`assets/audio/shared/`; its service migration is tracked as M9.10. M9.6 offline
+records are next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

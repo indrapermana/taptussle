@@ -104,12 +104,14 @@ local human, prevents duplicate colors and tokens, and shows bot controls only
 when the game's capabilities allow them. Existing two-player games retain their
 short Friend/Bot flow, and solo-only games start through a dedicated solo action.
 
-`MatchSession` provides ready → playing → paused/finished, immutable score
-snapshots, an optional winning player index (0 or 1), and a round counter for
-resets. The shell owns/disposes the session. Games listen to it, stop updates and
-input while not playing, reset when the round changes, and remove listeners on
-disposal. Games own their win rules and publish scores/results with
-`reportScore`; the shell does not calculate winners.
+`MatchSession` provides ready → playing → paused/finished, immutable
+participant-ordered score snapshots, an optional winning participant, explicit
+draw and winnerless-completion outcomes, optional ordered standings, and a round
+counter for resets. The shell owns/disposes the session. Games listen to it, stop
+updates and input while not playing, reset when the round changes, and remove
+listeners on disposal. Games own their win rules and publish scores/results; the
+shell does not calculate winners. The original two-player reporting methods remain
+available as compatibility adapters.
 
 Flame games normally use a model, optional bot, game adapter, and Flutter view.
 Pure Flutter games normally use a model, optional bot/controller, and view; they

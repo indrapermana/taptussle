@@ -1,0 +1,89 @@
+{
+  "pack_name": "TapTussle Shared Sound Pack",
+  "version": "1.0",
+  "format": "WAV, mono, 16-bit PCM, 44.1 kHz",
+  "created_for": "TapTussle",
+  "notes": "Original synthesized sound effects created for the TapTussle project. No third-party samples are used.",
+  "sounds": [
+    {
+      "file": "ui_tap.wav",
+      "use": "General taps and lightweight buttons"
+    },
+    {
+      "file": "ui_confirm.wav",
+      "use": "Confirm/apply/play actions"
+    },
+    {
+      "file": "ui_back.wav",
+      "use": "Back/cancel/close actions"
+    },
+    {
+      "file": "ui_invalid.wav",
+      "use": "Illegal move, unavailable action, false/invalid input"
+    },
+    {
+      "file": "countdown_tick.wav",
+      "use": "3-2-1 countdown ticks"
+    },
+    {
+      "file": "countdown_go.wav",
+      "use": "GO/start cue"
+    },
+    {
+      "file": "round_start.wav",
+      "use": "New round or match start"
+    },
+    {
+      "file": "score_warm.wav",
+      "use": "Warm/red player scores a point"
+    },
+    {
+      "file": "score_cool.wav",
+      "use": "Cool/blue player scores a point"
+    },
+    {
+      "file": "impact_soft.wav",
+      "use": "Puck/paddle/soft collision"
+    },
+    {
+      "file": "impact_heavy.wav",
+      "use": "Major collision, crash, strong hit"
+    },
+    {
+      "file": "piece_move.wav",
+      "use": "Board-game piece/token/chess/checkers move"
+    },
+    {
+      "file": "collect.wav",
+      "use": "Food, stone, token or reward pickup"
+    },
+    {
+      "file": "card_flip.wav",
+      "use": "Memory Match, Solitaire, Cangkulan card interaction"
+    },
+    {
+      "file": "dice_roll.wav",
+      "use": "Ludo and Snakes & Ladders"
+    },
+    {
+      "file": "match_pair.wav",
+      "use": "Memory Match successful pair"
+    },
+    {
+      "file": "puzzle_complete.wav",
+      "use": "Sudoku/Water Sort/Nuts & Bolts completion"
+    },
+    {
+      "file": "result_win.wav",
+      "use": "Win/result celebration"
+    },
+    {
+      "file": "result_draw.wav",
+      "use": "Draw/tie result"
+    },
+    {
+      "file": "result_lose.wav",
+      "use": "Loss result in solo/bot modes"
+    }
+  ]
+}

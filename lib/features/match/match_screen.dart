@@ -111,7 +111,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                       scores: session.scores,
                       matchLabel:
                           widget.game.matchLabel?.call(widget.options) ??
-                          '2 PLAYERS',
+                          '${widget.options.participants.length} ${widget.options.participants.length == 1 ? 'PLAYER' : 'PLAYERS'}',
                     ),
                     Expanded(
                       child: Stack(
@@ -126,6 +126,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                               scores: session.scores,
                               winner: session.winner,
                               outcome: session.outcome,
+                              standings: session.standings,
                               resultDetails: session.resultDetails,
                               onPrimaryAction: () {
                                 SoundEffects.play(SoundEffect.click);
@@ -289,6 +290,7 @@ class _MatchOverlay extends StatelessWidget {
     required this.scores,
     required this.winner,
     required this.outcome,
+    required this.standings,
     required this.resultDetails,
     required this.onPrimaryAction,
     required this.onChangeOptions,
@@ -301,6 +303,7 @@ class _MatchOverlay extends StatelessWidget {
   final List<int> scores;
   final int? winner;
   final MatchOutcome? outcome;
+  final List<int> standings;
   final String? resultDetails;
   final VoidCallback onPrimaryAction;
   final VoidCallback onChangeOptions;
@@ -309,9 +312,10 @@ class _MatchOverlay extends StatelessWidget {
   Color get accent {
     if (phase == MatchPhase.finished) {
       if (outcome == MatchOutcome.draw) return TapTussleColors.gold;
-      return winner == 1
-          ? TapTussleColors.rivalRed
-          : TapTussleColors.electricBlue;
+      if (outcome == MatchOutcome.completed) {
+        return TapTussleColors.electricBlue;
+      }
+      return _resultColors[winner!];
     }
     return phase == MatchPhase.paused
         ? TapTussleColors.gold
@@ -325,16 +329,18 @@ class _MatchOverlay extends StatelessWidget {
       PlayMode.bot => 'Ready to challenge the bot?',
     },
     MatchPhase.paused => 'Time out',
-    MatchPhase.finished =>
-      outcome == MatchOutcome.draw ? 'Draw!' : options.resultLabel(winner!),
+    MatchPhase.finished => switch (outcome!) {
+      MatchOutcome.winner => options.resultLabel(winner!),
+      MatchOutcome.draw => 'Draw!',
+      MatchOutcome.completed => 'Complete!',
+    },
     MatchPhase.playing => '',
   };
 
   String get details => switch (phase) {
     MatchPhase.ready => game.instructionsFor(options.mode),
     MatchPhase.paused => 'Catch your breath. Your match is right here.',
-    MatchPhase.finished =>
-      resultDetails ?? '${scores[0]} – ${scores[1]}  •  Another round?',
+    MatchPhase.finished => resultDetails ?? _defaultResultDetails,
     MatchPhase.playing => '',
   };
 
@@ -350,6 +356,32 @@ class _MatchOverlay extends StatelessWidget {
     MatchPhase.finished => 'play-again',
     MatchPhase.playing => 'match-action',
   };
+
+  String get _defaultResultDetails {
+    if (standings.isNotEmpty) {
+      final places = standings.indexed.map(
+        (entry) => '${entry.$1 + 1}. ${options.playerLabel(entry.$2)}',
+      );
+      return '${places.join('  •  ')}  •  Another round?';
+    }
+    final scoreLine = options.participants.indexed
+        .map((entry) => '${entry.$2.displayName} ${scores[entry.$1]}')
+        .join('  •  ');
+    return '$scoreLine  •  Another round?';
+  }
+
+  IconData get _resultIcon => switch (outcome) {
+    MatchOutcome.draw => Icons.handshake_rounded,
+    MatchOutcome.completed => Icons.check_circle_rounded,
+    _ => Icons.emoji_events_rounded,
+  };
+
+  static const _resultColors = [
+    Color(0xFF9DF5CF),
+    Color(0xFFFF968A),
+    TapTussleColors.gold,
+    Color(0xFFB388FF),
+  ];
 
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -380,9 +412,7 @@ class _MatchOverlay extends StatelessWidget {
                   ),
                   child: Icon(
                     phase == MatchPhase.finished
-                        ? outcome == MatchOutcome.draw
-                              ? Icons.handshake_rounded
-                              : Icons.emoji_events_rounded
+                        ? _resultIcon
                         : phase == MatchPhase.paused
                         ? Icons.pause_rounded
                         : game.icon,
@@ -412,7 +442,8 @@ class _MatchOverlay extends StatelessWidget {
                     fontSize: 15,
                   ),
                 ),
-                if (options.mode == PlayMode.bot) ...[
+                if (options.mode == PlayMode.bot &&
+                    options.botDifficulty != null) ...[
                   const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.symmetric(
