@@ -1,4 +1,4 @@
-# M8.3 graphics profile results
+# M23 graphics profile results
 
 Use this sheet for physical-device evidence only. Debug and simulator runs do
 not count. Test the production Paddle Duel presentation adapter in a real match;
@@ -90,6 +90,8 @@ them into a pass result.
 | Native | 100% | 30 | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
 | Native | 100% | 60 | Pending | Pending | Pending | Pending | Pending | Pending | Pending |
 
-M8.3 is complete only when the iPhone and Android tables contain physical-device
-measurements and any release-blocking instability has been fixed and retested.
-The iPad table provides additional large-screen iOS coverage.
+M23 graphics profiling is complete only when the iPhone and Android tables contain
+measurements from the final release candidate and any release-blocking instability
+has been fixed and retested. The iPad table provides additional large-screen iOS
+coverage. The entries above are retained early evidence and must be refreshed after
+M22 for the release candidate.

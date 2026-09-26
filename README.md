@@ -10,9 +10,9 @@ iOS are the mobile targets; web is included for quick desktop previews.
 See [the development plan](docs/DEVELOPMENT_PLAN.md) for milestone checklists,
 remaining games, friend/bot modes, favourites, difficulty, expanded settings,
 and the live resolution/FPS comparison preview. The current five-game foundation
-is in M8 validation. The planned first public release expands the catalog to all
-18 currently selected games, adds solo and up-to-four-player support, and moves
-final release validation to M23.
+has completed its branding and automated-regression checkpoint. The planned first
+public release expands the catalog to all 18 currently selected games, adds solo
+and up-to-four-player support, and runs final release validation in M23.
 
 ## Run
 
@@ -126,7 +126,7 @@ turn. Use this behavior for every future game with bot mode.
 Avoid introducing a global game manager or requiring inheritance from an existing
 game. Shared code defines lifecycle and integration contracts; each module owns
 its rules and presentation. The initial five-game catalog and its physical-device
-functional passes are complete. M8 validates that foundation before M9 introduces
+functional passes and the M8 automated checkpoint are complete. M9 introduces
 player-count capabilities, catalog filters, and local solo records.
 
 ## Verification and remaining device checks
@@ -138,10 +138,9 @@ Paddle Duel, Reaction Duel, Air Hockey, Lane Dash, and Tic-Tac-Toe have been
 exercised during development. M3–M7 are functionally confirmed on physical
 iPhone and Android devices. The newly revised Air Hockey bot profiles still need
 another device pass.
-M8 requires recorded device/build details, profile-mode graphics measurements,
-offline and interruption checks, accessibility/safe-area coverage, and long-session
-checks for the five-game foundation. Final 18-game release signing and store
-preparation are tracked in M23. Native UI
+M23 consolidates recorded device/build details, profile-mode graphics measurements,
+offline and interruption checks, accessibility/safe-area coverage, long-session
+checks, final 18-game signing, and store preparation. Native UI
 automation remains parked because Flutter could not attach its iPhone test runner.
-Use [`docs/M8_GRAPHICS_PROFILE_RESULTS.md`](docs/M8_GRAPHICS_PROFILE_RESULTS.md)
-for the physical-device graphics procedure and evidence matrix.
+Use [`docs/M23_GRAPHICS_PROFILE_RESULTS.md`](docs/M23_GRAPHICS_PROFILE_RESULTS.md)
+for the retained procedure and the final physical-device graphics evidence matrix.

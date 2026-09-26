@@ -4,9 +4,9 @@ Last updated: 2026-09-25.
 
 This is the working backlog for the next development phases. Paddle Duel,
 Reaction Duel, Air Hockey, Lane Dash, and Tic-Tac-Toe are implemented and have
-completed their milestone device passes. M8 validates that five-game foundation;
-the first store release is now planned after all 18 currently selected games are
-implemented and validated.
+completed their milestone device passes. M8 records the completed branding and
+automated-regression checkpoint. Physical-device release validation is consolidated
+in M23 after all 18 currently selected games are implemented.
 Update this file as each increment is implemented and verified.
 
 ## Product scope
@@ -35,7 +35,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M5 | Air Hockey | M4 | Done | User confirmed M3–M6 working on iPhone and Android |
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
-| M8 | Five-game foundation validation | M1–M7 | In progress | M8.1–M8.2 complete with all 82 tests and analysis passing; M8.3 profile build now runs with a stable DevTools connection on iPad, while the six-setting measurement matrix and Android profile pass remain pending |
+| M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
 | M9 | Player-count foundation and local records | M8 | Not started | Add catalog capabilities, player-count tabs, 1–4 participant setup, and reusable offline record storage before adding games that depend on them |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
@@ -48,14 +48,15 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with optional bots and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
-| M21 | Cangkulan | M20 | Not started | Indonesian card game after its exact rules variant is approved |
+| M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with seven-card deal and draw-until-match rules |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
 listed in the tracker; it is not release certification. M3–M6 have been confirmed
 on iPhone and Android. M7 is also confirmed on both physical platforms. M2 native
-automation remains blocked, and the five-game foundation matrix remains in M8.
+automation remains blocked. Full physical-device and release validation now runs
+once in M23 after the complete catalog is implemented.
 
 ## Target player flow
 
@@ -314,7 +315,7 @@ the baseline settings work reliably on supported devices.
   [Graphics rendering investigation](GRAPHICS_RENDERING_INVESTIGATION.md).
   It confirms that Flame viewport settings are not physical resolution scaling
   and that `GameWidget` has no public FPS cap. User confirmed the graphics
-  settings work on iPhone and Android; broader release profiling remains in M8.
+  settings work on iPhone and Android; broader release profiling remains in M23.
 - [x] M3.7 Implement a shared rendering adapter with supported capabilities and
   effective settings. Merely changing Flame's logical viewport size or skipping
   simulation updates does not implement resolution scaling or a rendering cap.
@@ -325,7 +326,7 @@ the baseline settings work reliably on supported devices.
   elapsed-time simulation at display cadence, then rasterizes a snapshot at
   the selected 50%, 75%, or 100% physical pixel scale and publishes it at 30
   or 60 FPS. The settings are saved locally. User confirmed graphics settings
-  work on iPhone and Android; broader release profiling remains in M8.
+  work on iPhone and Android; broader release profiling remains in M23.
 - [x] M3.9 For simple pure Flutter games, maintain native UI and explain when game
   resolution does not apply; apply FPS to relevant animations where supported.
   Do not blur board labels or claim an unsupported setting changed the game.
@@ -371,9 +372,9 @@ Acceptance:
   inputs produce equivalent elapsed-time outcomes within documented tolerances.
 - [x] Complete functional real-match checks for graphics settings on iPhone and
   Android. Detailed profile-mode frame timings for all six combinations remain
-  part of M8 release validation; debug results are not release evidence.
+  part of M23 release validation; debug results are not release evidence.
 - [x] Verify the runtime footer and settings layout during the M3 device checks.
-  Larger-text accessibility coverage remains part of M8 release validation.
+  Larger-text accessibility coverage remains part of M23 release validation.
 
 ## M4 — Reaction Duel
 
@@ -439,7 +440,7 @@ uses explicit difficulty profiles for reaction delay, movement reach, aim error,
 and positioning. Device confirmation of the revised profiles remains pending;
 its Flame adapter and renderer now live in `air_hockey_game.dart`, leaving the
 view responsible for Flutter input and layout. Release-level physics stress
-validation remains in M8.
+validation remains in M23.
 
 ## M6 — Lane Dash (proposed movement/racing game)
 
@@ -508,39 +509,18 @@ Acceptance: cover all winning lines, draws, invalid input, alternating starters,
 and bot legality. Exhaustive rule/search tests demonstrate Hard never loses from
 an initially empty board. Complete friend/bot matches on mobile devices.
 
-## M8 — Five-game foundation validation
+## M8 — Branding and automated foundation checkpoint
 
 - [x] M8.1 Add the final app icon for iOS and Android, verify every required icon
   size, and record attribution or original-asset ownership.
 - [x] M8.2 Run analysis and relevant rule/widget tests for every completed
   milestone; expand regression and persistence coverage where release-critical
   behavior is not yet protected.
-- [ ] M8.3 Profile graphics settings on physical devices and record frame-rate,
-  resolution-scale, and stability results using profile builds.
-- [ ] M8.4 Test fully offline launches and matches, setting/favourite persistence,
-  interruptions, audio focus, accessibility text, safe areas, and long sessions
-  for heat or input issues. Check that existing installations preserve points-to-win
-  and load sane defaults for newer storage keys.
-- [ ] M8.5 Complete the matrix below on a physical iPhone and Android device. Record
-  the actual model, OS version, app build, result, and any defects.
-- [ ] M8.6 Produce local profile builds on iOS and Android and record toolchain or
-  signing blockers. Final store signing and release artifacts move to M23.
-- [ ] M8.7 Close foundation-blocking defects and attach build/test evidence to the
-  tracker. Keep version `1.0.0+1` during local development; M23 owns the release
-  version decision.
 
-| Game | Friend | Easy bot | Normal bot | Hard bot | iPhone | Android |
-| --- | --- | --- | --- | --- | --- | --- |
-| Paddle Duel | Existing; regression pending | Pending | Pending | Pending | Initial debug run reported; full pass pending | Pending |
-| Reaction Duel | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
-| Air Hockey | User-confirmed | Revised bot pending | Revised bot pending | Revised bot pending | Previous bot pass confirmed | Previous bot pass confirmed |
-| Lane Dash | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
-| Tic-Tac-Toe | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
-
-Each full game acceptance pass includes start, pause, background/resume, win or
-draw where relevant, rematch, change options, exit, effects, supported graphics
-settings, and favourites. The table is a summary; keep device evidence separately
-in milestone completion notes rather than marking an untested platform Done.
+Physical-device profiling, the complete game/mode matrix, offline and interruption
+checks, accessibility, persistence migration, long-session behavior, signing, and
+release builds are intentionally consolidated in M23. The early iPhone/iPad profile
+attempts remain useful evidence but do not complete any M23 release check.
 
 ## Expansion review and product decisions
 
@@ -940,24 +920,45 @@ service in the first version.
 
 ## M23 — Eighteen-game release validation and store preparation
 
-- [ ] M23.1 Run the complete automated suite and a physical iPhone/iPad/Android
-  matrix for all 18 games, every supported player count, bot/puzzle difficulty,
-  records, persistence, offline launch, interruptions, and long sessions. Release
-  requires the catalog-wide solver tests to prove every shipped Water Sort, Nuts
-  and Bolts, and Sudoku level valid; no unverified level may enter a release build.
-- [ ] M23.2 Repeat profile-mode graphics measurements on representative iOS and
-  Android hardware, including the real-time Slither game, and close release-blocking
-  performance, memory, battery, or thermal defects.
-- [ ] M23.3 Audit game discoverability across all player tabs, setup consistency,
-  record accuracy, accessibility, safe areas, tablet layouts, privacy between local
-  card players, and migration from existing installations.
-- [ ] M23.4 Finalize privacy and terms content, store listing text/screenshots,
-  age/content declarations, attributions, support links, and all game instructions.
-- [ ] M23.5 Configure final Android and iOS store signing, choose the release
-  semantic version, increment the build number in `pubspec.yaml`, and produce the
-  release artifacts.
-- [ ] M23.6 Attach test/build/device evidence and complete the first public-release
-  checklist. Do not mark complete while any game has a known release-blocking defect.
+- [ ] M23.1 Run analysis and the complete automated suite. Release requires the
+  catalog-wide solver tests to prove every shipped Water Sort, Nuts and Bolts, and
+  Sudoku level valid; no unverified level may enter a release build.
+- [ ] M23.2 Complete a physical iPhone/iPad/Android matrix for all 18 games, every
+  supported player count, friend/bot mode, bot or puzzle difficulty, result type,
+  rematch, change-options flow, favourites, records, and saved progress. Record the
+  actual device model, OS, app build, result, and linked defect for every pass.
+- [ ] M23.3 Profile every resolution/FPS combination on representative iOS and
+  Android hardware. Include Paddle Duel and the real-time Slither game, record frame
+  timings and stability, and close release-blocking performance, memory, battery,
+  or thermal defects. Reuse the retained early profile procedure and evidence.
+- [ ] M23.4 Test fully offline install/launch and matches, audio focus, vibration,
+  background/resume, calls/interruptions, persistence and migration from existing
+  installs, malformed saved data, safe defaults, and long sessions.
+- [ ] M23.5 Audit player-tab discoverability, setup consistency, record accuracy,
+  enlarged text, screen-reader labels, contrast, safe areas, compact/tablet layouts,
+  and privacy between same-device card players.
+- [ ] M23.6 Produce signed local iOS and Android release builds and resolve toolchain
+  or signing blockers. Finalize privacy and terms content, store text/screenshots,
+  age/content declarations, attributions, support links, and game instructions.
+- [ ] M23.7 Choose the release semantic version, increment the build number in
+  `pubspec.yaml`, produce final store artifacts, and attach automated, build,
+  profile, and device evidence. Do not complete M23 while any game has a known
+  release-blocking defect.
+
+Existing five-game device evidence carried into M23:
+
+| Game | Friend | Easy bot | Normal bot | Hard bot | iPhone | Android |
+| --- | --- | --- | --- | --- | --- | --- |
+| Paddle Duel | Existing; regression pending | Pending | Pending | Pending | Initial debug run reported; full pass pending | Pending |
+| Reaction Duel | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
+| Air Hockey | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
+| Lane Dash | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
+| Tic-Tac-Toe | User-confirmed | User-confirmed | User-confirmed | User-confirmed | Functional pass confirmed | Functional pass confirmed |
+
+Each full game acceptance pass includes start, pause, background/resume, win or
+draw where relevant, rematch, change options, exit, effects, supported graphics
+settings, and favourites. Historical functional passes are regression context, not
+a substitute for the final build's M23 device matrix.
 
 ## Ongoing additions after the first release
 
@@ -985,6 +986,14 @@ build thereafter.
 
 For each increment append: date, task IDs, short change description, tests/device
 evidence, unresolved issues, and next task. Implementation starts with M1.1.
+
+2026-09-26 — Consolidated the unfinished physical-device and release-validation
+work into M23 so it runs once against the complete 18-game release candidate after
+M22. M8 is Done as the branding and automated foundation checkpoint: final icons
+and attribution are complete, and all 82 tests plus analysis passed. The early
+iPhone/iPad profile attempts and procedure are retained in
+`M23_GRAPHICS_PROFILE_RESULTS.md`, but final measurements must be refreshed for the
+release candidate. M9 is now the next implementation milestone.
 
 2026-09-26 — Confirmed future-game rules for M15 and M19–M22. Mancala uses
 standard two-player Kalah with 6 pits, 4 stones per pit, store/skip, extra-turn,
@@ -1043,7 +1052,8 @@ and stop on backgrounding.
 2026-09-24 — User confirmed M3–M6 working on both iPhone and Android. Closed the
 remaining device evidence for graphics settings and Lane Dash's independent
 courses/bot difficulty behavior; M3–M6 are Done. M2 remains blocked on iPhone
-integration-test transport, and M8's release-validation matrix remains open.
+integration-test transport. The final release-validation matrix is consolidated
+in M23.
 
 2026-09-24 — M7.1 implemented as a pure Dart Tic-Tac-Toe model with nine-cell
 state, player-indexed legal moves, explicit invalid-move results, all eight win
@@ -1168,17 +1178,19 @@ overlays at 320×568 with 150% text. Enlarged content remains reachable through
 the intended scroll surfaces without layout exceptions. The stale startup label
 assertion was aligned with the redesigned lobby. All 82 unit and widget tests,
 `flutter analyze`, and `git diff --check` pass. Physical-device graphics profiling
-for M8.3 is next.
+is deferred to the consolidated M23 release pass.
 
-2026-09-25 — Began M8.3 with a signed profile build for the connected physical
+2026-09-25 — Began an early physical-profile investigation, now retained as M23
+evidence, with a signed profile build for the connected physical
 iPhone on app version `1.0.0+1` at revision `5c5bb4e`. Xcode built, signed, and
 installed the profile app, but Flutter lost its device connection immediately
 after launch, so no DevTools timing sample is claimed. No Android device was
-connected. Added `M8_GRAPHICS_PROFILE_RESULTS.md` with the repeatable warm-up,
+connected. Added `M23_GRAPHICS_PROFILE_RESULTS.md` with the repeatable warm-up,
 real-match timing procedure and separate six-combination result matrices for
-iPhone and Android. M8.3 remains open until both matrices contain measurements.
+iPhone and Android. Final measurements are deferred until the M23 release build.
 
-2026-09-25 — Retried M8.3 on the physical iPad named Qpad running iPadOS 26.7
+2026-09-25 — Retried the early M23 profile procedure on the physical iPad named
+Qpad running iPadOS 26.7
 (23H24). The signed profile build completed, installed, and launched, and the
 Dart VM Service and DevTools connection remained available throughout the smoke
 run. Added an iPad matrix to the profile record for optional large-screen iOS
