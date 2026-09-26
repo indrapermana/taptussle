@@ -167,4 +167,42 @@ void main() {
       expect(repository.recordsFor(easyKey).single.metrics['level'], 6);
     },
   );
+
+  test(
+    'daily and Monday-Sunday bests roll over from stored timestamps',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final repository = GameRecordRepository(
+        await SharedPreferences.getInstance(),
+      );
+      for (final record in [
+        result(20, level: 10, moves: 20, timeMs: 90000), // Sunday.
+        result(21, level: 8, moves: 18, timeMs: 80000), // Monday.
+        result(23, level: 6, moves: 16, timeMs: 70000), // Wednesday.
+      ]) {
+        await repository.addRecord(
+          definition: recordDefinition,
+          record: record,
+        );
+      }
+
+      final wednesday = repository.bests(
+        key: easyKey,
+        definition: recordDefinition,
+        now: DateTime(2026, 9, 23, 18),
+      );
+      expect(wednesday.daily!.record.metrics['level'], 6);
+      expect(wednesday.weekly!.record.metrics['level'], 8);
+      expect(wednesday.overall!.record.metrics['level'], 10);
+
+      final nextMonday = repository.bests(
+        key: easyKey,
+        definition: recordDefinition,
+        now: DateTime(2026, 9, 28, 9),
+      );
+      expect(nextMonday.daily, isNull);
+      expect(nextMonday.weekly, isNull);
+      expect(nextMonday.overall!.record.metrics['level'], 10);
+    },
+  );
 }

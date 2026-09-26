@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'game_record_repository.dart';
 import 'match_options.dart';
 
 enum ResolutionPreset {
@@ -34,6 +35,7 @@ enum CatalogPlayerFilter {
 
 class AppSettings extends ChangeNotifier {
   AppSettings(this._preferences) {
+    recordRepository = GameRecordRepository(_preferences);
     final saved = _preferences.get('winningScore');
     _winningScore = allowedScores.contains(saved) ? saved as int : 7;
     final favourites = _preferences.get('favouriteGameIds');
@@ -61,6 +63,7 @@ class AppSettings extends ChangeNotifier {
 
   static const allowedScores = [5, 7, 11];
   final SharedPreferences _preferences;
+  late final GameRecordRepository recordRepository;
   late int _winningScore;
   int get winningScore => _winningScore;
   late Set<String> _favouriteIds;
@@ -185,4 +188,10 @@ class AppSettings extends ChangeNotifier {
         _gamePreferences[id] = preferences;
         notifyListeners();
       });
+
+  @override
+  void dispose() {
+    recordRepository.dispose();
+    super.dispose();
+  }
 }

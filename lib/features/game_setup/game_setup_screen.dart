@@ -6,6 +6,7 @@ import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
 import '../../core/sound_service.dart';
 import '../match/match_screen.dart';
+import 'game_record_bests_panel.dart';
 import 'participant_setup_screen.dart';
 
 class GameSetupScreen extends StatefulWidget {
@@ -124,6 +125,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                         ],
                       ),
                     ),
+                    if (widget.game.recordDefinition != null &&
+                        widget.game.supportsPlayerCount(PlayerCount.one)) ...[
+                      const SizedBox(height: 16),
+                      GameRecordBestsPanel(
+                        game: widget.game,
+                        settings: widget.settings,
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     OutlinedButton(
                       key: const ValueKey('favourite-toggle'),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'app_settings.dart';
+import 'game_record_definition.dart';
 import 'match_session.dart';
 import 'match_options.dart';
+
+export 'game_record_definition.dart';
 
 typedef MiniGameBuilder =
     Widget Function(MatchSession session, MatchOptions options);
@@ -13,6 +16,7 @@ typedef MiniGamePresentationBuilder =
       ResolutionPreset resolution,
       FrameRatePreset frameRate,
     );
+typedef RecordVariantBuilder = String Function(GamePreferences preferences);
 
 enum PlayerCount {
   one(1),
@@ -26,37 +30,6 @@ enum PlayerCount {
 
 /// Describes what Easy, Normal, and Hard alter for a game.
 enum DifficultyType { none, bot, puzzle, challenge }
-
-enum RecordMetricFormat { integer, duration }
-
-enum RecordSortOrder { higherIsBetter, lowerIsBetter }
-
-class RecordMetricDefinition {
-  const RecordMetricDefinition({
-    required this.id,
-    required this.label,
-    required this.format,
-    required this.sortOrder,
-  });
-
-  final String id;
-  final String label;
-  final RecordMetricFormat format;
-  final RecordSortOrder sortOrder;
-}
-
-/// Metrics are compared in order, so later entries are tie-breakers.
-class GameRecordDefinition {
-  GameRecordDefinition({
-    required this.primaryMetric,
-    List<RecordMetricDefinition> tieBreakers = const [],
-  }) : tieBreakers = List.unmodifiable(tieBreakers);
-
-  final RecordMetricDefinition primaryMetric;
-  final List<RecordMetricDefinition> tieBreakers;
-
-  List<RecordMetricDefinition> get metrics => [primaryMetric, ...tieBreakers];
-}
 
 /// Exposes a widget so pure Flutter games can use the same shell as Flame games.
 class MiniGame {
@@ -75,6 +48,7 @@ class MiniGame {
     Set<PlayerCount> supportedPlayerCounts = const {PlayerCount.two},
     this.difficultyType = DifficultyType.none,
     this.recordDefinition,
+    this.recordVariant,
   }) : assert(supportedModes.isNotEmpty),
        assert(supportedPlayerCounts.isNotEmpty),
        supportedModes = Set.unmodifiable(supportedModes),
@@ -89,6 +63,13 @@ class MiniGame {
   final Set<PlayerCount> supportedPlayerCounts;
   final DifficultyType difficultyType;
   final GameRecordDefinition? recordDefinition;
+  final RecordVariantBuilder? recordVariant;
+
+  String recordVariantFor(GamePreferences preferences) =>
+      recordVariant?.call(preferences) ??
+      (difficultyType == DifficultyType.none
+          ? 'default'
+          : preferences.difficulty.name);
 
   bool supportsPlayerCount(PlayerCount count) =>
       supportedPlayerCounts.contains(count);

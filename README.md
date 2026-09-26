@@ -94,7 +94,10 @@ offline repository stores immutable results by game ID, record type, and
 difficulty/rules variant, using device-local completion timestamps. It ranks the
 primary metric and tie-breakers in their declared direction; duration metric values
 are stored in milliseconds. Games submit results without owning persistence or
-ranking logic.
+ranking logic. For solo games with records, the shared setup panel derives Daily
+Best from the current local date, Weekly Best from Monday–Sunday, and Overall Best
+from the matching history. These windows are recomputed from timestamps when read,
+so calendar rollover does not require a background job.
 
 `MatchOptions` carries an immutable ordered list of one to four participants.
 Each participant has a display name, human or bot ownership, a unique color and

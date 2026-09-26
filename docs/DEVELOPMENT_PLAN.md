@@ -36,7 +36,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M6 | Lane Dash: simple racing/movement game | M5 | Done | User confirmed latest independent-course bot changes and M3–M6 working on iPhone and Android |
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
-| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.6 add typed capabilities, shared 1–4-player setup/results, and an offline timestamped record repository with metadata-driven ranking |
+| M9 | Player-count foundation and local records | M8 | In progress | M9.1–M9.7 add typed capabilities, shared 1–4-player setup/results, offline ranked records, and local Daily/Weekly/Overall best presentation |
 | M10 | Memory Match | M9 | Not started | First game supporting both solo records and two-player turns |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
@@ -577,7 +577,7 @@ Snakes & Ladders and would use a Flame real-time architecture.
   difficulty/rules variant, and local completion timestamp. Define whether higher
   or lower values are better and support a secondary tie-breaker such as time or
   moves. Keep record logic out of individual screens.
-- [ ] M9.7 Show **Daily Best**, **Weekly Best**, and **Overall Best** for supported
+- [x] M9.7 Show **Daily Best**, **Weekly Best**, and **Overall Best** for supported
   solo games. Daily means the current local calendar day; weekly means the current
   local Monday–Sunday week. Recompute buckets from saved timestamped results so
   rollover requires no scheduled job. Records remain local and device-clock based.
@@ -1070,6 +1070,21 @@ succeeds; invalid keys/metrics are rejected and malformed stored rows are skippe
 Four repository tests cover restart persistence, key isolation, mixed-direction
 ranking and ties, immutability, validation, and malformed data. The complete
 102-test suite and `flutter analyze` pass. M9.7 record time windows and UI are next.
+
+2026-09-26 — Completed M9.7. The record repository now derives Daily Best from
+the current local calendar day, Weekly Best from the current local Monday through
+Sunday, and Overall Best from the complete matching game/type/variant history.
+Windows are recomputed from stored local timestamps whenever queried, so day and
+week rollover needs no scheduled task. Solo-capable games with record metadata now
+show a shared **Your Best** panel on setup with Daily, Weekly, and Overall columns,
+the active difficulty/rules variant, the primary metric, and formatted tie-breakers.
+Empty windows show an intentional dash, duration values use milliseconds in storage
+and readable clock formatting in the UI, and repository notifications refresh an
+open panel after a saved result. Record metadata now owns the stable record type,
+while games may override their stable variant mapping. Window-boundary and widget
+tests cover Monday rollover, empty states, live refresh, integer/duration display,
+and setup integration. The complete 105-test suite and `flutter analyze` pass.
+M9.8 migration, regression, and retention coverage is next.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

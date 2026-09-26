@@ -74,6 +74,13 @@ void main() {
     expect(game.supportsPlayerCount(PlayerCount.one), isTrue);
     expect(game.supportedModes, {PlayMode.solo});
     expect(game.difficultyType, DifficultyType.puzzle);
+    expect(game.recordDefinition!.recordType, 'solo');
+    expect(
+      game.recordVariantFor(
+        const GamePreferences(difficulty: BotDifficulty.hard),
+      ),
+      'hard',
+    );
     expect(game.recordDefinition!.metrics.map((metric) => metric.id), [
       'level',
       'moves',

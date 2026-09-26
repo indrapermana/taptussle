@@ -1,8 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'mini_game.dart';
+import 'game_record_definition.dart';
 
 class GameRecordKey {
   const GameRecordKey({
@@ -97,7 +98,15 @@ class RankedGameRecord {
   final GameRecord record;
 }
 
-class GameRecordRepository {
+class GameRecordBests {
+  const GameRecordBests({this.daily, this.weekly, this.overall});
+
+  final RankedGameRecord? daily;
+  final RankedGameRecord? weekly;
+  final RankedGameRecord? overall;
+}
+
+class GameRecordRepository extends ChangeNotifier {
   GameRecordRepository(this._preferences)
     : _records = _readRecords(_preferences);
 
@@ -122,6 +131,7 @@ class GameRecordRepository {
       throw StateError('Could not save game record');
     }
     _records = next;
+    notifyListeners();
   });
 
   List<RankedGameRecord> rankedRecords({
@@ -158,6 +168,64 @@ class GameRecordRepository {
     required GameRecordKey key,
     required GameRecordDefinition definition,
   }) => rankedRecords(key: key, definition: definition).firstOrNull;
+
+  GameRecordBests bests({
+    required GameRecordKey key,
+    required GameRecordDefinition definition,
+    DateTime? now,
+  }) {
+    _validateKey(key);
+    final localNow = (now ?? DateTime.now()).toLocal();
+    final dayStart = DateTime(localNow.year, localNow.month, localNow.day);
+    final nextDay = DateTime(localNow.year, localNow.month, localNow.day + 1);
+    final weekStart = DateTime(
+      localNow.year,
+      localNow.month,
+      localNow.day - (localNow.weekday - DateTime.monday),
+    );
+    final nextWeek = DateTime(
+      weekStart.year,
+      weekStart.month,
+      weekStart.day + 7,
+    );
+    final records = recordsFor(key);
+    return GameRecordBests(
+      daily: _bestFrom(
+        records.where(
+          (record) =>
+              !record.completedAt.isBefore(dayStart) &&
+              record.completedAt.isBefore(nextDay),
+        ),
+        definition,
+      ),
+      weekly: _bestFrom(
+        records.where(
+          (record) =>
+              !record.completedAt.isBefore(weekStart) &&
+              record.completedAt.isBefore(nextWeek),
+        ),
+        definition,
+      ),
+      overall: _bestFrom(records, definition),
+    );
+  }
+
+  RankedGameRecord? _bestFrom(
+    Iterable<GameRecord> records,
+    GameRecordDefinition definition,
+  ) {
+    final candidates = records.toList();
+    for (final record in candidates) {
+      _validateMetrics(definition, record.metrics);
+    }
+    candidates.sort((left, right) {
+      final metricOrder = _compareMetrics(definition, left, right);
+      if (metricOrder != 0) return metricOrder;
+      return left.completedAt.compareTo(right.completedAt);
+    });
+    if (candidates.isEmpty) return null;
+    return RankedGameRecord(rank: 1, record: candidates.first);
+  }
 
   Future<void> _write(Future<void> Function() action) {
     final result = _pendingWrite.then((_) => action());
