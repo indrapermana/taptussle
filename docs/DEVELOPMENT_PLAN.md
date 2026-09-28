@@ -37,7 +37,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
-| M10 | Memory Match | M9 | In progress | M10.1–M10.4 complete with 136 passing tests; M10.5 adds fair Easy/Normal/Hard bots, then M10.6 closes physical iPhone/Android verification |
+| M10 | Memory Match | M9 | In progress | M10.1–M10.5 complete with fair Easy/Normal/Hard bots; M10.6 closes physical iPhone/Android verification |
 | M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
@@ -646,7 +646,7 @@ mode uses the selected grid size without an opening preview for either player.
   records; add two-player play with pair scores and alternating turns.
 - [x] M10.4 Integrate sounds, haptics, favourites, player-count filters, results,
   records, rematch, and automated end-to-end coverage.
-- [ ] M10.5 Add Play vs Bot with human-like delays and fair Easy, Normal, and
+- [x] M10.5 Add Play vs Bot with human-like delays and fair Easy, Normal, and
   Hard memory policies. Bots may remember only cards they have legitimately seen:
   Easy retains a small, fallible recent memory; Normal retains more observations
   with occasional forgetting; Hard retains every revealed card but never reads
@@ -1245,6 +1245,19 @@ rules contain no strategic choice. Cangkulan now requires mixed human/bot suppor
 for two to four participants with fair hidden-information policies. Sudoku,
 Slither-style Snakes, Water Sort Puzzle, Nuts and Bolts, and Solitaire remain
 solo-only and therefore do not add a separate Play vs Bot mode.
+
+2026-09-27 — Completed M10.5. Memory Match now exposes Play vs Bot through the
+shared setup and uses delayed first- and second-card choices so the opponent
+acts at a readable, human pace. The policy receives only legal card indexes and
+identities from cards that were actually revealed: Easy remembers the four most
+recent cards with fallible recall, Normal remembers ten with stronger recall,
+and Hard remembers every observed card without reading hidden deck identities.
+The controller blocks human taps during bot turns, carries the same sounds and
+haptics through bot selections, and cancels or safely restarts pending choices
+across pause, resume, result, rematch, option changes, and disposal. Focused
+coverage verifies bounded memory, deliberate mistakes, legal moves, setup,
+scoring, alternating bot starts, and lifecycle cancellation. All 148 host tests
+pass, `flutter analyze` is clean, and `git diff --check` passes.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

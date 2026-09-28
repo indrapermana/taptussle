@@ -23,11 +23,11 @@ void main() {
     }
   });
 
-  test('Memory Match supports solo records and two-player friend mode', () {
+  test('Memory Match supports solo records plus friend and bot modes', () {
     final game = gameCatalog.singleWhere((game) => game.id == 'memory-match');
 
     expect(game.supportedPlayerCounts, {PlayerCount.one, PlayerCount.two});
-    expect(game.supportedModes, {PlayMode.solo, PlayMode.friend});
+    expect(game.supportedModes, {PlayMode.solo, PlayMode.friend, PlayMode.bot});
     expect(game.difficultyType, DifficultyType.challenge);
     expect(game.recordDefinition!.primaryMetric.id, 'moves');
     expect(

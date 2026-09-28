@@ -22,8 +22,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         'stay open. In solo play, find every pair in as few moves and as '
         'little time as possible. With a friend, a match keeps your turn and '
         'a mismatch passes it; the most pairs wins.',
+    botInstructions:
+        'Flip two cards to find a pair. A match keeps your turn and a mismatch '
+        'passes it. The bot remembers only cards that have been revealed; '
+        'higher difficulties remember more. The most pairs wins.',
     icon: Icons.style_rounded,
-    supportedModes: const {PlayMode.solo, PlayMode.friend},
+    supportedModes: const {PlayMode.solo, PlayMode.friend, PlayMode.bot},
     supportedPlayerCounts: const {PlayerCount.one, PlayerCount.two},
     difficultyType: DifficultyType.challenge,
     recordDefinition: GameRecordDefinition(

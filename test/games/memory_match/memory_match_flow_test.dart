@@ -109,6 +109,29 @@ void main() {
     expect(session.resultDetails, contains('Player 1 6'));
   });
 
+  test('bot match completion preserves shared scores and result labels', () {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.easy),
+    );
+    final controller = MemoryMatchController(
+      session: session,
+      difficulty: MemoryMatchDifficulty.easy,
+      random: Random(24),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    session.start();
+    completeEveryPair(controller);
+
+    expect(session.phase, MatchPhase.finished);
+    expect(session.outcome, MatchOutcome.winner);
+    expect(session.winner, 0);
+    expect(session.scores, [6, 0]);
+    expect(session.resultDetails, contains('You 6'));
+    expect(session.resultDetails, contains('Bot 0'));
+  });
+
   testWidgets('solo and friend modes choose difficulty and build that grid', (
     tester,
   ) async {
@@ -145,6 +168,49 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('play-vs-friend')));
     await tester.pumpAndSettle();
     expect(find.text('Game difficulty'), findsOneWidget);
+  });
+
+  testWidgets('bot setup selects a difficulty and starts a locked bot match', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = AppSettings(await SharedPreferences.getInstance());
+    addTearDown(settings.dispose);
+    final game = gameCatalog.singleWhere((game) => game.id == 'memory-match');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTapTussleTheme(),
+        home: GameSetupScreen(game: game, settings: settings),
+      ),
+    );
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bot difficulty'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('start-bot-match')));
+    await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+    await tester.pumpAndSettle();
+    expect(find.byType(MemoryMatchView), findsOneWidget);
+
+    final board = tester.widget<MemoryMatchBoard>(
+      find.byType(MemoryMatchBoard),
+    );
+    final mismatch = <int>[0];
+    mismatch.add(
+      board.controller.model.deck.indexWhere(
+        (pair) => pair != board.controller.model.deck.first,
+      ),
+    );
+    await tester.tap(find.byKey(ValueKey('memory-card-${mismatch[0]}')));
+    await tester.pump();
+    await tester.tap(find.byKey(ValueKey('memory-card-${mismatch[1]}')));
+    await tester.pump(const Duration(milliseconds: 850));
+
+    expect(find.text('BOT IS THINKING'), findsOneWidget);
+    expect(board.controller.acceptsInput, isFalse);
   });
 
   testWidgets('solo completion is persisted once for its difficulty', (

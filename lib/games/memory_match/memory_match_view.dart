@@ -32,6 +32,7 @@ class _MemoryMatchViewState extends State<MemoryMatchView> {
     controller = MemoryMatchController(
       session: widget.session,
       difficulty: MemoryMatchDifficulty.values[widget.options.difficulty.index],
+      onSelection: _handleSelection,
     );
     _observedRound = widget.session.round;
     widget.session.addListener(_handleSessionChange);
@@ -81,7 +82,6 @@ class _MemoryMatchViewState extends State<MemoryMatchView> {
     playerLabels: widget.options.participants
         .map((participant) => participant.displayName)
         .toList(growable: false),
-    onSelection: _handleSelection,
   );
 }
 
@@ -185,6 +185,8 @@ class _MemoryStatus extends StatelessWidget {
         ? 'NOT A MATCH'
         : model.isFinished
         ? 'ALL PAIRS FOUND'
+        : controller.isBotTurn
+        ? 'BOT IS THINKING'
         : model.playerCount == 1
         ? 'MOVES ${model.moveCount}'
         : '${playerLabels[model.currentPlayer].toUpperCase()}\'S TURN';
