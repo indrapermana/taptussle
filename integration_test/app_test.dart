@@ -10,6 +10,8 @@ import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_game.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
 import 'package:tap_tussle/games/memory_match/memory_match_view.dart';
+import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_model.dart';
+import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -185,6 +187,61 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('change-options')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('game-record-bests')), findsOneWidget);
+    expect(find.text('Remove favourite'), findsOneWidget);
+  });
+
+  testWidgets('Rock Paper Scissors friend journey integrates and rematches', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+    await settings.setWinningScore(5);
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-twoPlayers')));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('game-card-rock-paper-scissors')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    expect(settings.isFavourite('rock-paper-scissors'), isTrue);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-vs-friend')));
+    await tester.pumpAndSettle();
+
+    final board = tester.widget<RockPaperScissorsBoard>(
+      find.byType(RockPaperScissorsBoard),
+    );
+    for (var round = 0; round < 5; round++) {
+      if (board.controller.activePlayer == 0) {
+        board.controller.selectChoice(RockPaperScissorsChoice.rock);
+        board.controller.confirmHandoff();
+        board.controller.selectChoice(RockPaperScissorsChoice.scissors);
+      } else {
+        board.controller.selectChoice(RockPaperScissorsChoice.scissors);
+        board.controller.confirmHandoff();
+        board.controller.selectChoice(RockPaperScissorsChoice.rock);
+      }
+      await tester.pump();
+      if (round < 4) board.controller.startNextRound();
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Player 1 wins!'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('play-again')));
+    await tester.pump();
+    expect(board.controller.model.scores, [0, 0]);
+    expect(board.controller.model.roundCount, 0);
+
+    await tester.tap(find.byTooltip('Pause match'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('change-options')));
+    await tester.pumpAndSettle();
     expect(find.text('Remove favourite'), findsOneWidget);
   });
 }

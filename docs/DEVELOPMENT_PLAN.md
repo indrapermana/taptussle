@@ -37,8 +37,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M7 | Tic-Tac-Toe: fifth game | M6 | Done | M7.1–M7.5 implemented; 32 focused tests pass; user confirmed Friend and all three bot difficulties on physical iPhone and Android devices |
 | M8 | Branding and automated foundation checkpoint | M1–M7 | Done | Final app icon and attribution complete; all 82 tests and analysis passed; early iPad profile connection evidence is retained for the final M23 validation |
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
-| M10 | Memory Match | M9 | In progress | M10.1–M10.5 complete with fair Easy/Normal/Hard bots; M10.6 closes physical iPhone/Android verification |
-| M11 | Rock Paper Scissors | M9 | Not started | Small two-player/bot addition that validates reusable simultaneous hidden choices |
+| M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
+| M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
@@ -652,17 +652,17 @@ mode uses the selected grid size without an opening preview for either player.
   with occasional forgetting; Hard retains every revealed card but never reads
   hidden identities. Cancel pending bot selections safely on pause, result,
   rematch, change-options, and disposal, and test that every chosen move is legal.
-- [ ] M10.6 Verify solo, friend, and all three bot difficulties on physical iPhone
+- [x] M10.6 Verify solo, friend, and all three bot difficulties on physical iPhone
   and Android devices, including previews, turn changes, results, rematch,
   favourites, records, sounds, vibration-on/off, and lifecycle interruption.
 
 ## M11 — Rock Paper Scissors
 
-- [ ] M11.1 Implement round rules, draws, configured points-to-win, and deterministic
+- [x] M11.1 Implement round rules, draws, configured points-to-win, and deterministic
   tests for every choice pairing.
-- [ ] M11.2 Create a fair pass-and-hide flow for two friends and delayed Easy,
+- [x] M11.2 Create a fair pass-and-hide flow for two friends and delayed Easy,
   Normal, and Hard bot policies without reading future human input.
-- [ ] M11.3 Integrate setup, effects, rematch, favourites, filters, lifecycle, and
+- [x] M11.3 Integrate setup, effects, rematch, favourites, filters, lifecycle, and
   physical-device verification.
 
 ## M12 — Snakes & Ladders
@@ -1233,8 +1233,8 @@ did not attach after more than three minutes. A separate normal debug build also
 completed in 30.8 seconds but Xcode could not finish launching/attaching and
 returned `osascript: -2`. Flutter reported that Xcode was taking longer than
 expected to start debugging, matching the open M2 native test-transport blocker.
-No physical Android device was connected. Physical confirmation is tracked in
-M10.6; the M10.4 implementation and runnable integration journey are complete.
+No physical Android device was connected during that earlier automated attempt;
+the later user-run iPhone and Android verification is recorded under M10.6.
 
 2026-09-27 — Expanded Memory Match with M10.5 for fair Easy, Normal, and Hard
 bots and M10.6 for final solo/friend/bot physical-device verification. Audited
@@ -1258,6 +1258,53 @@ across pause, resume, result, rematch, option changes, and disposal. Focused
 coverage verifies bounded memory, deliberate mistakes, legal moves, setup,
 scoring, alternating bot starts, and lifecycle cancellation. All 148 host tests
 pass, `flutter analyze` is clean, and `git diff --check` passes.
+
+2026-09-29 — Completed M10.6 and closed M10. The user verified Memory Match on
+physical iPhone and Android devices in solo mode, friend mode, and Easy, Normal,
+and Hard bot modes. All required Memory Match play modes are now device-confirmed.
+
+2026-09-29 — Completed M11.1. Added a pure Dart Rock Paper Scissors model that
+accepts both hidden choices atomically, resolves every choice pairing, preserves
+draws without awarding points, tracks immutable scores and completed rounds,
+finishes at the shared configured points-to-win value, and rejects play after a
+winner is decided. Reset and rematch return the model to a clean match state.
+Seventeen focused tests cover all nine pairings plus scoring, both winners,
+terminal locking, reset/rematch, immutable state, and invalid win thresholds.
+All 165 host tests pass, `flutter analyze` is clean, and `git diff --check`
+passes.
+
+2026-09-29 — Completed M11.2. Added a pure Flutter pass-and-hide round flow:
+each friend choice locks immediately, disappears behind a neutral handoff panel,
+and remains concealed until the second choice resolves the round atomically.
+Friend rounds alternate the first chooser. Bot matches lock input during a
+human-like delay, then reveal both choices together. Easy chooses randomly,
+Normal usually counters the most frequent completed human choice with deliberate
+mistakes, and Hard predicts from completed-choice transitions. Bot APIs never
+receive the pending human choice. Pause cancels pending bot work, resume starts a
+fresh delay, and result, rematch, option changes, and disposal cannot leave a
+stale callback. Thirty focused M11 tests cover rules, privacy, all bot policies,
+round flow, score publication, lifecycle safety, and the rendered handoff. All
+178 host tests pass, `flutter analyze` is clean, and `git diff --check` passes.
+
+2026-09-29 — Completed the M11.3 implementation and automated integration.
+Rock Paper Scissors is registered in the two-player catalog with its supplied
+artwork, shared friend/bot setup, persisted favourites, Easy/Normal/Hard
+difficulty selection, configured points-to-win, shared results, and rematch.
+Choice locking, handoff, reveal, round start, and scoring use shared sounds and
+haptics without duplicating the shared final-result effect. Added catalog,
+filter, setup, effects, result, and rematch coverage plus a native integration
+journey from the two-player filter through a completed friend match and rematch.
+All 183 host tests pass and `flutter analyze` and `git diff --check` are clean.
+The focused iPhone run built successfully in Xcode in 116.3 seconds, then stalled
+while Flutter attempted to attach the debugger/test transport; the runner
+reported that Xcode was taking longer than expected to start debugging. Physical
+friend and Easy/Normal/Hard bot confirmation therefore remains pending.
+
+2026-09-29 — Completed M11.3 and closed M11. The user manually verified Rock
+Paper Scissors friend mode and Easy, Normal, and Hard bot modes on physical
+iPhone and Android devices. Together with the passing automated integration,
+effects, favourites, filters, lifecycle, results, and rematch coverage, all M11
+acceptance work is complete.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after

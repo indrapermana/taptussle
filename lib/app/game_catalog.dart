@@ -9,6 +9,7 @@ import '../games/air_hockey/air_hockey_view.dart';
 import '../games/lane_dash/lane_dash_view.dart';
 import '../games/tic_tac_toe/tic_tac_toe_view.dart';
 import '../games/memory_match/memory_match_view.dart';
+import '../games/rock_paper_scissors/rock_paper_scissors_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -156,5 +157,27 @@ final gameCatalog = List<MiniGame>.unmodifiable([
           resolution: resolution,
           frameRate: frameRate,
         ),
+  ),
+  MiniGame(
+    id: 'rock-paper-scissors',
+    artworkAsset: gameLogoAssets['rock-paper-scissors'],
+    title: 'Rock Paper Scissors',
+    subtitle: 'Choose. Reveal. Outsmart.',
+    instructions:
+        'Choose Rock, Paper, or Scissors. Rock beats Scissors, Scissors beats '
+        'Paper, and Paper beats Rock. With a friend, lock your choice and pass '
+        'the device without revealing it. Both choices appear together. First '
+        'to the configured score wins.',
+    botInstructions:
+        'Choose Rock, Paper, or Scissors before the bot responds. The bot uses '
+        'only choices revealed in completed rounds and never reads your current '
+        'hidden choice. First to the configured score wins.',
+    icon: Icons.sports_mma_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {PlayerCount.two},
+    difficultyType: DifficultyType.bot,
+    matchLabel: (options) => 'FIRST TO ${options.winningScore}',
+    build: (session, options) =>
+        RockPaperScissorsView(session: session, options: options),
   ),
 ]);

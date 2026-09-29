@@ -257,6 +257,22 @@ void main() {
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 
+  testWidgets('two-player filter includes Rock Paper Scissors', (tester) async {
+    final settings = await settingsFor(tester);
+    await tester.pumpWidget(TapTussleApp(settings: settings));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-twoPlayers')));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('game-card-rock-paper-scissors')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('saved bot selection opens on the separate difficulty page', (
     tester,
   ) async {

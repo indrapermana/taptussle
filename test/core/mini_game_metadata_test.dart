@@ -11,7 +11,7 @@ void main() {
     final existingGames = gameCatalog.where(
       (game) => game.id != 'memory-match',
     );
-    expect(gameCatalog, hasLength(6));
+    expect(gameCatalog, hasLength(7));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
