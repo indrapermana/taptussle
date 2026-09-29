@@ -31,6 +31,25 @@ MatchOptions _options(int count) => MatchOptions.custom(
   ],
 );
 
+MatchOptions _botOptions({BotDifficulty difficulty = BotDifficulty.normal}) =>
+    MatchOptions.custom(
+      mode: PlayMode.bot,
+      participants: [
+        const MatchParticipant.human(
+          displayName: 'You',
+          color: ParticipantColor.mint,
+          token: ParticipantToken.circle,
+        ),
+        MatchParticipant.bot(
+          displayName: 'Bot',
+          color: ParticipantColor.coral,
+          token: ParticipantToken.diamond,
+          difficulty: difficulty,
+        ),
+      ],
+      difficulty: difficulty,
+    );
+
 class _Dice {
   _Dice(this.values);
   final List<int> values;
@@ -103,7 +122,7 @@ void main() {
       session: session,
       diceRoller: dice.roll,
       transitions: const {},
-      movementStepDuration: Duration.zero,
+      movementStepDuration: const Duration(milliseconds: 1),
     );
     addTearDown(controller.dispose);
     addTearDown(session.dispose);
@@ -139,5 +158,73 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(controller.displayPositions, [0, 0]);
     session.dispose();
+  });
+
+  testWidgets('bot waits visibly and rolls from the same dice sequence', (
+    tester,
+  ) async {
+    final dice = _Dice([2, 5]);
+    final session = MatchSession(options: _botOptions())..start();
+    final controller = SnakesAndLaddersController(
+      session: session,
+      diceRoller: dice.roll,
+      transitions: const {},
+      movementStepDuration: const Duration(milliseconds: 1),
+      botRollDelay: const Duration(milliseconds: 50),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    controller.roll();
+    await tester.pump(const Duration(milliseconds: 2));
+    await tester.pump(const Duration(milliseconds: 2));
+    expect(controller.displayPositions, [2, 0]);
+    expect(controller.isBotTurn, isTrue);
+    expect(controller.isBotThinking, isTrue);
+    expect(controller.canRoll, isFalse);
+    expect(dice.index, 1);
+
+    await tester.pump(const Duration(milliseconds: 45));
+    expect(dice.index, 1);
+    await tester.pump(const Duration(milliseconds: 6));
+    expect(dice.index, 2);
+    await tester.pumpAndSettle();
+
+    expect(controller.displayPositions, [2, 5]);
+    expect(controller.isBotTurn, isFalse);
+    expect(controller.canRoll, isTrue);
+  });
+
+  testWidgets('pause cancels bot delay and resume starts a fresh delay', (
+    tester,
+  ) async {
+    final dice = _Dice([1, 4]);
+    final session = MatchSession(
+      options: _botOptions(difficulty: BotDifficulty.hard),
+    )..start();
+    final controller = SnakesAndLaddersController(
+      session: session,
+      diceRoller: dice.roll,
+      transitions: const {},
+      movementStepDuration: const Duration(milliseconds: 1),
+      botRollDelay: const Duration(milliseconds: 50),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    controller.roll();
+    await tester.pump(const Duration(milliseconds: 2));
+    expect(controller.isBotThinking, isTrue);
+    session.pause();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(dice.index, 1);
+
+    session.resume();
+    expect(controller.isBotThinking, isTrue);
+    await tester.pump(const Duration(milliseconds: 49));
+    expect(dice.index, 1);
+    await tester.pump(const Duration(milliseconds: 2));
+    expect(dice.index, 2);
+    await tester.pumpAndSettle();
   });
 }

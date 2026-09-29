@@ -100,6 +100,8 @@ class _TurnBanner extends StatelessWidget {
     final participant = options.participants[player];
     final status = controller.isAnimating
         ? '${participant.displayName.toUpperCase()} IS MOVING'
+        : controller.isBotThinking
+        ? '${participant.displayName.toUpperCase()} IS THINKING…'
         : '${participant.displayName.toUpperCase()}’S TURN';
     return ArcadePanel(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -302,7 +304,7 @@ class _RollControls extends StatelessWidget {
         key: const ValueKey('snakes-roll'),
         onPressed: controller.canRoll ? controller.roll : null,
         icon: const Icon(Icons.casino_rounded),
-        label: const Text('ROLL'),
+        label: Text(controller.isBotThinking ? 'WAIT' : 'ROLL'),
       ),
     ],
   );

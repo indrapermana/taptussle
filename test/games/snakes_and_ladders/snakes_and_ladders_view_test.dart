@@ -39,7 +39,7 @@ void main() {
     final controller = SnakesAndLaddersController(
       session: session,
       diceRoller: () => 2,
-      movementStepDuration: Duration.zero,
+      movementStepDuration: const Duration(milliseconds: 1),
     );
     addTearDown(controller.dispose);
     addTearDown(session.dispose);
@@ -68,5 +68,42 @@ void main() {
     expect(find.text('One: 2'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r'Square 2, One')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shows a locked visible bot-thinking turn', (tester) async {
+    final options = MatchOptions.bot(difficulty: BotDifficulty.easy);
+    final session = MatchSession(options: options)..start();
+    final rolls = [1, 3];
+    var rollIndex = 0;
+    final controller = SnakesAndLaddersController(
+      session: session,
+      diceRoller: () => rolls[rollIndex++],
+      transitions: const {},
+      movementStepDuration: Duration.zero,
+      botRollDelay: const Duration(seconds: 1),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTapTussleTheme(),
+        home: Scaffold(
+          body: SnakesAndLaddersBoard(controller: controller, options: options),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('snakes-roll')));
+    await tester.pump(const Duration(milliseconds: 2));
+
+    expect(find.text('BOT IS THINKING…'), findsOneWidget);
+    expect(find.text('WAIT'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const ValueKey('snakes-roll')))
+          .onPressed,
+      isNull,
+    );
+    controller.dispose();
   });
 }

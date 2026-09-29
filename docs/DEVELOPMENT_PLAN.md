@@ -39,7 +39,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
-| M12 | Snakes & Ladders | M9 | In progress | M12.1–M12.2 complete with fixed rules, animated 2–4-player local play, lifecycle-safe movement, and ordered standings |
+| M12 | Snakes & Ladders | M9 | In progress | M12.1–M12.3 complete with fixed rules, animated 2–4-player play, ordered standings, and fair delayed bots using the shared dice source |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
@@ -679,7 +679,7 @@ no extra turns, multiple tokens may share a square without capture, and reaching
   deterministic dice injection, transitions, and movement tests before UI work.
 - [x] M12.2 Build a readable board and animated token path for two to four local
   players, including clear current-turn and final-standings states.
-- [ ] M12.3 Add required bot support with visible roll delays and no dice
+- [x] M12.3 Add required bot support with visible roll delays and no dice
   advantage. Because the confirmed rules contain no move decision beyond rolling,
   expose one honest bot profile rather than artificial Easy/Normal/Hard choices.
 - [ ] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
@@ -1315,6 +1315,17 @@ squares without collision, no extra turn after six, exact-roll victory, and
 oversized rolls that leave the token in place before advancing the turn. Ten
 focused tests cover the board, transitions, movement, turn rotation, finish,
 reset, immutability, and invalid configuration. All 193 host tests pass,
+`flutter analyze` is clean, and `git diff --check` passes.
+
+2026-09-29 — Completed M12.3. Snakes & Ladders bots now wait for a visible
+human-like 750–1200 ms delay before rolling, show a bot-thinking state, and lock
+the roll control until their turn completes. Humans and bots consume the same
+dice source, so bot participants have no roll advantage and no artificial
+Easy/Normal/Hard policy for a game without move choices. Consecutive bots schedule
+independently after each token finishes moving. Pause cancels a pending bot roll;
+resume starts a fresh full delay, while rematch, result, and disposal clear stale
+timers. Three focused bot tests verify the shared deterministic dice sequence,
+visible input locking, and pause/resume cancellation. All 201 host tests pass,
 `flutter analyze` is clean, and `git diff --check` passes.
 
 2026-09-29 — Completed M12.2. Added a lifecycle-aware controller and responsive
