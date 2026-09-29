@@ -12,6 +12,7 @@ import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
 import 'package:tap_tussle/games/memory_match/memory_match_view.dart';
 import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_model.dart';
 import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_view.dart';
+import 'package:tap_tussle/games/snakes_and_ladders/snakes_and_ladders_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -243,5 +244,65 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('change-options')));
     await tester.pumpAndSettle();
     expect(find.text('Remove favourite'), findsOneWidget);
+  });
+
+  testWidgets('Snakes and Ladders flexible setup and lifecycle journey', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+
+    await tester.tap(
+      find.byKey(const ValueKey('player-filter-upToFourPlayers')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('game-card-snakes-and-ladders')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('configure-participants')),
+    );
+    await tester.tap(find.byKey(const ValueKey('configure-participants')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('participant-count-3')));
+    await tester.pumpAndSettle();
+    final secondKind = find.byKey(const ValueKey('participant-kind-1'));
+    await tester.ensureVisible(secondKind);
+    await tester.tap(
+      find.descendant(of: secondKind, matching: find.text('Bot')),
+    );
+    await tester.pumpAndSettle();
+    final start = find.byKey(const ValueKey('start-configured-match'));
+    await tester.ensureVisible(start);
+    await tester.tap(start);
+    await tester.pumpAndSettle();
+
+    var board = tester.widget<SnakesAndLaddersBoard>(
+      find.byType(SnakesAndLaddersBoard),
+    );
+    expect(board.options.participants, hasLength(3));
+    expect(board.options.participants[1].isBot, isTrue);
+    await tester.tap(find.byKey(const ValueKey('snakes-roll')));
+    await tester.pump(const Duration(seconds: 3));
+    expect(board.controller.lastRoll, isNotNull);
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('Time out'), findsOneWidget);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('resume-match')));
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Pause match'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('change-options')));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove favourite'), findsOneWidget);
+    expect(settings.catalogPlayerFilter, CatalogPlayerFilter.upToFourPlayers);
   });
 }

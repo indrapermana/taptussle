@@ -168,7 +168,7 @@ class SnakesAndLaddersController extends ChangeNotifier {
       scores: model.positions,
       standings: standings,
       details:
-          '${session.options.playerLabel(winner)} reached square 64. • Another race?',
+          '${standings.indexed.map((entry) => '${entry.$1 + 1}. ${session.options.playerLabel(entry.$2)}').join('  •  ')}  •  Another race?',
     );
   }
 

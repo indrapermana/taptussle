@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'snakes_and_ladders_controller.dart';
 import 'snakes_and_ladders_model.dart';
 
@@ -22,15 +24,47 @@ class SnakesAndLaddersView extends StatefulWidget {
 
 class _SnakesAndLaddersViewState extends State<SnakesAndLaddersView> {
   late final SnakesAndLaddersController controller;
+  SnakesAndLaddersTurn? _observedTurn;
+  bool _wasAnimating = false;
 
   @override
   void initState() {
     super.initState();
-    controller = SnakesAndLaddersController(session: widget.session);
+    controller = SnakesAndLaddersController(session: widget.session)
+      ..addListener(_playEffects);
+  }
+
+  void _playEffects() {
+    final turn = controller.model.lastTurn;
+    if (turn == null) {
+      _observedTurn = null;
+    } else if (!identical(turn, _observedTurn)) {
+      _observedTurn = turn;
+      SoundEffects.play(SoundEffect.diceRoll);
+      HapticEffects.preview();
+    }
+
+    if (_wasAnimating && !controller.isAnimating) {
+      final turn = controller.model.lastTurn!;
+      switch (turn.transitionType) {
+        case BoardTransitionType.none:
+          SoundEffects.play(
+            turn.wasOversized ? SoundEffect.uiInvalid : SoundEffect.pieceMove,
+          );
+        case BoardTransitionType.ladder:
+          SoundEffects.play(SoundEffect.levelUp);
+          HapticEffects.preview();
+        case BoardTransitionType.snake:
+          SoundEffects.play(SoundEffect.impactSoft);
+          HapticEffects.paddleHit();
+      }
+    }
+    _wasAnimating = controller.isAnimating;
   }
 
   @override
   void dispose() {
+    controller.removeListener(_playEffects);
     controller.dispose();
     super.dispose();
   }

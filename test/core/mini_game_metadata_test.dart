@@ -9,9 +9,9 @@ void main() {
 
   test('existing catalog keeps its two-player bot capabilities', () {
     final existingGames = gameCatalog.where(
-      (game) => game.id != 'memory-match',
+      (game) => game.id != 'memory-match' && game.id != 'snakes-and-ladders',
     );
-    expect(gameCatalog, hasLength(7));
+    expect(gameCatalog, hasLength(8));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
@@ -21,6 +21,22 @@ void main() {
       expect(game.difficultyType, DifficultyType.bot);
       expect(game.recordDefinition, isNull);
     }
+  });
+
+  test('Snakes & Ladders supports fair flexible multiplayer setup', () {
+    final game = gameCatalog.singleWhere(
+      (game) => game.id == 'snakes-and-ladders',
+    );
+
+    expect(game.supportedPlayerCounts, {
+      PlayerCount.two,
+      PlayerCount.three,
+      PlayerCount.four,
+    });
+    expect(game.supportedModes, {PlayMode.friend, PlayMode.bot});
+    expect(game.difficultyType, DifficultyType.none);
+    expect(game.recordDefinition, isNull);
+    expect(game.matchLabel!(MatchOptions.friend()), 'FIRST TO SQUARE 64');
   });
 
   test('Memory Match supports solo records plus friend and bot modes', () {

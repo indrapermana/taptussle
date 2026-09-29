@@ -39,7 +39,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
-| M12 | Snakes & Ladders | M9 | In progress | M12.1–M12.3 complete with fixed rules, animated 2–4-player play, ordered standings, and fair delayed bots using the shared dice source |
+| M12 | Snakes & Ladders | M9 | In progress | M12.1–M12.4 implementation complete and native iPhone journey passed; Android physical verification remains pending |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
@@ -683,7 +683,8 @@ no extra turns, multiple tokens may share a square without capture, and reaching
   advantage. Because the confirmed rules contain no move decision beyond rolling,
   expose one honest bot profile rather than artificial Easy/Normal/Hard choices.
 - [ ] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
-  effects, and physical devices.
+  effects, and physical devices. Automated coverage and the focused physical
+  iPhone journey pass; keep this open until Android is manually confirmed.
 
 ## M13 — Sudoku
 
@@ -1316,6 +1317,21 @@ oversized rolls that leave the token in place before advancing the turn. Ten
 focused tests cover the board, transitions, movement, turn rotation, finish,
 reset, immutability, and invalid configuration. All 193 host tests pass,
 `flutter analyze` is clean, and `git diff --check` passes.
+
+2026-09-29 — Completed the M12.4 implementation and iPhone verification. Added
+Snakes & Ladders to the catalog with supplied artwork, two-to-four-player and
+friend/bot metadata, the shared participant editor, both multiplayer filters,
+persisted favourites, and shared results/rematch. Bot seats deliberately omit
+difficulty controls because all participants use the same dice. Dice rolls,
+ordinary movement, ladder climbs, snake descents, and oversized rolls now use
+shared sounds and haptics. Fixed the final result details so all ordered standings
+remain visible. Five integration tests cover metadata, filters, mixed four-seat
+setup, lifecycle interruption, result/rematch, favourites, and effects. All 206
+host tests pass, `flutter analyze` is clean, and `git diff --check` passes. The
+focused native journey built, installed, launched, and passed on a physical
+iPhone, covering the up-to-four filter, favourite, three-player human/bot setup,
+rolling, and lifecycle recovery. No Android device was connected, so Android
+physical confirmation remains pending before M12 closes.
 
 2026-09-29 — Completed M12.3. Snakes & Ladders bots now wait for a visible
 human-like 750–1200 ms delay before rolling, show a bot-thinking state, and lock

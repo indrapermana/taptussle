@@ -10,6 +10,7 @@ import '../games/lane_dash/lane_dash_view.dart';
 import '../games/tic_tac_toe/tic_tac_toe_view.dart';
 import '../games/memory_match/memory_match_view.dart';
 import '../games/rock_paper_scissors/rock_paper_scissors_view.dart';
+import '../games/snakes_and_ladders/snakes_and_ladders_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -179,5 +180,31 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (options) => 'FIRST TO ${options.winningScore}',
     build: (session, options) =>
         RockPaperScissorsView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'snakes-and-ladders',
+    artworkAsset: gameLogoAssets['snakes-and-ladders'],
+    title: 'Snakes & Ladders',
+    subtitle: 'Climb high. Slide down. Reach 64.',
+    instructions:
+        'Choose two to four players and take turns rolling the dice. Ladders '
+        'move your token upward and snakes send it downward. Players may share '
+        'a square. Rolling six does not grant another turn, and you must roll '
+        'the exact number needed to reach square 64.',
+    botInstructions:
+        'Choose two to four participants and assign any non-first seat as a '
+        'bot. Every player uses the same fair dice. Bots pause briefly before '
+        'rolling. Reach square 64 with an exact roll to win.',
+    icon: Icons.casino_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {
+      PlayerCount.two,
+      PlayerCount.three,
+      PlayerCount.four,
+    },
+    difficultyType: DifficultyType.none,
+    matchLabel: (_) => 'FIRST TO SQUARE 64',
+    build: (session, options) =>
+        SnakesAndLaddersView(session: session, options: options),
   ),
 ]);
