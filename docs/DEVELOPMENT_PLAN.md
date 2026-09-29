@@ -39,8 +39,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
-| M12 | Snakes & Ladders | M9 | In progress | M12.1–M12.4 implementation complete and native iPhone journey passed; Android physical verification remains pending |
-| M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
+| M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
+| M13 | Sudoku | M9 | In progress | M13.1 pure Dart rules, deterministic 180-puzzle catalog, and uniqueness verification complete |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
@@ -682,9 +682,9 @@ no extra turns, multiple tokens may share a square without capture, and reaching
 - [x] M12.3 Add required bot support with visible roll delays and no dice
   advantage. Because the confirmed rules contain no move decision beyond rolling,
   expose one honest bot profile rather than artificial Easy/Normal/Hard choices.
-- [ ] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
+- [x] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
   effects, and physical devices. Automated coverage and the focused physical
-  iPhone journey pass; keep this open until Android is manually confirmed.
+  iPhone journey pass; the user manually confirmed all functionality on Android.
 
 ## M13 — Sudoku
 
@@ -701,7 +701,7 @@ three hints; using a hint marks the result as assisted. Records rank highest lev
 then unassisted completion, fewer mistakes, and faster time within each difficulty.
 These rules and the 60-level count are confirmed.
 
-- [ ] M13.1 Implement board validation, candidates, completion, mistake policy,
+- [x] M13.1 Implement board validation, candidates, completion, mistake policy,
   deterministic puzzle loading/generation, and uniqueness verification.
 - [ ] M13.2 Build touch-first number entry, notes, erase, conflict highlighting,
   pause-hidden timer, and resumable in-progress games.
@@ -1014,6 +1014,23 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-29 — Completed M13.1. Added a pure Dart Sudoku foundation with board
+validation, row/column/box candidates, immutable puzzle definitions, protected
+givens, unlimited notes and erase, incorrect-entry highlighting and mistake
+counting, completion detection, and a maximum of three hints that mark a result
+assisted. The deterministic catalog contains 60 distinct levels for each of Easy,
+Normal, and Hard, records the techniques used for each rating, and derives levels
+through solution-preserving digit, row-band, and column-stack transformations.
+The solver uses minimum-candidate backtracking and proves that every one of the
+180 shipped boards has exactly one solution. Sixteen focused tests cover the
+catalog, uniqueness, candidates, malformed boards, entry policy, notes, hints,
+immutability, and completion. All 222 host tests pass, `flutter analyze` is clean,
+and `git diff --check` passes.
+
+2026-09-29 — Closed M12 after the user manually confirmed that all Snakes &
+Ladders functionality works on a physical Android device. Together with the
+previous physical iPhone journey and automated coverage, M12.4 and M12 are Done.
 
 Confirmed: offline operation, shared-device friend mode, bot mode with Easy /
 Normal / Hard, favourites on setup with favourites-first ordering, volume,
