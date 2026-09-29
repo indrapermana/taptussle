@@ -273,14 +273,52 @@ class SudokuSolver {
 class SudokuModel {
   SudokuModel(this.puzzle)
     : _values = List.of(puzzle.givens),
-      _notes = List.generate(SudokuSolver.cellCount, (_) => <int>{});
+      _notes = List.generate(SudokuSolver.cellCount, (_) => <int>{}),
+      _incorrectCells = <int>{};
+
+  SudokuModel.restore(
+    this.puzzle, {
+    required List<int> values,
+    required List<Set<int>> notes,
+    required Set<int> incorrectCells,
+    required this.mistakes,
+    required this.hintsUsed,
+  }) : _values = List.of(values),
+       _notes = notes.map(Set<int>.of).toList(),
+       _incorrectCells = Set.of(incorrectCells) {
+    SudokuSolver.validateBoardShape(_values, allowEmpty: true);
+    if (_notes.length != SudokuSolver.cellCount ||
+        _notes.any(
+          (cellNotes) => cellNotes.any((value) => value < 1 || value > 9),
+        ) ||
+        mistakes < 0 ||
+        hintsUsed < 0 ||
+        hintsUsed > maximumHints ||
+        _incorrectCells.any(
+          (cell) => cell < 0 || cell >= SudokuSolver.cellCount,
+        )) {
+      throw ArgumentError('Invalid saved Sudoku state');
+    }
+    for (var cell = 0; cell < SudokuSolver.cellCount; cell++) {
+      final given = puzzle.givens[cell];
+      final shouldBeIncorrect =
+          given == 0 &&
+          _values[cell] != 0 &&
+          _values[cell] != puzzle.solution[cell];
+      if ((given != 0 && _values[cell] != given) ||
+          (_values[cell] != 0 && _notes[cell].isNotEmpty) ||
+          _incorrectCells.contains(cell) != shouldBeIncorrect) {
+        throw ArgumentError('Saved Sudoku state does not match its puzzle');
+      }
+    }
+  }
 
   static const int maximumHints = 3;
 
   final SudokuPuzzle puzzle;
   final List<int> _values;
   final List<Set<int>> _notes;
-  final Set<int> _incorrectCells = {};
+  final Set<int> _incorrectCells;
 
   List<int> get values => List.unmodifiable(_values);
   List<Set<int>> get notes =>

@@ -40,7 +40,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
-| M13 | Sudoku | M9 | In progress | M13.1 pure Dart rules, deterministic 180-puzzle catalog, and uniqueness verification complete |
+| M13 | Sudoku | M9 | In progress | M13.1–M13.2 rules, touch board, pause-safe timer, and resumable progress complete |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
@@ -703,7 +703,7 @@ These rules and the 60-level count are confirmed.
 
 - [x] M13.1 Implement board validation, candidates, completion, mistake policy,
   deterministic puzzle loading/generation, and uniqueness verification.
-- [ ] M13.2 Build touch-first number entry, notes, erase, conflict highlighting,
+- [x] M13.2 Build touch-first number entry, notes, erase, conflict highlighting,
   pause-hidden timer, and resumable in-progress games.
 - [ ] M13.3 Provide Easy, Normal, and Hard puzzle difficulty and record completion
   time plus mistakes per difficulty. Puzzle difficulty replaces bot difficulty.
@@ -1014,6 +1014,18 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-29 — Completed M13.2. Added a responsive touch-first 9×9 Flutter board
+with selected and related-cell emphasis, matching-number emphasis, immutable
+given styling, explicit incorrect-entry highlighting, compact notes, accessible
+row/column/value labels, a nine-number keypad, Notes, Erase, and three-use Hint
+controls. The active-play timer stops while the shared match is paused and the
+puzzle is removed from view until play resumes. Added versioned local progress
+snapshots keyed by difficulty; values, notes, incorrect cells, mistakes, hints,
+level, and elapsed active time restore together, while malformed or mismatched
+data is rejected and completed progress is cleared. Eight new controller,
+repository, and widget tests bring Sudoku coverage to 24 tests. All 230 host
+tests pass, `flutter analyze` is clean, and `git diff --check` passes.
 
 2026-09-29 — Completed M13.1. Added a pure Dart Sudoku foundation with board
 validation, row/column/box candidates, immutable puzzle definitions, protected
