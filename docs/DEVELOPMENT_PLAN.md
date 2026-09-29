@@ -41,7 +41,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
-| M14 | Checkers | M9 | In progress | M14.1 pure Dart American/English rules and deterministic tests complete |
+| M14 | Checkers | M9 | In progress | M14.1–M14.2 pure rules, interaction controller, and responsive board complete |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
@@ -724,7 +724,7 @@ more compact and easier to read on phones.
 - [x] M14.1 Implement American/English legal moves, mandatory capture,
   multi-jump continuation, promotion, win, stalemate, and draw protection in pure
   Dart with rule tests.
-- [ ] M14.2 Build a readable Flutter board with legal-target, selected-piece,
+- [x] M14.2 Build a readable Flutter board with legal-target, selected-piece,
   capture-chain, king, current-player, and result states.
 - [ ] M14.3 Add delayed Easy, Normal, and Hard bots with bounded search and
   difficulty-specific evaluation/search depth; cancel safely across lifecycle and
@@ -1015,6 +1015,19 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-29 — Completed M14.2. Added a pure Flutter Checkers board with a
+responsive 8×8 layout, participant badges and piece counts, clear current-turn
+and capture-required messaging, selectable movable pieces, highlighted legal
+targets, distinct capture targets, forced-chain selection, crowned king pieces,
+and winner plus draw states. Every square exposes its row, column, occupant,
+piece type, selection, movement, and target state to accessibility services. A
+separate controller owns touch selection, legal moves through the M14.1 model,
+pause input locking, capture continuation, shared match results, and
+starter-alternating rematches, leaving the board reusable for the M14.3 bots.
+Nine controller and widget tests extend focused Checkers coverage to 21 tests,
+including the 320×568 compact layout. All 255 host tests pass, `flutter analyze`
+reports no issues, and `git diff --check` is clean.
 
 2026-09-29 — Completed M14.1. Added a pure Dart American/English Checkers model
 with the standard 8×8 setup and 12 forward-moving men per player. The shared
