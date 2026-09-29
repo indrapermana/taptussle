@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
@@ -117,5 +119,132 @@ void main() {
     expect(controller.model.currentPlayer, 1);
     expect(controller.model.pieceCount(0), 12);
     expect(controller.model.pieceCount(1), 12);
+  });
+
+  testWidgets('bot waits visibly and blocks human input before moving', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.easy),
+    )..start();
+    final controller = CheckersController(
+      session: session,
+      random: Random(10),
+      botThinkDelay: const Duration(milliseconds: 20),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    controller.tapSquare(40);
+    controller.tapSquare(33);
+    expect(controller.isBotThinking, isTrue);
+    expect(controller.acceptsInput, isFalse);
+    expect(controller.tapSquare(17), CheckersTapResult.ignored);
+
+    await tester.pump(const Duration(milliseconds: 19));
+    expect(controller.model.currentPlayer, 1);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(controller.model.currentPlayer, 0);
+    controller.dispose();
+  });
+
+  testWidgets(
+    'pause cancels pending bot work and resume starts a fresh delay',
+    (tester) async {
+      final session = MatchSession(
+        options: MatchOptions.bot(difficulty: BotDifficulty.normal),
+      )..start();
+      final controller = CheckersController(
+        session: session,
+        random: Random(11),
+        botThinkDelay: const Duration(milliseconds: 20),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+      controller.tapSquare(40);
+      controller.tapSquare(33);
+
+      session.pause();
+      expect(controller.isBotThinking, isFalse);
+      await tester.pump(const Duration(seconds: 1));
+      expect(controller.model.currentPlayer, 1);
+
+      session.resume();
+      expect(controller.isBotThinking, isTrue);
+      await tester.pump(const Duration(milliseconds: 19));
+      expect(controller.model.currentPlayer, 1);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(controller.model.currentPlayer, 0);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('bot completes a forced capture chain after separate delays', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.hard),
+    );
+    final controller = CheckersController(
+      session: session,
+      model: CheckersModel.fromBoard(
+        currentPlayer: 1,
+        startingPlayer: 1,
+        board: {
+          17: const CheckersPiece(player: 1),
+          26: const CheckersPiece(player: 0),
+          44: const CheckersPiece(player: 0),
+          56: const CheckersPiece(player: 0),
+        },
+      ),
+      random: Random(12),
+      botThinkDelay: const Duration(milliseconds: 10),
+      botChainDelay: const Duration(milliseconds: 10),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+    session.start();
+
+    expect(controller.isBotThinking, isTrue);
+    await tester.pump(const Duration(milliseconds: 10));
+    expect(controller.model.forcedCaptureSquare, 35);
+    expect(controller.selectedSquare, 35);
+    expect(controller.isBotThinking, isTrue);
+    await tester.pump(const Duration(milliseconds: 10));
+    expect(controller.model.forcedCaptureSquare, isNull);
+    expect(controller.model.currentPlayer, 0);
+    expect(controller.model.board[53], const CheckersPiece(player: 1));
+    controller.dispose();
+  });
+
+  testWidgets('bot starts an alternating rematch and disposal cancels it', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.hard),
+    )..start();
+    final controller = CheckersController(
+      session: session,
+      model: CheckersModel.fromBoard(
+        board: {
+          40: const CheckersPiece(player: 0),
+          33: const CheckersPiece(player: 1),
+        },
+      ),
+      random: Random(13),
+      botThinkDelay: const Duration(milliseconds: 20),
+    );
+    addTearDown(session.dispose);
+    controller.tapSquare(40);
+    controller.tapSquare(26);
+    expect(session.phase, MatchPhase.finished);
+
+    session.start();
+    expect(controller.model.currentPlayer, 1);
+    expect(controller.isBotThinking, isTrue);
+    controller.dispose();
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.model.currentPlayer, 1);
+    expect(tester.takeException(), isNull);
   });
 }

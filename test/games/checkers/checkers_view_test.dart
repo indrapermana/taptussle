@@ -127,4 +127,34 @@ void main() {
     expect(find.byType(CheckersBoard), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('shows the supplied bot thinking status and disables targets', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: Scaffold(
+          body: CheckersBoard(
+            model: CheckersModel(),
+            selectedSquare: 40,
+            enabled: false,
+            statusOverride: 'BOT IS THINKING…',
+            onSquareTap: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('BOT IS THINKING…'), findsOneWidget);
+    expect(
+      tester
+          .widget<Semantics>(
+            find.bySemanticsLabel('Row 5, column 2, empty, legal target'),
+          )
+          .properties
+          .enabled,
+      isFalse,
+    );
+  });
 }

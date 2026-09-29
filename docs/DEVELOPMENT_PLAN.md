@@ -41,7 +41,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
-| M14 | Checkers | M9 | In progress | M14.1–M14.2 pure rules, interaction controller, and responsive board complete |
+| M14 | Checkers | M9 | In progress | M14.1–M14.3 rules, responsive board, and three delayed bot difficulties complete |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
@@ -726,7 +726,7 @@ more compact and easier to read on phones.
   Dart with rule tests.
 - [x] M14.2 Build a readable Flutter board with legal-target, selected-piece,
   capture-chain, king, current-player, and result states.
-- [ ] M14.3 Add delayed Easy, Normal, and Hard bots with bounded search and
+- [x] M14.3 Add delayed Easy, Normal, and Hard bots with bounded search and
   difficulty-specific evaluation/search depth; cancel safely across lifecycle and
   rematch events.
 - [ ] M14.4 Integrate effects, favourites, filters, setup/results, and exhaustive
@@ -1015,6 +1015,20 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-29 — Completed M14.3. Added a Checkers bot that consumes only legal
+moves from the shared M14.1 model and searches independent state copies. Easy
+chooses randomly among legal moves. Normal uses two-turn alpha-beta search with
+a 1,400-node ceiling and an 18% intentional mistake rate. Hard uses four-turn
+search with improved material, king, advancement, center, and back-row
+evaluation under an 8,000-node ceiling and makes no intentional mistakes. The
+controller gives every bot a visible human-like thinking delay, applies a
+separate shorter delay between forced jumps, blocks human input throughout the
+bot turn, and cancels or freshly schedules timers across pause, resume, result,
+rematch, and disposal. Rematches still alternate the starting participant, so
+the bot can start after its normal delay. Nine new bot, controller, and board
+tests raise focused Checkers coverage to 30 tests. All 264 host tests pass,
+`flutter analyze` reports no issues, and `git diff --check` is clean.
 
 2026-09-29 — Completed M14.2. Added a pure Flutter Checkers board with a
 responsive 8×8 layout, participant badges and piece counts, clear current-turn

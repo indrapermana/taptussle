@@ -37,6 +37,11 @@ class _CheckersViewState extends State<CheckersView> {
       model: controller.model,
       selectedSquare: controller.selectedSquare,
       enabled: controller.acceptsInput,
+      statusOverride: controller.isBotThinking
+          ? controller.model.forcedCaptureSquare == null
+                ? 'BOT IS THINKING…'
+                : 'BOT • CONTINUE CAPTURING…'
+          : null,
       playerLabels: [
         widget.options.playerLabel(0),
         widget.options.playerLabel(1),
@@ -54,6 +59,7 @@ class CheckersBoard extends StatelessWidget {
     this.selectedSquare,
     this.playerLabels = const ['Player 1', 'Player 2'],
     this.enabled = true,
+    this.statusOverride,
     super.key,
   }) : assert(playerLabels.length == 2);
 
@@ -62,6 +68,7 @@ class CheckersBoard extends StatelessWidget {
   final int? selectedSquare;
   final List<String> playerLabels;
   final bool enabled;
+  final String? statusOverride;
 
   static const playerOneColor = Color(0xFFFF664F);
   static const playerTwoColor = Color(0xFF35C8FF);
@@ -82,7 +89,7 @@ class CheckersBoard extends StatelessWidget {
     };
     final movableSquares = model.legalMoves.map((move) => move.from).toSet();
     final winner = model.winner;
-    final status = _statusText(model, playerLabels);
+    final status = statusOverride ?? _statusText(model, playerLabels);
 
     return ColoredBox(
       color: const Color(0xFF0C1724),
