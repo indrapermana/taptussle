@@ -323,19 +323,25 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
     difficulty = widget.settings.preferencesFor(widget.game.id).difficulty;
   }
 
-  String get description => widget.mode == PlayMode.bot
-      ? switch (difficulty) {
-          BotDifficulty.easy =>
-            'More time to react and more frequent mistakes.',
-          BotDifficulty.normal =>
-            'Balanced decisions with occasional mistakes.',
-          BotDifficulty.hard => 'Quicker reactions and stronger decisions.',
-        }
-      : switch (difficulty) {
-          BotDifficulty.easy => 'A smaller board with more time to memorize.',
-          BotDifficulty.normal => 'A balanced board and a short preview.',
-          BotDifficulty.hard => 'The largest board with no opening preview.',
-        };
+  String get description {
+    final customDescription = widget.game.difficultyDescription;
+    if (widget.mode != PlayMode.bot && customDescription != null) {
+      return customDescription(difficulty);
+    }
+    return widget.mode == PlayMode.bot
+        ? switch (difficulty) {
+            BotDifficulty.easy =>
+              'More time to react and more frequent mistakes.',
+            BotDifficulty.normal =>
+              'Balanced decisions with occasional mistakes.',
+            BotDifficulty.hard => 'Quicker reactions and stronger decisions.',
+          }
+        : switch (difficulty) {
+            BotDifficulty.easy => 'A smaller board with more time to memorize.',
+            BotDifficulty.normal => 'A balanced board and a short preview.',
+            BotDifficulty.hard => 'The largest board with no opening preview.',
+          };
+  }
 
   Color get difficultyColor => switch (difficulty) {
     BotDifficulty.easy => TapTussleColors.electricBlue,

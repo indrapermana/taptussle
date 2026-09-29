@@ -103,6 +103,19 @@ void main() {
 
     expect(controller.model.isComplete, isTrue);
     expect(repository.load(SudokuDifficulty.easy), isNull);
+    expect(repository.unlockedLevel(SudokuDifficulty.easy), 2);
+    expect(session.phase, MatchPhase.finished);
+    expect(session.outcome, MatchOutcome.completed);
+    expect(session.recordMetrics, {
+      'level': 1,
+      'unassisted': 1,
+      'mistakes': 0,
+      'time': isA<int>(),
+    });
+
+    session.start();
+    expect(controller.model.puzzle.level, 2);
+    expect(controller.model.isComplete, isFalse);
     controller.dispose();
   });
 }

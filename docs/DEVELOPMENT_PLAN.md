@@ -40,7 +40,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
-| M13 | Sudoku | M9 | In progress | M13.1–M13.2 rules, touch board, pause-safe timer, and resumable progress complete |
+| M13 | Sudoku | M9 | In progress | M13.1–M13.3 rules, playable solo flow, level progression, and difficulty-specific records complete |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
@@ -705,7 +705,7 @@ These rules and the 60-level count are confirmed.
   deterministic puzzle loading/generation, and uniqueness verification.
 - [x] M13.2 Build touch-first number entry, notes, erase, conflict highlighting,
   pause-hidden timer, and resumable in-progress games.
-- [ ] M13.3 Provide Easy, Normal, and Hard puzzle difficulty and record completion
+- [x] M13.3 Provide Easy, Normal, and Hard puzzle difficulty and record completion
   time plus mistakes per difficulty. Puzzle difficulty replaces bot difficulty.
 - [ ] M13.4 Verify persistence, records, accessibility, favourites, filters,
   lifecycle, and physical devices.
@@ -1014,6 +1014,19 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-29 — Completed M13.3. Registered Sudoku in the 1 Player catalog with its
+supplied artwork, solo-only puzzle metadata, instructions, favourite support,
+and custom Easy, Normal, and Hard descriptions. The selected difficulty is
+remembered through shared setup and maps directly to the matching 60-level
+catalog. Each difficulty tracks its highest unlocked level independently;
+unfinished boards resume first, completed boards unlock the next level, and
+Play Again advances without changing difficulty. Completion publishes the
+shared result with level, assisted state, mistakes, and active time. Records are
+partitioned by difficulty and rank highest level, unassisted over assisted,
+fewer mistakes, then faster time. Added catalog metadata, level persistence,
+and full setup-to-result/rematch coverage. Sudoku now has 26 focused tests and
+all 233 host tests pass; `flutter analyze` and `git diff --check` are clean.
 
 2026-09-29 — Completed M13.2. Added a responsive touch-first 9×9 Flutter board
 with selected and related-cell emphasis, matching-number emphasis, immutable

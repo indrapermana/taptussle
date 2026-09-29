@@ -60,6 +60,22 @@ void main() {
 
     expect(repository.load(SudokuDifficulty.easy), isNull);
   });
+
+  test(
+    'unlocks levels independently and never moves progress backward',
+    () async {
+      final repository = SudokuProgressRepository(
+        await SharedPreferences.getInstance(),
+      );
+
+      expect(repository.unlockedLevel(SudokuDifficulty.easy), 1);
+      await repository.unlockLevel(SudokuDifficulty.easy, 2);
+      await repository.unlockLevel(SudokuDifficulty.easy, 1);
+
+      expect(repository.unlockedLevel(SudokuDifficulty.easy), 2);
+      expect(repository.unlockedLevel(SudokuDifficulty.normal), 1);
+    },
+  );
 }
 
 int _wrongValue(int solution) => solution == 1 ? 2 : 1;

@@ -17,6 +17,8 @@ typedef MiniGamePresentationBuilder =
       FrameRatePreset frameRate,
     );
 typedef RecordVariantBuilder = String Function(GamePreferences preferences);
+typedef DifficultyDescriptionBuilder =
+    String Function(BotDifficulty difficulty);
 
 enum PlayerCount {
   one(1),
@@ -50,6 +52,7 @@ class MiniGame {
     this.difficultyType = DifficultyType.none,
     this.recordDefinition,
     this.recordVariant,
+    this.difficultyDescription,
   }) : assert(supportedModes.isNotEmpty),
        assert(supportedPlayerCounts.isNotEmpty),
        supportedModes = Set.unmodifiable(supportedModes),
@@ -65,6 +68,7 @@ class MiniGame {
   final DifficultyType difficultyType;
   final GameRecordDefinition? recordDefinition;
   final RecordVariantBuilder? recordVariant;
+  final DifficultyDescriptionBuilder? difficultyDescription;
 
   String recordVariantFor(GamePreferences preferences) =>
       recordVariant?.call(preferences) ??

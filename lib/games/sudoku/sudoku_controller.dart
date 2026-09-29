@@ -24,18 +24,20 @@ class SudokuController extends ChangeNotifier {
       throw ArgumentError('Restored progress belongs to another puzzle');
     }
     session.addListener(_syncSession);
+    _observedRound = session.round;
     _syncSession();
   }
 
   final MatchSession session;
   final SudokuProgressRepository repository;
-  final SudokuModel model;
+  SudokuModel model;
   final DateTime Function() _now;
   final Duration clockTick;
   Timer? _clockTimer;
   DateTime? _activeStartedAt;
   Duration _elapsedBeforeActive;
   MatchPhase _observedPhase = MatchPhase.ready;
+  late int _observedRound;
   bool _disposed = false;
   int? _selectedCell;
   bool _notesMode = false;
@@ -74,7 +76,7 @@ class SudokuController extends ChangeNotifier {
     final result = model.enter(cell, value);
     if (result == SudokuEntryResult.accepted ||
         result == SudokuEntryResult.mistake) {
-      _saveProgress();
+      model.isComplete ? _completePuzzle() : _saveProgress();
       notifyListeners();
     }
     return result;
@@ -93,7 +95,7 @@ class SudokuController extends ChangeNotifier {
     var result = model.revealHint(_selectedCell);
     if (result == SudokuHintResult.outOfBounds) result = model.revealHint();
     if (result == SudokuHintResult.revealed) {
-      _saveProgress();
+      model.isComplete ? _completePuzzle() : _saveProgress();
       notifyListeners();
     }
     return result;
@@ -101,6 +103,12 @@ class SudokuController extends ChangeNotifier {
 
   void _syncSession() {
     if (_disposed) return;
+    final roundChanged = session.round != _observedRound;
+    if (roundChanged) {
+      final previousRound = _observedRound;
+      _observedRound = session.round;
+      if (previousRound > 0) _startNextRound();
+    }
     if (_observedPhase == MatchPhase.playing &&
         session.phase != MatchPhase.playing) {
       _stopClock();
@@ -114,6 +122,50 @@ class SudokuController extends ChangeNotifier {
     if (session.phase == MatchPhase.finished) _clockTimer?.cancel();
     _observedPhase = session.phase;
     notifyListeners();
+  }
+
+  void _startNextRound() {
+    _stopClock();
+    final nextLevel = model.puzzle.level < SudokuCatalog.levelsPerDifficulty
+        ? model.puzzle.level + 1
+        : model.puzzle.level;
+    model = SudokuModel(
+      SudokuCatalog.puzzle(model.puzzle.difficulty, nextLevel),
+    );
+    _elapsedBeforeActive = Duration.zero;
+    _selectedCell = null;
+    _notesMode = false;
+  }
+
+  void _completePuzzle() {
+    _stopClock();
+    final elapsedMilliseconds = elapsed.inMilliseconds;
+    final puzzle = model.puzzle;
+    final nextLevel = (puzzle.level + 1).clamp(
+      1,
+      SudokuCatalog.levelsPerDifficulty,
+    );
+    unawaited(repository.clear(puzzle.difficulty));
+    unawaited(repository.unlockLevel(puzzle.difficulty, nextLevel));
+    session.reportCompletion(
+      scores: const [0],
+      details:
+          'Level ${puzzle.level} complete • ${model.mistakes} mistakes • '
+          '${_formatElapsed(elapsedMilliseconds)}${model.isAssisted ? ' • Assisted' : ''}',
+      recordMetrics: {
+        'level': puzzle.level,
+        'unassisted': model.isAssisted ? 0 : 1,
+        'mistakes': model.mistakes,
+        'time': elapsedMilliseconds,
+      },
+    );
+  }
+
+  String _formatElapsed(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 
   void _startTicker() {

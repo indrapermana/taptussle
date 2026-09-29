@@ -240,7 +240,9 @@ void main() {
     expect(restored.catalogPlayerFilter, CatalogPlayerFilter.upToFourPlayers);
   });
 
-  testWidgets('one-player filter shows Memory Match only', (tester) async {
+  testWidgets('one-player filter shows Memory Match and Sudoku', (
+    tester,
+  ) async {
     final settings = await settingsFor(tester);
     await tester.pumpWidget(TapTussleApp(settings: settings));
     await tester.pumpAndSettle();
@@ -253,7 +255,8 @@ void main() {
       find.byKey(const ValueKey('game-card-memory-match')),
       findsOneWidget,
     );
-    expect(find.text('1 GAME'), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-card-sudoku')), findsOneWidget);
+    expect(find.text('2 GAMES'), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 

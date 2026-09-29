@@ -9,9 +9,12 @@ void main() {
 
   test('existing catalog keeps its two-player bot capabilities', () {
     final existingGames = gameCatalog.where(
-      (game) => game.id != 'memory-match' && game.id != 'snakes-and-ladders',
+      (game) =>
+          game.id != 'memory-match' &&
+          game.id != 'snakes-and-ladders' &&
+          game.id != 'sudoku',
     );
-    expect(gameCatalog, hasLength(8));
+    expect(gameCatalog, hasLength(9));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
@@ -56,6 +59,30 @@ void main() {
         const GamePreferences(difficulty: BotDifficulty.hard),
       ),
       'hard',
+    );
+  });
+
+  test('Sudoku is a solo puzzle with level-first records', () {
+    final game = gameCatalog.singleWhere((game) => game.id == 'sudoku');
+
+    expect(game.supportedPlayerCounts, {PlayerCount.one});
+    expect(game.supportedModes, {PlayMode.solo});
+    expect(game.difficultyType, DifficultyType.puzzle);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.id), [
+      'level',
+      'unassisted',
+      'mistakes',
+      'time',
+    ]);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.sortOrder), [
+      RecordSortOrder.higherIsBetter,
+      RecordSortOrder.higherIsBetter,
+      RecordSortOrder.lowerIsBetter,
+      RecordSortOrder.lowerIsBetter,
+    ]);
+    expect(
+      game.difficultyDescription!(BotDifficulty.hard),
+      contains('Advanced'),
     );
   });
 

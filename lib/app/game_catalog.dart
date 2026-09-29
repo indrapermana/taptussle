@@ -11,9 +11,62 @@ import '../games/tic_tac_toe/tic_tac_toe_view.dart';
 import '../games/memory_match/memory_match_view.dart';
 import '../games/rock_paper_scissors/rock_paper_scissors_view.dart';
 import '../games/snakes_and_ladders/snakes_and_ladders_view.dart';
+import '../games/sudoku/sudoku_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'sudoku',
+    artworkAsset: gameLogoAssets['sudoku'],
+    title: 'Sudoku',
+    subtitle: 'Think ahead. Fill every square.',
+    instructions:
+        'Fill the 9×9 board so every row, column, and 3×3 box contains the '
+        'numbers 1–9 once. Use Notes to track candidates, erase freely, or use '
+        'up to three hints. Incorrect entries count as mistakes. Finish levels '
+        'to unlock the next puzzle in that difficulty.',
+    icon: Icons.grid_on_rounded,
+    supportedModes: const {PlayMode.solo},
+    supportedPlayerCounts: const {PlayerCount.one},
+    difficultyType: DifficultyType.puzzle,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy =>
+        'Straightforward scanning and single-candidate logic.',
+      BotDifficulty.normal => 'Adds locked candidates and pair techniques.',
+      BotDifficulty.hard => 'Advanced deductions for experienced solvers.',
+    },
+    recordDefinition: GameRecordDefinition(
+      primaryMetric: const RecordMetricDefinition(
+        id: 'level',
+        label: 'Level',
+        format: RecordMetricFormat.integer,
+        sortOrder: RecordSortOrder.higherIsBetter,
+      ),
+      tieBreakers: const [
+        RecordMetricDefinition(
+          id: 'unassisted',
+          label: 'Unassisted',
+          format: RecordMetricFormat.integer,
+          sortOrder: RecordSortOrder.higherIsBetter,
+        ),
+        RecordMetricDefinition(
+          id: 'mistakes',
+          label: 'Mistakes',
+          format: RecordMetricFormat.integer,
+          sortOrder: RecordSortOrder.lowerIsBetter,
+        ),
+        RecordMetricDefinition(
+          id: 'time',
+          label: 'Time',
+          format: RecordMetricFormat.duration,
+          sortOrder: RecordSortOrder.lowerIsBetter,
+        ),
+      ],
+    ),
+    matchLabel: (options) =>
+        '${options.difficulty.label.toUpperCase()} • LEVELS 1–60',
+    build: (session, options) => SudokuView(session: session, options: options),
+  ),
   MiniGame(
     id: 'memory-match',
     artworkAsset: gameLogoAssets['memory-match'],

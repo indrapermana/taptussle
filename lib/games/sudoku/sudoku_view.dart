@@ -1,8 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/match_options.dart';
+import '../../core/match_session.dart';
 import 'sudoku_controller.dart';
 import 'sudoku_model.dart';
+import 'sudoku_progress_repository.dart';
+
+class SudokuView extends StatefulWidget {
+  const SudokuView({
+    required this.session,
+    required this.options,
+    this.repository,
+    super.key,
+  });
+
+  final MatchSession session;
+  final MatchOptions options;
+  final SudokuProgressRepository? repository;
+
+  @override
+  State<SudokuView> createState() => _SudokuViewState();
+}
+
+class _SudokuViewState extends State<SudokuView> {
+  SudokuController? controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final repository =
+        widget.repository ??
+        SudokuProgressRepository(await SharedPreferences.getInstance());
+    if (!mounted) return;
+    final difficulty = SudokuDifficulty.values[widget.options.difficulty.index];
+    final saved = repository.load(difficulty);
+    final level = saved?.level ?? repository.unlockedLevel(difficulty);
+    setState(() {
+      controller = SudokuController(
+        session: widget.session,
+        puzzle: SudokuCatalog.puzzle(difficulty, level),
+        repository: repository,
+        restoredProgress: saved,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loadedController = controller;
+    if (loadedController == null) {
+      return const Center(
+        child: CircularProgressIndicator(key: ValueKey('sudoku-loading')),
+      );
+    }
+    return SudokuBoard(controller: loadedController);
+  }
+}
 
 class SudokuBoard extends StatelessWidget {
   const SudokuBoard({required this.controller, super.key});

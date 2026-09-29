@@ -44,6 +44,27 @@ class SudokuProgressRepository {
 
   String _key(SudokuDifficulty difficulty) =>
       'sudoku.progress.${difficulty.name}';
+  String _levelKey(SudokuDifficulty difficulty) =>
+      'sudoku.unlockedLevel.${difficulty.name}';
+
+  int unlockedLevel(SudokuDifficulty difficulty) {
+    final saved = _preferences.getInt(_levelKey(difficulty));
+    return saved == null ||
+            saved < 1 ||
+            saved > SudokuCatalog.levelsPerDifficulty
+        ? 1
+        : saved;
+  }
+
+  Future<void> unlockLevel(SudokuDifficulty difficulty, int level) {
+    final next = level.clamp(1, SudokuCatalog.levelsPerDifficulty);
+    if (next <= unlockedLevel(difficulty)) return Future.value();
+    return _enqueue(() async {
+      if (!await _preferences.setInt(_levelKey(difficulty), next)) {
+        throw StateError('Could not save Sudoku level progress');
+      }
+    });
+  }
 
   SudokuProgressSnapshot? load(SudokuDifficulty difficulty) {
     final encoded = _preferences.getString(_key(difficulty));
