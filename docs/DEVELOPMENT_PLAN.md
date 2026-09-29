@@ -39,7 +39,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M9 | Player-count foundation and local records | M8 | Done | M9.1–M9.10 complete the shared 1–4-player, records, catalog artwork, and branded sound foundations; all 113 tests and analysis pass; user confirmed new logos and sounds on device |
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
-| M12 | Snakes & Ladders | M9 | Not started | First 2–4-player game and first shared multi-token turn flow |
+| M12 | Snakes & Ladders | M9 | In progress | M12.1 complete with the fixed 8x8 board, deterministic dice, exact-roll finish, and 2–4-player rule coverage |
 | M13 | Sudoku | M9 | Not started | Dedicated solo game with difficulty, completion time, mistakes, and local records |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
@@ -674,7 +674,7 @@ square, sends that token back, or blocks the move. Confirmed TapTussle rules are
 no extra turns, multiple tokens may share a square without capture, and reaching
 64 requires an exact roll; an oversized roll leaves the token in place.
 
-- [ ] M12.1 Freeze snake/ladder positions and confirm exact-roll finish, no extra
+- [x] M12.1 Freeze snake/ladder positions and confirm exact-roll finish, no extra
   turns, and shared squares without collision. Implement the 1–64 path,
   deterministic dice injection, transitions, and movement tests before UI work.
 - [ ] M12.2 Build a readable board and animated token path for two to four local
@@ -1305,6 +1305,17 @@ Paper Scissors friend mode and Easy, Normal, and Hard bot modes on physical
 iPhone and Android devices. Together with the passing automated integration,
 effects, favourites, filters, lifecycle, results, and rematch coverage, all M11
 acceptance work is complete.
+
+2026-09-29 — Completed M12.1. Added a pure Dart Snakes & Ladders model with a
+fixed serpentine 1–64 path and five frozen ladders (3→16, 8→30, 20→39, 27→48,
+41→60) plus five frozen snakes (18→6, 26→10, 37→24, 50→34, 62→45). The model
+supports two to four participants, injected deterministic dice, immutable token
+positions and transitions, one snake or ladder transition per roll, shared
+squares without collision, no extra turn after six, exact-roll victory, and
+oversized rolls that leave the token in place before advancing the turn. Ten
+focused tests cover the board, transitions, movement, turn rotation, finish,
+reset, immutability, and invalid configuration. All 193 host tests pass,
+`flutter analyze` is clean, and `git diff --check` passes.
 
 2026-09-26 — Consolidated the unfinished physical-device and release-validation
 work into M23 so it runs once against the complete 18-game release candidate after
