@@ -40,8 +40,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
-| M13 | Sudoku | M9 | In progress | M13.1–M13.4 implemented and automated checks pass; physical-device confirmation pending |
-| M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
+| M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
+| M14 | Checkers | M9 | In progress | M14.1 pure Dart American/English rules and deterministic tests complete |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
@@ -707,9 +707,9 @@ These rules and the 60-level count are confirmed.
   pause-hidden timer, and resumable in-progress games.
 - [x] M13.3 Provide Easy, Normal, and Hard puzzle difficulty and record completion
   time plus mistakes per difficulty. Puzzle difficulty replaces bot difficulty.
-- [ ] M13.4 Verify persistence, records, accessibility, favourites, filters,
-  lifecycle, and physical devices. Implementation and automated coverage are
-  complete; final physical-device confirmation remains.
+- [x] M13.4 Verify persistence, records, accessibility, favourites, filters,
+  lifecycle, and physical devices. The user confirmed the completed game on
+  physical iPhone and Android devices.
 
 ## M14 — Checkers
 
@@ -721,7 +721,7 @@ capture backward, kings are flying pieces, and the maximum available capture
 sequence is mandatory. TapTussle will use American/English checkers because it is
 more compact and easier to read on phones.
 
-- [ ] M14.1 Implement American/English legal moves, mandatory capture,
+- [x] M14.1 Implement American/English legal moves, mandatory capture,
   multi-jump continuation, promotion, win, stalemate, and draw protection in pure
   Dart with rule tests.
 - [ ] M14.2 Build a readable Flutter board with legal-target, selected-piece,
@@ -1016,6 +1016,23 @@ maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
 
+2026-09-29 — Completed M14.1. Added a pure Dart American/English Checkers model
+with the standard 8×8 setup and 12 forward-moving men per player. The shared
+legal-move API enforces board-wide mandatory captures, locks consecutive jumps
+to the capturing piece, ends a capture turn when a man is crowned, and gives
+kings single-square diagonal movement and jumping in both directions without
+flying. Capturing the final opposing piece and leaving the next player without a
+legal move both produce a win. Threefold position repetition and 80 half-moves
+(40 moves per player) without a capture or promotion protect against endless
+games. A state-preserving independent copy supports future bot search without
+mutating the live match. Twelve deterministic rule tests cover setup,
+validation, captures, multi-jumps, promotion, kings, wins, stalemate, both draw
+paths, and copy independence. All 246 host tests pass, `flutter analyze` reports
+no issues, and `git diff --check` is clean.
+
+2026-09-29 — Closed M13.4 after the user verified Sudoku on physical iPhone and
+Android devices. M13 is complete.
+
 2026-09-29 — Implemented M13.4. Sudoku now maps cell selection, notes, accepted
 entries, invalid entries, erase, and hints to the shared sound and haptic
 services. Hint selection skips given and already solved cells. Expanded the
@@ -1027,7 +1044,7 @@ tests and all 234 host tests pass; `flutter analyze` and `git diff --check` are
 clean. Physical automation remains pending: the wired iPhone build installed
 but Flutter could not discover its Dart VM service, while Flutter rejected the
 wireless iPad launch because `flutter test` does not expose the requested
-`--publish-port` option. Manual iPhone and Android confirmation will close M13.4.
+`--publish-port` option. The later manual iPhone and Android pass closed M13.4.
 
 2026-09-29 — Completed M13.3. Registered Sudoku in the 1 Player catalog with its
 supplied artwork, solo-only puzzle metadata, instructions, favourite support,
