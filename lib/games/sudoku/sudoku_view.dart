@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'sudoku_controller.dart';
 import 'sudoku_model.dart';
 import 'sudoku_progress_repository.dart';
@@ -228,7 +230,10 @@ class _Cell extends StatelessWidget {
       child: ExcludeSemantics(
         child: InkWell(
           key: ValueKey('sudoku-cell-$cell'),
-          onTap: () => controller.selectCell(cell),
+          onTap: () {
+            controller.selectCell(cell);
+            SoundEffects.play(SoundEffect.uiTap);
+          },
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: background,
@@ -332,7 +337,20 @@ class _NumberPad extends StatelessWidget {
               ),
               onPressed: controller.selectedCell == null
                   ? null
-                  : () => controller.enterNumber(value),
+                  : () {
+                      final wasNotesMode = controller.notesMode;
+                      final result = controller.enterNumber(value);
+                      if (wasNotesMode) {
+                        SoundEffects.play(SoundEffect.uiTap);
+                        HapticEffects.preview();
+                      } else if (result == SudokuEntryResult.mistake) {
+                        SoundEffects.play(SoundEffect.uiInvalid);
+                        HapticEffects.paddleHit();
+                      } else if (result == SudokuEntryResult.accepted) {
+                        SoundEffects.play(SoundEffect.pieceMove);
+                        HapticEffects.preview();
+                      }
+                    },
               child: Text('$value'),
             ),
           ),
@@ -353,7 +371,10 @@ class _ActionBar extends StatelessWidget {
       Expanded(
         child: OutlinedButton.icon(
           key: const ValueKey('sudoku-notes'),
-          onPressed: controller.toggleNotesMode,
+          onPressed: () {
+            controller.toggleNotesMode();
+            SoundEffects.play(SoundEffect.uiTap);
+          },
           style: controller.notesMode
               ? OutlinedButton.styleFrom(
                   backgroundColor: TapTussleColors.gold.withValues(alpha: .2),
@@ -372,7 +393,12 @@ class _ActionBar extends StatelessWidget {
           key: const ValueKey('sudoku-erase'),
           onPressed: controller.selectedCell == null
               ? null
-              : controller.eraseSelected,
+              : () {
+                  if (controller.eraseSelected()) {
+                    SoundEffects.play(SoundEffect.uiBack);
+                    HapticEffects.preview();
+                  }
+                },
           icon: const Icon(Icons.backspace_outlined),
           label: const Text('ERASE'),
         ),
@@ -383,7 +409,12 @@ class _ActionBar extends StatelessWidget {
           key: const ValueKey('sudoku-hint'),
           onPressed: controller.model.hintsUsed >= SudokuModel.maximumHints
               ? null
-              : controller.revealHint,
+              : () {
+                  if (controller.revealHint() == SudokuHintResult.revealed) {
+                    SoundEffects.play(SoundEffect.collect);
+                    HapticEffects.paddleHit();
+                  }
+                },
           icon: const Icon(Icons.lightbulb_outline_rounded),
           label: Text(
             'HINT ${SudokuModel.maximumHints - controller.model.hintsUsed}',

@@ -40,7 +40,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M10 | Memory Match | M9 | Done | M10.1–M10.6 complete; user verified solo, friend, and all three bot difficulties on physical iPhone and Android devices |
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
-| M13 | Sudoku | M9 | In progress | M13.1–M13.3 rules, playable solo flow, level progression, and difficulty-specific records complete |
+| M13 | Sudoku | M9 | In progress | M13.1–M13.4 implemented and automated checks pass; physical-device confirmation pending |
 | M14 | Checkers | M9 | Not started | Two-player strategy game with legal-move and bot-search coverage |
 | M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
@@ -708,7 +708,8 @@ These rules and the 60-level count are confirmed.
 - [x] M13.3 Provide Easy, Normal, and Hard puzzle difficulty and record completion
   time plus mistakes per difficulty. Puzzle difficulty replaces bot difficulty.
 - [ ] M13.4 Verify persistence, records, accessibility, favourites, filters,
-  lifecycle, and physical devices.
+  lifecycle, and physical devices. Implementation and automated coverage are
+  complete; final physical-device confirmation remains.
 
 ## M14 — Checkers
 
@@ -1014,6 +1015,19 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-29 — Implemented M13.4. Sudoku now maps cell selection, notes, accepted
+entries, invalid entries, erase, and hints to the shared sound and haptic
+services. Hint selection skips given and already solved cells. Expanded the
+setup-to-result coverage to verify favourites, the 1 Player filter, lifecycle
+pause/resume, resumable notes, difficulty-specific records, and next-level
+rematch behavior; existing board tests verify all 81 cells expose accessible
+row, column, value, given, selected, and incorrect states. Sudoku has 27 focused
+tests and all 234 host tests pass; `flutter analyze` and `git diff --check` are
+clean. Physical automation remains pending: the wired iPhone build installed
+but Flutter could not discover its Dart VM service, while Flutter rejected the
+wireless iPad launch because `flutter test` does not expose the requested
+`--publish-port` option. Manual iPhone and Android confirmation will close M13.4.
 
 2026-09-29 — Completed M13.3. Registered Sudoku in the 1 Player catalog with its
 supplied artwork, solo-only puzzle metadata, instructions, favourite support,

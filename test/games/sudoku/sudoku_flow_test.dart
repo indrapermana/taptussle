@@ -31,6 +31,9 @@ void main() {
         home: GameSetupScreen(game: game, settings: settings),
       ),
     );
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    expect(settings.isFavourite('sudoku'), isTrue);
     await tester.ensureVisible(find.byKey(const ValueKey('play-solo')));
     await tester.tap(find.byKey(const ValueKey('play-solo')));
     await tester.pumpAndSettle();
@@ -52,6 +55,18 @@ void main() {
     final board = tester.widget<SudokuBoard>(find.byType(SudokuBoard));
     expect(board.controller.model.puzzle.difficulty, SudokuDifficulty.hard);
     expect(board.controller.model.puzzle.level, 1);
+    final notedCell = board.controller.model.puzzle.givens.indexOf(0);
+    board.controller.selectCell(notedCell);
+    board.controller.toggleNotesMode();
+    board.controller.enterNumber(2);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('Time out'), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.tap(find.byKey(const ValueKey('resume-match')));
+    await tester.pump();
+    expect(board.controller.model.notes[notedCell], {2});
+    board.controller.toggleNotesMode();
     final puzzle = board.controller.model.puzzle;
     for (var cell = 0; cell < SudokuSolver.cellCount; cell++) {
       if (puzzle.givens[cell] != 0) continue;
@@ -83,6 +98,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(board.controller.model.puzzle.level, 2);
     expect(find.textContaining('LEVEL 2'), findsOneWidget);
+    expect(settings.isFavourite('sudoku'), isTrue);
     expect(tester.takeException(), isNull);
   });
 }

@@ -384,7 +384,11 @@ class SudokuModel {
       return SudokuHintResult.outOfBounds;
     }
     final target = cell ?? _firstUnsolvedCell();
-    if (target == null || isGiven(target)) return SudokuHintResult.outOfBounds;
+    if (target == null ||
+        isGiven(target) ||
+        _values[target] == puzzle.solution[target]) {
+      return SudokuHintResult.outOfBounds;
+    }
 
     _values[target] = puzzle.solution[target];
     _notes[target].clear();

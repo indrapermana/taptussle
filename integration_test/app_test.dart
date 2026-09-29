@@ -13,6 +13,8 @@ import 'package:tap_tussle/games/memory_match/memory_match_view.dart';
 import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_model.dart';
 import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_view.dart';
 import 'package:tap_tussle/games/snakes_and_ladders/snakes_and_ladders_view.dart';
+import 'package:tap_tussle/games/sudoku/sudoku_model.dart';
+import 'package:tap_tussle/games/sudoku/sudoku_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -305,4 +307,64 @@ void main() {
     expect(find.text('Remove favourite'), findsOneWidget);
     expect(settings.catalogPlayerFilter, CatalogPlayerFilter.upToFourPlayers);
   });
+
+  testWidgets(
+    'Sudoku solo persistence, lifecycle, result, and rematch journey',
+    (tester) async {
+      final settings = await launchCleanApp(tester);
+      addTearDown(settings.dispose);
+
+      await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('game-card-sudoku')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('play-solo')));
+      await tester.tap(find.byKey(const ValueKey('play-solo')));
+      await tester.pumpAndSettle();
+      await setDifficulty(tester, BotDifficulty.easy);
+      await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+      await tester.pumpAndSettle();
+
+      final board = tester.widget<SudokuBoard>(find.byType(SudokuBoard));
+      final puzzle = board.controller.model.puzzle;
+      final notedCell = puzzle.givens.indexOf(0);
+      board.controller.selectCell(notedCell);
+      board.controller.toggleNotesMode();
+      board.controller.enterNumber(2);
+
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      expect(find.text('Time out'), findsOneWidget);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.tap(find.byKey(const ValueKey('resume-match')));
+      await tester.pump();
+      expect(board.controller.model.notes[notedCell], {2});
+      board.controller.toggleNotesMode();
+
+      for (var cell = 0; cell < SudokuSolver.cellCount; cell++) {
+        if (puzzle.givens[cell] != 0) continue;
+        board.controller.selectCell(cell);
+        board.controller.enterNumber(puzzle.solution[cell]);
+      }
+      await tester.pumpAndSettle();
+
+      expect(find.text('Complete!'), findsOneWidget);
+      expect(settings.isFavourite('sudoku'), isTrue);
+      expect(
+        settings.recordRepository.recordsFor(
+          const GameRecordKey(
+            gameId: 'sudoku',
+            recordType: 'solo',
+            variant: 'easy',
+          ),
+        ),
+        hasLength(1),
+      );
+      await tester.tap(find.byKey(const ValueKey('play-again')));
+      await tester.pump();
+      expect(board.controller.model.puzzle.level, 2);
+    },
+  );
 }
