@@ -44,7 +44,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; 333 host tests and focused iPhone automation passed; user confirmed physical-device functionality |
-| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.2 rules, 180 deterministic levels, exact solver, and catalog-wide proof complete; all 347 host tests pass |
+| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.3 rules, verified 180-level catalog, solver, controller, and responsive accessible interface complete; all 352 host tests pass |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
@@ -822,7 +822,7 @@ the number of colors.
   solution length plus branching metadata used to validate the classification. A
   catalog-wide automated test must solve every level, replay the returned move path
   through the production model, and report the exact level ID on failure.
-- [ ] M17.3 Build a responsive Flutter tube interface with selected/source states,
+- [x] M17.3 Build a responsive Flutter tube interface with selected/source states,
   pour animation, color/pattern accessibility, undo, restart, and optional hints.
 - [ ] M17.4 Persist unlocked/completed levels and the active puzzle. Daily, weekly,
   and overall best rank the highest completed level per difficulty, then fewer moves
@@ -1018,6 +1018,16 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M17.3. Added a dedicated Water Sort controller for tube
+selection, destination changes, animation locking, undo, restart, and optional
+shortest-path hints from the M17.2 solver. The Flutter board adapts its column count
+for compact phones and wide/tablet layouts, scrolls when higher difficulties need
+more tubes, and visibly animates the pouring source and destination. Every liquid
+layer combines color with one of twelve symbols, and tube semantics announce ordered
+bottom-to-top contents, selection, and hint roles without relying on color alone.
+Focused controller and widget coverage verifies input locking, selection changes,
+hints, animation, undo/restart, accessibility, and compact/wide layouts.
 
 2026-09-30 — Completed M17.2. Added a compact deterministic catalog containing 60
 Easy, 60 Normal, and 60 Hard Water Sort levels. Difficulty follows the confirmed
