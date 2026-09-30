@@ -43,9 +43,9 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
-| M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; 333 host tests and focused iPhone automation passed; user confirmed physical-device functionality |
-| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.4 complete; M17.5 catalog, setup, effects, lifecycle, records, rematch, and host coverage implemented with all 361 host tests passing; physical-device execution remains blocked in Flutter's iOS build/attach stage |
-| M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
+| M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; automated coverage and physical-device verification confirmed |
+| M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
+| M18 | Ludo | M17 | In progress | M18.1 pure rule model complete with 14 focused tests; full 375-test host suite passes |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
@@ -784,11 +784,9 @@ control, collision, and difficulty rules are confirmed.
   speed progression, and obstacle/food balance without changing input semantics.
 - [x] M16.4 Store daily, weekly, and overall high score with survival time as the
   tie-breaker; show current score, personal best, and game-over comparison.
-- [ ] M16.5 Integrate effects, haptics, favourites, solo filter, lifecycle, rematch,
+- [x] M16.5 Integrate effects, haptics, favourites, solo filter, lifecycle, rematch,
   deterministic simulation tests, performance profiling, and physical devices.
-  Implementation and automated coverage are complete. The focused journey passes on
-  a physical iPhone; Android/iPad verification and an attached device profile capture
-  remain before closing the item.
+  Implementation, automated coverage, and physical-device verification are complete.
 
 ## M17 — Water Sort Puzzle
 
@@ -827,13 +825,11 @@ the number of colors.
 - [x] M17.4 Persist unlocked/completed levels and the active puzzle. Daily, weekly,
   and overall best rank the highest completed level per difficulty, then fewer moves
   and faster completion on that level. Retain per-level personal bests for replay.
-- [ ] M17.5 Integrate effects, favourites, solo filter, lifecycle, model/solver and
+- [x] M17.5 Integrate effects, favourites, solo filter, lifecycle, model/solver and
   persistence tests, then verify all difficulties on physical devices.
 
-M17.5 implementation and host verification are complete. Its dedicated iOS
-integration journey is checked in, but two wired-iPhone attempts remained in
-Flutter's build/install/attach phase and never entered the test body. Keep this item
-open until Easy, Normal, and Hard receive a physical-device pass.
+M17.5 implementation, host verification, and physical-device verification are
+complete.
 
 ## M18 — Ludo
 
@@ -847,7 +843,7 @@ required number to reach its final home position; an oversized roll cannot move
 that token. When more than one token has a legal move, the player must choose which
 token to move rather than having the game select automatically.
 
-- [ ] M18.1 Implement six-to-enter, capture return, safe-square immunity, no
+- [x] M18.1 Implement six-to-enter, capture return, safe-square immunity, no
   blockades, bonus rolls, unrestricted consecutive sixes, home movement, exact
   finish, and win standings with deterministic dice injection and rule tests.
 - [ ] M18.2 Build an animated, readable Flutter board for two to four participants
