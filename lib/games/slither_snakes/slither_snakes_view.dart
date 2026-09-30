@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import 'slither_challenge_profile.dart';
 import 'slither_simulation.dart';
 import 'slither_snakes_game.dart';
 
@@ -30,8 +31,12 @@ class _SlitherSnakesViewState extends State<SlitherSnakesView> {
   @override
   void initState() {
     super.initState();
+    final profile = SlitherChallengeProfile.forDifficulty(
+      widget.options.difficulty,
+    );
     game = SlitherSnakesGame(
       session: widget.session,
+      config: profile.config,
       simulation: widget.initialSimulation,
     );
     widget.session.addListener(_syncSession);

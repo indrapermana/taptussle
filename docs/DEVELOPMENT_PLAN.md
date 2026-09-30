@@ -43,7 +43,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
-| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.2 deterministic simulation and Flame presentation complete |
+| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.3 simulation, Flame presentation, and challenge profiles complete |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
@@ -780,7 +780,7 @@ control, collision, and difficulty rules are confirmed.
   and seeded spawning independently from rendering.
 - [x] M16.2 Build the Flame game with natural touch steering, camera/arena feedback,
   readable snake and food artwork, pause safety, and stable fixed-step movement.
-- [ ] M16.3 Add Easy, Normal, and Hard challenge profiles through arena pressure,
+- [x] M16.3 Add Easy, Normal, and Hard challenge profiles through arena pressure,
   speed progression, and obstacle/food balance without changing input semantics.
 - [ ] M16.4 Store daily, weekly, and overall high score with survival time as the
   tie-breaker; show current score, personal best, and game-over comparison.
@@ -1015,6 +1015,18 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M16.3. Added explicit Slither challenge profiles selected
+from the shared Easy, Normal, and Hard setup difficulty. Easy uses two slower,
+less responsive AI snakes and 64 food items; Normal uses four balanced AI snakes
+and 45 food items; Hard uses six faster, more responsive AI snakes with stronger
+food-driven speed progression and 30 food items. AI speed caps and growth curves
+are now independent from player movement, while player base speed, maximum speed,
+food progression, turn rate, arena, controls, collision rules, and spawn protection
+stay identical across all three profiles. Rematches rebuild the same selected
+profile with a fresh deterministic round seed. Six focused tests verify profile
+mapping, monotonic pressure and scarcity, unchanged player handling, configured
+arena populations, AI speed curves, view wiring, and rematch preservation.
 
 2026-09-30 — Completed M16.2. Added a Flame presentation over the pure M16.1
 simulation with lower-half drag steering, screen-to-arena coordinate conversion,

@@ -82,6 +82,8 @@ class SlitherSimulationConfig {
     this.aiBaseSpeed = 142,
     this.maximumSpeed = 220,
     this.speedPerFood = 2.5,
+    this.aiMaximumSpeed = 220,
+    this.aiSpeedPerFood = 2.5,
     this.playerTurnRate = 3.2,
     this.aiTurnRate = 2.4,
     this.spawnProtection = 2,
@@ -98,6 +100,9 @@ class SlitherSimulationConfig {
        assert(playerBaseSpeed > 0),
        assert(aiBaseSpeed > 0),
        assert(maximumSpeed >= playerBaseSpeed),
+       assert(aiMaximumSpeed >= aiBaseSpeed),
+       assert(speedPerFood >= 0),
+       assert(aiSpeedPerFood >= 0),
        assert(spawnProtection >= 0),
        assert(initialSegments > 0);
 
@@ -109,6 +114,8 @@ class SlitherSimulationConfig {
   final double aiBaseSpeed;
   final double maximumSpeed;
   final double speedPerFood;
+  final double aiMaximumSpeed;
+  final double aiSpeedPerFood;
   final double playerTurnRate;
   final double aiTurnRate;
   final double spawnProtection;
@@ -171,10 +178,15 @@ class SlitherSimulation {
   SlitherGameOverReason? gameOverReason;
   bool get isGameOver => gameOverReason != null;
 
-  double speedFor(SlitherSnake snake) => min(
-    config.maximumSpeed,
-    snake.baseSpeed + snake.foodEaten * config.speedPerFood,
-  );
+  double speedFor(SlitherSnake snake) {
+    final maximumSpeed = snake.isPlayer
+        ? config.maximumSpeed
+        : config.aiMaximumSpeed;
+    final speedPerFood = snake.isPlayer
+        ? config.speedPerFood
+        : config.aiSpeedPerFood;
+    return min(maximumSpeed, snake.baseSpeed + snake.foodEaten * speedPerFood);
+  }
 
   void steerToward(SlitherPoint? arenaTarget) => _steeringTarget = arenaTarget;
 

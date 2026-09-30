@@ -8,6 +8,47 @@ import 'package:tap_tussle/games/slither_snakes/slither_snakes_game.dart';
 import 'package:tap_tussle/games/slither_snakes/slither_snakes_view.dart';
 
 void main() {
+  testWidgets('selected difficulty configures pressure and survives rematch', (
+    tester,
+  ) async {
+    for (final difficulty in BotDifficulty.values) {
+      final options = MatchOptions.solo(difficulty: difficulty);
+      final session = MatchSession(options: options)..start();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SlitherSnakesView(
+              key: ValueKey(difficulty),
+              session: session,
+              options: options,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final game = _gameFrom(tester);
+      final aiCount = switch (difficulty) {
+        BotDifficulty.easy => 2,
+        BotDifficulty.normal => 4,
+        BotDifficulty.hard => 6,
+      };
+      final foodCount = switch (difficulty) {
+        BotDifficulty.easy => 64,
+        BotDifficulty.normal => 45,
+        BotDifficulty.hard => 30,
+      };
+
+      expect(game.simulation.opponents, hasLength(aiCount));
+      expect(game.simulation.food, hasLength(foodCount));
+      session.reportCompletion();
+      session.start();
+      expect(game.simulation.opponents, hasLength(aiCount));
+      expect(game.simulation.food, hasLength(foodCount));
+    }
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('only a lower-half drag steers and release clears the target', (
     tester,
   ) async {
