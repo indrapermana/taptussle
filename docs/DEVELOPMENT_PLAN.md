@@ -44,7 +44,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; 333 host tests and focused iPhone automation passed; user confirmed physical-device functionality |
-| M17 | Water Sort Puzzle | M16 | In progress | M17.1 immutable rules model complete; 9 focused tests and all 342 host tests pass |
+| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.2 rules, 180 deterministic levels, exact solver, and catalog-wide proof complete; all 347 host tests pass |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
@@ -817,7 +817,7 @@ the number of colors.
 
 - [x] M17.1 Define tube capacity, legal pours, completion, move counting, undo, and
   restart; implement an immutable/testable puzzle model.
-- [ ] M17.2 Choose a curated or generated level source and prove every shipped level
+- [x] M17.2 Choose a curated or generated level source and prove every shipped level
   is solvable. Ship 60 levels in each difficulty and record solver-verified minimum
   solution length plus branching metadata used to validate the classification. A
   catalog-wide automated test must solve every level, replay the returned move path
@@ -1018,6 +1018,16 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M17.2. Added a compact deterministic catalog containing 60
+Easy, 60 Normal, and 60 Hard Water Sort levels. Difficulty follows the confirmed
+color and helper-tube ranges and progresses through teaching, core, combined, and
+mastery pattern families. Every level records its exact shortest solution length,
+initial legal-move count, and mixed-color boundary count. An exact breadth-first
+solver canonicalizes interchangeable tubes, removes redundant empty-tube moves,
+and returns a replayable shortest path under an explicit search bound. The
+catalog-wide test independently solves all 180 levels and replays every move through
+the production M17.1 model, reporting the exact level ID and failing step on drift.
 
 2026-09-30 — Completed M17.1. Added an immutable Water Sort model with four-unit
 tubes by default, bottom-to-top compact color IDs, maximal contiguous legal pours,
