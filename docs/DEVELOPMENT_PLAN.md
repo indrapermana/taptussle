@@ -41,8 +41,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M11 | Rock Paper Scissors | M9 | Done | M11.1–M11.3 complete; friend mode and all three bot difficulties verified on physical iPhone and Android devices |
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
-| M14 | Checkers | M9 | In progress | M14.1–M14.4 implementation and automated coverage complete; physical iPhone and Android confirmation pending |
-| M15 | Mancala | M14 | Not started | Two-player sowing strategy with friend and delayed bot modes |
+| M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
+| M15 | Mancala | M14 | In progress | M15.1 deterministic Kalah rules and focused model coverage complete |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
@@ -729,9 +729,8 @@ more compact and easier to read on phones.
 - [x] M14.3 Add delayed Easy, Normal, and Hard bots with bounded search and
   difficulty-specific evaluation/search depth; cancel safely across lifecycle and
   rematch events.
-- [ ] M14.4 Integrate effects, favourites, filters, setup/results, and exhaustive
-  device-sized widget plus physical-device checks. Implementation and automated
-  coverage are complete; physical iPhone and Android confirmation remains.
+- [x] M14.4 Integrate effects, favourites, filters, setup/results, and exhaustive
+  device-sized widget plus physical-device checks.
 
 ## M15 — Mancala
 
@@ -745,7 +744,7 @@ pit, but only when the opposite pit is non-empty. The game ends as soon as eithe
 side's six pits are empty; the other side moves all remaining stones to its store.
 The larger store wins, and equal stores produce a draw.
 
-- [ ] M15.1 Implement the confirmed board setup, counterclockwise sowing,
+- [x] M15.1 Implement the confirmed board setup, counterclockwise sowing,
   opponent-store skipping, capture condition, extra turns, immediate side-empty
   detection, final collection, winner, and draw in a deterministic pure Dart model.
 - [ ] M15.2 Build an accessible Flutter board with clear pit ownership, stone counts,
@@ -1016,6 +1015,19 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M15.1. Added a deterministic pure Dart Kalah model with
+the confirmed six pits and four stones per pit, explicit counterclockwise board
+order, active-store inclusion, opposing-store skipping, extra turns, captures
+only against a non-empty opposite pit, immediate side-empty detection, final
+stone collection, wins, and draws. The model exposes immutable board and turn
+snapshots, rejects invalid moves without mutation, conserves the configured
+stone total, and supports independent copies for the future bot search. Twelve
+focused tests cover both players, rule boundaries, terminal scoring, malformed
+state, and copy isolation.
+
+2026-09-30 — Completed M14 after the user confirmed Checkers works on a physical
+device. The broader all-device release matrix remains scheduled for M23.
 
 2026-09-29 — Completed the implementation and automated portion of M14.4.
 Registered Checkers in the two-player catalog with its supplied artwork,
