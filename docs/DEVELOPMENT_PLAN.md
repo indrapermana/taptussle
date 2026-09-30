@@ -42,7 +42,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
-| M15 | Mancala | M14 | In progress | M15.1–M15.4 game, bots, catalog/setup, effects, results, rematch, and responsive coverage complete; M15.5 device acceptance remains |
+| M15 | Mancala | M14 | In progress | M15.1–M15.5 implementation and automated acceptance complete; corrected iPhone journey is blocked by debug transport and Android is not connected |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
@@ -755,6 +755,8 @@ The larger store wins, and equal stores produce a draw.
   pause/resume, and compact/large-screen layouts.
 - [ ] M15.5 Test sowing invariants, captures, extra turns, terminal collection, bot
   legality/lifecycle, and complete every mode on physical iOS and Android devices.
+  Automated acceptance is complete; corrected iPhone automation and Android
+  physical verification remain pending.
 
 ## M16 — Slither-style Snakes
 
@@ -1015,6 +1017,21 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed the automated portion of M15.5. One hundred seeded full
+matches now prove that legal play terminates, conserves all 48 stones, skips the
+opposing store, keeps every count non-negative, preserves extra-turn ownership,
+collects both sides at completion, and produces a winner or draw. Separate
+full-match simulations verify Easy, Normal, and Hard bots always choose legal
+moves, remain within their node budgets, preserve state, and finish. A focused
+integration journey covers the two-player filter, favourite persistence, Hard
+bot setup, lifecycle recovery, final store result, bot-starting rematch, and
+change-options flow. The journey installed, launched, and executed on the wired
+iPhone; its first run exposed an automation-only last-row scroll miss, which is
+now fixed by fully revealing the card. The corrected rerun installed but Flutter
+could not discover the Dart VM service after 60 seconds. Chrome cannot run
+Flutter integration tests and no Android device is connected. Keep M15.5 and
+M15 open until corrected iPhone and Android physical acceptance is recorded.
 
 2026-09-30 — Completed M15.4. Registered Mancala in the two-player catalog with
 its supplied artwork, full Kalah instructions, friend and bot modes, Easy/Normal/

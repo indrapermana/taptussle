@@ -17,6 +17,8 @@ import 'package:tap_tussle/games/sudoku/sudoku_model.dart';
 import 'package:tap_tussle/games/sudoku/sudoku_view.dart';
 import 'package:tap_tussle/games/checkers/checkers_model.dart';
 import 'package:tap_tussle/games/checkers/checkers_view.dart';
+import 'package:tap_tussle/games/mancala/mancala_model.dart';
+import 'package:tap_tussle/games/mancala/mancala_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -384,6 +386,8 @@ void main() {
       420,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
     await tester.tap(card);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
@@ -424,5 +428,64 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('change-options')));
     await tester.pumpAndSettle();
     expect(find.text('Remove favourite'), findsOneWidget);
+  });
+
+  testWidgets('Mancala bot lifecycle, result, and rematch journey', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-twoPlayers')));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const ValueKey('game-card-mancala'));
+    await tester.scrollUntilVisible(
+      card,
+      420,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.tap(card);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    expect(settings.isFavourite('mancala'), isTrue);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('play-vs-bot')));
+    await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
+    await tester.pumpAndSettle();
+    await setDifficulty(tester, BotDifficulty.hard);
+    await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+    await tester.pumpAndSettle();
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('Time out'), findsOneWidget);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.tap(find.byKey(const ValueKey('resume-match')));
+    await tester.pump();
+
+    var board = tester.widget<MancalaBoard>(find.byType(MancalaBoard));
+    board.controller!.model = MancalaModel.fromBoard(
+      board: const [0, 0, 0, 0, 0, 1, 30, 1, 0, 0, 0, 0, 0, 16],
+    );
+    board.controller!.tapPit(0, 5);
+    await tester.pumpAndSettle();
+    expect(find.text('You win!'), findsOneWidget);
+    expect(find.textContaining('most stones'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('play-again')));
+    await tester.pump();
+    board = tester.widget<MancalaBoard>(find.byType(MancalaBoard));
+    expect(board.controller!.model.currentPlayer, 1);
+    expect(board.controller!.isBotThinking, isTrue);
+
+    await tester.tap(find.byTooltip('Pause match'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('change-options')));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove favourite'), findsOneWidget);
+    expect(settings.preferencesFor('mancala').difficulty, BotDifficulty.hard);
   });
 }
