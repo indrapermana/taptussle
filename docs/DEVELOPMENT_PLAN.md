@@ -43,7 +43,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
-| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.3 simulation, Flame presentation, and challenge profiles complete |
+| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.4 gameplay, challenge profiles, and offline records complete |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
@@ -782,7 +782,7 @@ control, collision, and difficulty rules are confirmed.
   readable snake and food artwork, pause safety, and stable fixed-step movement.
 - [x] M16.3 Add Easy, Normal, and Hard challenge profiles through arena pressure,
   speed progression, and obstacle/food balance without changing input semantics.
-- [ ] M16.4 Store daily, weekly, and overall high score with survival time as the
+- [x] M16.4 Store daily, weekly, and overall high score with survival time as the
   tie-breaker; show current score, personal best, and game-over comparison.
 - [ ] M16.5 Integrate effects, haptics, favourites, solo filter, lifecycle, rematch,
   deterministic simulation tests, performance profiling, and physical devices.
@@ -1015,6 +1015,17 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M16.4. Registered Slither-style Snakes as a solo challenge
+game and connected terminal arena state to the shared match and offline record
+systems. Each run publishes score plus survival milliseconds exactly once. Records
+are separated by Easy, Normal, and Hard; score ranks first, and longer survival
+wins an equal-score tie. The setup screen uses the shared daily, Monday-Sunday
+weekly, and overall best panel. The shared result overlay now compares the current
+run with all three windows and identifies a new overall best, which also benefits
+other solo record games. Focused coverage verifies catalog metadata, one-player
+filtering, terminal result publication, ordered ranking, record windows, persistence,
+and the game-over comparison presentation.
 
 2026-09-30 — Completed M16.3. Added explicit Slither challenge profiles selected
 from the shared Easy, Normal, and Hard setup difficulty. Easy uses two slower,

@@ -240,7 +240,7 @@ void main() {
     expect(restored.catalogPlayerFilter, CatalogPlayerFilter.upToFourPlayers);
   });
 
-  testWidgets('one-player filter shows Memory Match and Sudoku', (
+  testWidgets('one-player filter shows every implemented solo game', (
     tester,
   ) async {
     final settings = await settingsFor(tester);
@@ -256,7 +256,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('game-card-sudoku')), findsOneWidget);
-    expect(find.text('2 GAMES'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('game-card-slither-style-snakes')),
+      findsOneWidget,
+    );
+    expect(find.text('3 GAMES'), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 

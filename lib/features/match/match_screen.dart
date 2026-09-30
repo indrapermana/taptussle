@@ -36,6 +36,9 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
   var _observedRound = 0;
   var _observedPhase = MatchPhase.ready;
   var _recordedRound = 0;
+  GameRecordBests? _recordBests;
+  bool _recordSaving = false;
+  bool _isNewOverallBest = false;
 
   @override
   void initState() {
@@ -58,6 +61,9 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
     if (session.round != _observedRound &&
         session.phase == MatchPhase.playing) {
       _observedRound = session.round;
+      _recordBests = null;
+      _recordSaving = false;
+      _isNewOverallBest = false;
       SoundEffects.play(SoundEffect.roundStart);
     }
     if (_observedPhase != MatchPhase.finished &&
@@ -86,21 +92,37 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
       return;
     }
     _recordedRound = session.round;
+    final key = GameRecordKey(
+      gameId: widget.game.id,
+      recordType: definition.recordType,
+      variant: widget.recordVariant ?? widget.options.difficulty.name,
+    );
+    final previousBest = repository.bestRecord(
+      key: key,
+      definition: definition,
+    );
+    _recordSaving = true;
+    _isNewOverallBest =
+        previousBest == null ||
+        _metricsAreBetter(definition, metrics, previousBest.record.metrics);
     try {
       await repository.addRecord(
         definition: definition,
         record: GameRecord(
-          key: GameRecordKey(
-            gameId: widget.game.id,
-            recordType: definition.recordType,
-            variant: widget.recordVariant ?? widget.options.difficulty.name,
-          ),
+          key: key,
           completedAt: DateTime.now(),
           metrics: metrics,
         ),
       );
+      if (mounted) {
+        setState(() {
+          _recordBests = repository.bests(key: key, definition: definition);
+          _recordSaving = false;
+        });
+      }
     } catch (_) {
       if (mounted) {
+        setState(() => _recordSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not save this record.')),
         );
@@ -192,6 +214,10 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                               outcome: session.outcome,
                               standings: session.standings,
                               resultDetails: session.resultDetails,
+                              recordMetrics: session.recordMetrics,
+                              recordBests: _recordBests,
+                              recordSaving: _recordSaving,
+                              isNewOverallBest: _isNewOverallBest,
                               onPrimaryAction: () {
                                 SoundEffects.play(SoundEffect.uiConfirm);
                                 if (session.phase == MatchPhase.paused) {
@@ -356,6 +382,10 @@ class _MatchOverlay extends StatelessWidget {
     required this.outcome,
     required this.standings,
     required this.resultDetails,
+    required this.recordMetrics,
+    required this.recordBests,
+    required this.recordSaving,
+    required this.isNewOverallBest,
     required this.onPrimaryAction,
     required this.onChangeOptions,
     required this.onBackToGames,
@@ -369,6 +399,10 @@ class _MatchOverlay extends StatelessWidget {
   final MatchOutcome? outcome;
   final List<int> standings;
   final String? resultDetails;
+  final Map<String, num>? recordMetrics;
+  final GameRecordBests? recordBests;
+  final bool recordSaving;
+  final bool isNewOverallBest;
   final VoidCallback onPrimaryAction;
   final VoidCallback onChangeOptions;
   final VoidCallback onBackToGames;
@@ -506,6 +540,18 @@ class _MatchOverlay extends StatelessWidget {
                     fontSize: 15,
                   ),
                 ),
+                if (phase == MatchPhase.finished &&
+                    game.recordDefinition != null &&
+                    recordMetrics != null) ...[
+                  const SizedBox(height: 16),
+                  _RecordResultPanel(
+                    definition: game.recordDefinition!,
+                    current: recordMetrics!,
+                    bests: recordBests,
+                    saving: recordSaving,
+                    isNewOverallBest: isNewOverallBest,
+                  ),
+                ],
                 if (options.mode == PlayMode.bot &&
                     options.botDifficulty != null) ...[
                   const SizedBox(height: 14),
@@ -571,4 +617,163 @@ class _MatchOverlay extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _RecordResultPanel extends StatelessWidget {
+  const _RecordResultPanel({
+    required this.definition,
+    required this.current,
+    required this.bests,
+    required this.saving,
+    required this.isNewOverallBest,
+  });
+
+  final GameRecordDefinition definition;
+  final Map<String, num> current;
+  final GameRecordBests? bests;
+  final bool saving;
+  final bool isNewOverallBest;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = definition.primaryMetric;
+    return Container(
+      key: const ValueKey('record-result-panel'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: TapTussleColors.navy.withValues(alpha: .78),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: TapTussleColors.panelBorder),
+      ),
+      child: Column(
+        children: [
+          Text(
+            isNewOverallBest ? 'NEW OVERALL BEST' : 'THIS RUN',
+            key: const ValueKey('record-result-status'),
+            style: TextStyle(
+              color: isNewOverallBest
+                  ? TapTussleColors.gold
+                  : TapTussleColors.electricBlue,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: .8,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _recordMetricLine(definition, current),
+            key: const ValueKey('record-current-metrics'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (saving)
+            const Text(
+              'Saving record…',
+              style: TextStyle(color: TapTussleColors.mutedText, fontSize: 11),
+            )
+          else
+            Row(
+              children: [
+                for (final entry in [
+                  ('DAILY', bests?.daily),
+                  ('WEEKLY', bests?.weekly),
+                  ('OVERALL', bests?.overall),
+                ])
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          entry.$1,
+                          style: const TextStyle(
+                            color: TapTussleColors.mutedText,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          entry.$2 == null
+                              ? '—'
+                              : _formatRecordMetric(
+                                  primary,
+                                  entry.$2!.record.metrics[primary.id]!,
+                                ),
+                          key: ValueKey(
+                            'result-record-${entry.$1.toLowerCase()}',
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (entry.$2 != null &&
+                            definition.tieBreakers.isNotEmpty)
+                          Text(
+                            _formatRecordMetric(
+                              definition.tieBreakers.first,
+                              entry.$2!.record.metrics[definition
+                                  .tieBreakers
+                                  .first
+                                  .id]!,
+                            ),
+                            style: const TextStyle(
+                              color: TapTussleColors.mutedText,
+                              fontSize: 9,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+bool _metricsAreBetter(
+  GameRecordDefinition definition,
+  Map<String, num> candidate,
+  Map<String, num> currentBest,
+) {
+  for (final metric in definition.metrics) {
+    final comparison = candidate[metric.id]!.compareTo(currentBest[metric.id]!);
+    if (comparison == 0) continue;
+    return metric.sortOrder == RecordSortOrder.higherIsBetter
+        ? comparison > 0
+        : comparison < 0;
+  }
+  return false;
+}
+
+String _recordMetricLine(
+  GameRecordDefinition definition,
+  Map<String, num> metrics,
+) => definition.metrics
+    .map(
+      (metric) =>
+          '${metric.label} ${_formatRecordMetric(metric, metrics[metric.id]!)}',
+    )
+    .join('  •  ');
+
+String _formatRecordMetric(RecordMetricDefinition definition, num value) =>
+    switch (definition.format) {
+      RecordMetricFormat.integer => value.round().toString(),
+      RecordMetricFormat.duration => _formatRecordDuration(value.round()),
+    };
+
+String _formatRecordDuration(int milliseconds) {
+  final duration = Duration(milliseconds: milliseconds);
+  final minutes = duration.inMinutes;
+  final seconds = duration.inSeconds.remainder(60);
+  if (minutes > 0) return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  return '${(milliseconds / 1000).toStringAsFixed(1)}s';
 }

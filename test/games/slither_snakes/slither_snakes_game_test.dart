@@ -69,6 +69,29 @@ void main() {
         expect(game.simulation.player.head, before);
       }
     });
+
+    test('game over publishes score and survival metrics exactly once', () {
+      final session = MatchSession(options: MatchOptions.solo())..start();
+      final game = _game(
+        playerHead: const SlitherPoint(990, 650),
+        session: session,
+      );
+      game.onGameResize(Vector2(320, 480));
+      game.simulation.player.age = 3;
+
+      game.update(SlitherSimulation.fixedStep);
+
+      expect(session.phase, MatchPhase.finished);
+      expect(session.outcome, MatchOutcome.completed);
+      expect(session.scores, [0]);
+      expect(session.recordMetrics, {
+        'score': 0,
+        'survivalTime': (SlitherSimulation.fixedStep * 1000).round(),
+      });
+      final metrics = session.recordMetrics;
+      game.update(1);
+      expect(session.recordMetrics, same(metrics));
+    });
   });
 }
 

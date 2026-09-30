@@ -12,9 +12,10 @@ void main() {
       (game) =>
           game.id != 'memory-match' &&
           game.id != 'snakes-and-ladders' &&
-          game.id != 'sudoku',
+          game.id != 'sudoku' &&
+          game.id != 'slither-style-snakes',
     );
-    expect(gameCatalog, hasLength(11));
+    expect(gameCatalog, hasLength(12));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});

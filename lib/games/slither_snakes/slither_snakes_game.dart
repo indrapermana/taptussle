@@ -22,10 +22,12 @@ class SlitherSnakesGame extends Game {
   SlitherSimulation simulation;
   var cameraCenter = const SlitherPoint(0, 0);
   bool _stopped = false;
+  bool _resultReported = false;
 
   void reset({int round = 0}) {
     simulation = SlitherSimulation(seed: seed + round, config: config);
     cameraCenter = simulation.player.head;
+    _resultReported = false;
   }
 
   void stopMatch() {
@@ -59,6 +61,32 @@ class SlitherSnakesGame extends Game {
     if (_stopped || session.phase != MatchPhase.playing) return;
     simulation.update(dt);
     _updateCamera();
+    if (simulation.isGameOver) _publishResult();
+  }
+
+  void _publishResult() {
+    if (_resultReported || session.phase != MatchPhase.playing) return;
+    _resultReported = true;
+    final survivalMilliseconds = (simulation.survivalTime * 1000).round();
+    session.reportCompletion(
+      scores: [simulation.score],
+      details:
+          'Score ${simulation.score} • Survived ${_formatSurvival(survivalMilliseconds)}',
+      recordMetrics: {
+        'score': simulation.score,
+        'survivalTime': survivalMilliseconds,
+      },
+    );
+  }
+
+  String _formatSurvival(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+    final tenths = duration.inMilliseconds.remainder(1000) ~/ 100;
+    return minutes > 0
+        ? '$minutes:${seconds.toString().padLeft(2, '0')}'
+        : '$seconds.${tenths}s';
   }
 
   void _updateCamera() {

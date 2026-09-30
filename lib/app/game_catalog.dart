@@ -14,9 +14,36 @@ import '../games/snakes_and_ladders/snakes_and_ladders_view.dart';
 import '../games/sudoku/sudoku_view.dart';
 import '../games/checkers/checkers_view.dart';
 import '../games/mancala/mancala_view.dart';
+import '../games/slither_snakes/slither_records.dart';
+import '../games/slither_snakes/slither_snakes_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'slither-style-snakes',
+    artworkAsset: gameLogoAssets['slither-style-snakes'],
+    title: 'Slither-style Snakes',
+    subtitle: 'Grow longer. Survive the arena.',
+    instructions:
+        'Drag anywhere in the lower half to steer. Eat glowing food to grow '
+        'and score, and make rival snakes crash into a body for a bonus. '
+        'Hitting the wall or another snake ends the run. Crossing your own '
+        'body is safe.',
+    icon: Icons.gesture_rounded,
+    supportedModes: const {PlayMode.solo},
+    supportedPlayerCounts: const {PlayerCount.one},
+    difficultyType: DifficultyType.challenge,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Two slower rivals and generous food.',
+      BotDifficulty.normal => 'Four balanced rivals and moderate food.',
+      BotDifficulty.hard => 'Six faster rivals and scarce food.',
+    },
+    recordDefinition: slitherRecordDefinition,
+    matchLabel: (options) =>
+        '${options.difficulty.label.toUpperCase()} • SURVIVE',
+    build: (session, options) =>
+        SlitherSnakesView(session: session, options: options),
+  ),
   MiniGame(
     id: 'sudoku',
     artworkAsset: gameLogoAssets['sudoku'],
