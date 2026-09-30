@@ -42,7 +42,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
-| M15 | Mancala | M14 | In progress | M15.1 deterministic Kalah rules and focused model coverage complete |
+| M15 | Mancala | M14 | In progress | M15.1–M15.2 deterministic rules, animated controller, and accessible responsive board complete |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
@@ -747,7 +747,7 @@ The larger store wins, and equal stores produce a draw.
 - [x] M15.1 Implement the confirmed board setup, counterclockwise sowing,
   opponent-store skipping, capture condition, extra turns, immediate side-empty
   detection, final collection, winner, and draw in a deterministic pure Dart model.
-- [ ] M15.2 Build an accessible Flutter board with clear pit ownership, stone counts,
+- [x] M15.2 Build an accessible Flutter board with clear pit ownership, stone counts,
   legal-pit emphasis, sowing animation, current-player state, and final stores.
 - [ ] M15.3 Add friend mode plus delayed Easy, Normal, and Hard bots. Use legal moves
   through the model; vary search depth/evaluation and keep bounded thinking time.
@@ -1015,6 +1015,18 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M15.2. Added a responsive pure Flutter Kalah board with
+two clearly colored player sides, twelve numbered pits, two stores, visible stone
+counts, current-player and extra-turn messages, legal-pit glow, final scores, and
+winner or draw states. Each pit and store exposes ownership, position, count,
+legality, and enabled state through accessibility semantics. A lifecycle-aware
+controller locks input and animates every sown stone along the M15.1 path before
+settling captures or final collection, publishes final store scores, safely
+settles on pause, and alternates the starting player on rematch. Nine new
+controller and widget tests cover animation, locking, results, pause/rematch,
+accessibility, legal input, terminal states, compact phones, and large tablets,
+raising focused Mancala coverage to 21 tests.
 
 2026-09-30 — Completed M15.1. Added a deterministic pure Dart Kalah model with
 the confirmed six pits and four stones per pit, explicit counterclockwise board
