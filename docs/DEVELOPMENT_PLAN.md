@@ -42,8 +42,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
-| M15 | Mancala | M14 | In progress | M15.1–M15.5 implementation and automated acceptance complete; corrected iPhone journey is blocked by debug transport and Android is not connected |
-| M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
+| M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
+| M16 | Slither-style Snakes | M15 | In progress | M16.1 deterministic seeded arena simulation and rule coverage complete |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
@@ -753,10 +753,8 @@ The larger store wins, and equal stores produce a draw.
   through the model; vary search depth/evaluation and keep bounded thinking time.
 - [x] M15.4 Integrate setup, results, rematch, effects, favourites, player filters,
   pause/resume, and compact/large-screen layouts.
-- [ ] M15.5 Test sowing invariants, captures, extra turns, terminal collection, bot
+- [x] M15.5 Test sowing invariants, captures, extra turns, terminal collection, bot
   legality/lifecycle, and complete every mode on physical iOS and Android devices.
-  Automated acceptance is complete; corrected iPhone automation and Android
-  physical verification remain pending.
 
 ## M16 — Slither-style Snakes
 
@@ -777,7 +775,7 @@ short spawn-protection period, then score food plus defeated AI bonuses. Daily,
 weekly, and overall records rank score first and survival time second. These arena,
 control, collision, and difficulty rules are confirmed.
 
-- [ ] M16.1 Define arena boundaries, steering, growth, food spawning, collision,
+- [x] M16.1 Define arena boundaries, steering, growth, food spawning, collision,
   score, speed progression, and game-over rules; implement deterministic simulation
   and seeded spawning independently from rendering.
 - [ ] M16.2 Build the Flame game with natural touch steering, camera/arena feedback,
@@ -1017,6 +1015,21 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M16.1. Added a rendering-independent pure Dart arena
+simulation with a stable 60 Hz fixed step, seeded player/AI/food spawning,
+continuous speed-limited movement, turn-rate-limited arena steering, score-driven
+growth and capped speed progression, food replenishment, and survival time. Wall
+or opposing-snake contact ends the player's run after spawn protection, while
+self-crossing is explicitly harmless. AI snakes steer deterministically toward
+food; an AI that hits a wall or another body is removed and drops its body as
+food, with a score bonus when it hits the player's body. Game-over state freezes
+the simulation. Eight focused tests cover seed reproducibility, frame-chunk
+independence, steering, growth, scoring, speed, walls, opposing and self-body
+contact, AI food drops, bonuses, spawn protection, and frozen terminal state.
+
+2026-09-30 — Completed M15 after the user confirmed Mancala works on a physical
+device. The final cross-device release matrix remains scheduled for M23.
 
 2026-09-30 — Completed the automated portion of M15.5. One hundred seeded full
 matches now prove that legal play terminates, conserves all 48 stones, skips the
