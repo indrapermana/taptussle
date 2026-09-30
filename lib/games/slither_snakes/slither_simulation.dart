@@ -157,6 +157,7 @@ class SlitherSimulation {
   int _nextFoodId = 0;
   double _accumulator = 0;
   SlitherPoint? _steeringTarget;
+  SlitherPoint? get steeringTarget => _steeringTarget;
 
   List<SlitherSnake> get snakes => List.unmodifiable(_snakes);
   SlitherSnake get player => _snakes.first;
