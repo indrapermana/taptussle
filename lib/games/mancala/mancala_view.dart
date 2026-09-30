@@ -50,6 +50,7 @@ class _MancalaViewState extends State<MancalaView> {
       activePosition: controller.activePosition,
       isAnimating: controller.isAnimating,
       enabled: controller.acceptsInput,
+      statusOverride: controller.isBotThinking ? 'BOT IS THINKING…' : null,
       playerLabels: [
         widget.options.playerLabel(0),
         widget.options.playerLabel(1),
@@ -69,6 +70,7 @@ class MancalaBoard extends StatelessWidget {
     this.activePosition,
     this.isAnimating = false,
     this.enabled = true,
+    this.statusOverride,
     this.playerLabels = const ['Player 1', 'Player 2'],
     this.controller,
     super.key,
@@ -79,6 +81,7 @@ class MancalaBoard extends StatelessWidget {
   final int? activePosition;
   final bool isAnimating;
   final bool enabled;
+  final String? statusOverride;
   final List<String> playerLabels;
   final MancalaController? controller;
   final MancalaTapResult Function(int player, int pit) onPitTap;
@@ -96,7 +99,7 @@ class MancalaBoard extends StatelessWidget {
     final legalPits = enabled
         ? model.legalPitsFor(model.currentPlayer).toSet()
         : const <int>{};
-    final status = _statusText();
+    final status = statusOverride ?? _statusText();
 
     return ColoredBox(
       color: const Color(0xFF0C1724),

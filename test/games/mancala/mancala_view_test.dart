@@ -129,4 +129,26 @@ void main() {
     }
     await tester.binding.setSurfaceSize(null);
   });
+
+  testWidgets('shows bot thinking and disables every pit', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: Scaffold(
+          body: MancalaBoard(
+            model: MancalaModel(startingPlayer: 1),
+            enabled: false,
+            statusOverride: 'BOT IS THINKING…',
+            onPitTap: (_, _) => MancalaTapResult.ignored,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('BOT IS THINKING…'), findsOneWidget);
+    final pit = tester.widget<Semantics>(
+      find.bySemanticsLabel('Player 2 pit 1, 4 stones'),
+    );
+    expect(pit.properties.enabled, isFalse);
+  });
 }

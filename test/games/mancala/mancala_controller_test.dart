@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
@@ -120,5 +122,102 @@ void main() {
     expect(finishingController.model.startingPlayer, 1);
     expect(finishingController.model.currentPlayer, 1);
     expect(finishingController.model.board.fold(0, (a, b) => a + b), 48);
+  });
+
+  testWidgets('bot waits after human sowing and blocks human input', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.easy),
+    )..start();
+    final controller = MancalaController(
+      session: session,
+      random: Random(7),
+      botThinkDelay: const Duration(milliseconds: 20),
+      sowingStepDuration: const Duration(milliseconds: 1),
+      settleDuration: const Duration(milliseconds: 1),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    controller.tapPit(0, 0);
+    expect(controller.isAnimating, isTrue);
+    expect(controller.isBotThinking, isFalse);
+    await tester.pump(const Duration(milliseconds: 5));
+
+    expect(controller.model.currentPlayer, 1);
+    expect(controller.isBotThinking, isTrue);
+    expect(controller.acceptsInput, isFalse);
+    expect(controller.tapPit(1, 0), MancalaTapResult.ignored);
+    await tester.pump(const Duration(milliseconds: 19));
+    expect(controller.model.lastTurn?.player, 0);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(controller.model.lastTurn?.player, 1);
+    expect(controller.isAnimating, isTrue);
+    controller.dispose();
+  });
+
+  testWidgets('pause cancels bot thinking and resume starts a fresh delay', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.normal),
+    );
+    final controller = MancalaController(
+      session: session,
+      model: MancalaModel(startingPlayer: 1),
+      random: Random(8),
+      botThinkDelay: const Duration(milliseconds: 20),
+      sowingStepDuration: Duration.zero,
+      settleDuration: Duration.zero,
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+    session.start();
+
+    expect(controller.isBotThinking, isTrue);
+    session.pause();
+    expect(controller.isBotThinking, isFalse);
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.model.lastTurn, isNull);
+
+    session.resume();
+    expect(controller.isBotThinking, isTrue);
+    await tester.pump(const Duration(milliseconds: 19));
+    expect(controller.model.lastTurn, isNull);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(controller.model.lastTurn?.player, 1);
+    controller.dispose();
+  });
+
+  testWidgets('bot starts an alternating rematch and disposal cancels it', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.hard),
+    )..start();
+    final controller = MancalaController(
+      session: session,
+      model: MancalaModel.fromBoard(
+        board: const [0, 0, 0, 0, 0, 1, 30, 1, 0, 0, 0, 0, 0, 16],
+      ),
+      random: Random(9),
+      botThinkDelay: const Duration(milliseconds: 20),
+      sowingStepDuration: Duration.zero,
+      settleDuration: Duration.zero,
+    );
+    addTearDown(session.dispose);
+
+    controller.tapPit(0, 5);
+    await tester.pumpAndSettle();
+    expect(session.phase, MatchPhase.finished);
+    session.start();
+    expect(controller.model.currentPlayer, 1);
+    expect(controller.isBotThinking, isTrue);
+
+    controller.dispose();
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.model.lastTurn, isNull);
+    expect(tester.takeException(), isNull);
   });
 }

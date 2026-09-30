@@ -42,7 +42,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
-| M15 | Mancala | M14 | In progress | M15.1–M15.2 deterministic rules, animated controller, and accessible responsive board complete |
+| M15 | Mancala | M14 | In progress | M15.1–M15.3 rules, animated board, and delayed bounded Easy/Normal/Hard bots complete |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
@@ -749,7 +749,7 @@ The larger store wins, and equal stores produce a draw.
   detection, final collection, winner, and draw in a deterministic pure Dart model.
 - [x] M15.2 Build an accessible Flutter board with clear pit ownership, stone counts,
   legal-pit emphasis, sowing animation, current-player state, and final stores.
-- [ ] M15.3 Add friend mode plus delayed Easy, Normal, and Hard bots. Use legal moves
+- [x] M15.3 Add friend mode plus delayed Easy, Normal, and Hard bots. Use legal moves
   through the model; vary search depth/evaluation and keep bounded thinking time.
 - [ ] M15.4 Integrate setup, results, rematch, effects, favourites, player filters,
   pause/resume, and compact/large-screen layouts.
@@ -1015,6 +1015,22 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M15.3. Added a Mancala bot that selects exclusively from
+the pure model's legal pits and searches independent state copies without
+mutating the live match. Easy chooses random legal pits. Normal uses three-ply
+alpha-beta search, a 2,200-node ceiling, store-and-side evaluation, and a 16%
+intentional mistake rate. Hard uses seven-ply search, a 12,000-node ceiling,
+stronger store, side-control, and mobility evaluation, and no intentional
+mistakes. Tactical ordering prioritizes wins, extra turns, captures, and store
+gain. The controller waits until the human sowing animation settles, shows a
+natural difficulty-specific thinking delay, locks human input during bot turns,
+and gives chained extra turns a fresh delay. Pending work is cancelled and
+freshly scheduled across pause, resume, rematch, and disposal. Nine new bot,
+controller, and presentation tests cover legal choices, profile bounds, tactical
+capture choice, delayed movement, input locking, lifecycle cancellation,
+bot-starting rematches, and visible thinking state, raising focused Mancala
+coverage to 30 tests.
 
 2026-09-30 — Completed M15.2. Added a responsive pure Flutter Kalah board with
 two clearly colored player sides, twelve numbered pits, two stores, visible stone
