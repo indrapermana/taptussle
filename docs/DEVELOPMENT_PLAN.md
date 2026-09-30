@@ -43,7 +43,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
-| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.4 gameplay, challenge profiles, and offline records complete |
+| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.5 implementation complete; 333 host tests and the focused iPhone integration journey pass; Android/iPad verification and attached profile capture remain |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
@@ -786,6 +786,9 @@ control, collision, and difficulty rules are confirmed.
   tie-breaker; show current score, personal best, and game-over comparison.
 - [ ] M16.5 Integrate effects, haptics, favourites, solo filter, lifecycle, rematch,
   deterministic simulation tests, performance profiling, and physical devices.
+  Implementation and automated coverage are complete. The focused journey passes on
+  a physical iPhone; Android/iPad verification and an attached device profile capture
+  remain before closing the item.
 
 ## M17 — Water Sort Puzzle
 
@@ -1015,6 +1018,18 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Implemented the M16.5 Slither integration scope. Eating food now uses
+the dedicated snake-eat sound with light haptics; snake crashes and defeated rivals
+use the snake-crash sound with stronger haptics. Added a complete solo journey test
+covering one-player filtering, favourites, Hard setup, lifecycle pause/resume,
+result-record persistence, and clean rematch, plus focused effect checks and a
+bounded 3,600-frame simulation budget for every challenge profile. Static analysis
+and all 333 host tests pass. The focused integration journey also passes on the
+physical iPhone `Indra` running iOS 26.6.2. The profile build completed and installed,
+but Flutter lost its local VM-service WebSocket during profile attachment. The iPad
+was unavailable over the network and no Android device was connected, so those
+device checks remain before M16 is marked Done.
 
 2026-09-30 — Completed M16.4. Registered Slither-style Snakes as a solo challenge
 game and connected terminal arena state to the shared match and offline record

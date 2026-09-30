@@ -4,7 +4,9 @@ import 'dart:ui' show PointMode;
 import 'package:flame/game.dart';
 import 'package:flutter/painting.dart';
 
+import '../../core/haptic_service.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'slither_simulation.dart';
 
 /// Flame rendering and timing adapter over the pure [SlitherSimulation].
@@ -23,11 +25,15 @@ class SlitherSnakesGame extends Game {
   var cameraCenter = const SlitherPoint(0, 0);
   bool _stopped = false;
   bool _resultReported = false;
+  int _reportedPlayerFood = 0;
+  int _reportedAliveOpponents = -1;
 
   void reset({int round = 0}) {
     simulation = SlitherSimulation(seed: seed + round, config: config);
     cameraCenter = simulation.player.head;
     _resultReported = false;
+    _reportedPlayerFood = 0;
+    _reportedAliveOpponents = config.aiCount;
   }
 
   void stopMatch() {
@@ -59,9 +65,36 @@ class SlitherSnakesGame extends Game {
   @override
   void update(double dt) {
     if (_stopped || session.phase != MatchPhase.playing) return;
+    if (_reportedAliveOpponents < 0) {
+      _reportedPlayerFood = simulation.player.foodEaten;
+      _reportedAliveOpponents = simulation.opponents
+          .where((snake) => snake.alive)
+          .length;
+    }
     simulation.update(dt);
     _updateCamera();
-    if (simulation.isGameOver) _publishResult();
+    _publishSimulationEffects();
+    if (simulation.isGameOver) {
+      SoundEffects.play(SoundEffect.snakeCrash);
+      HapticEffects.paddleHit();
+      _publishResult();
+    }
+  }
+
+  void _publishSimulationEffects() {
+    if (simulation.player.foodEaten > _reportedPlayerFood) {
+      _reportedPlayerFood = simulation.player.foodEaten;
+      SoundEffects.play(SoundEffect.snakeEat);
+      HapticEffects.preview();
+    }
+    final aliveOpponents = simulation.opponents
+        .where((snake) => snake.alive)
+        .length;
+    if (aliveOpponents < _reportedAliveOpponents) {
+      SoundEffects.play(SoundEffect.snakeCrash);
+      HapticEffects.paddleHit();
+    }
+    _reportedAliveOpponents = aliveOpponents;
   }
 
   void _publishResult() {

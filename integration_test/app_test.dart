@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flame/game.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,9 @@ import 'package:tap_tussle/games/checkers/checkers_model.dart';
 import 'package:tap_tussle/games/checkers/checkers_view.dart';
 import 'package:tap_tussle/games/mancala/mancala_model.dart';
 import 'package:tap_tussle/games/mancala/mancala_view.dart';
+import 'package:tap_tussle/games/slither_snakes/slither_simulation.dart';
+import 'package:tap_tussle/games/slither_snakes/slither_snakes_game.dart';
+import 'package:tap_tussle/games/slither_snakes/slither_snakes_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +62,17 @@ void main() {
       game.update(.02);
     }
     await tester.pump();
+  }
+
+  Future<void> pumpUntilFound(WidgetTester tester, Finder finder) async {
+    for (
+      var attempt = 0;
+      attempt < 50 && finder.evaluate().isEmpty;
+      attempt++
+    ) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(finder, findsOneWidget);
   }
 
   testWidgets('friend match journey persists favourite and supports recovery', (
@@ -195,6 +210,71 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('game-record-bests')), findsOneWidget);
     expect(find.text('Remove favourite'), findsOneWidget);
+  });
+
+  testWidgets('Slither solo journey pauses, records, and rematches', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('game-card-slither-style-snakes')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('play-solo')));
+    await tester.tap(find.byKey(const ValueKey('play-solo')));
+    await tester.pumpAndSettle();
+    await setDifficulty(tester, BotDifficulty.hard);
+    await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+    await pumpUntilFound(tester, find.byType(SlitherSnakesView));
+
+    expect(find.byType(SlitherSnakesView), findsOneWidget);
+    final gameWidget = tester.widget<GameWidget>(
+      find.byWidgetPredicate(
+        (widget) => widget is GameWidget && widget.game is SlitherSnakesGame,
+      ),
+    );
+    final game = gameWidget.game as SlitherSnakesGame;
+    expect(game.config.aiCount, 6);
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('Time out'), findsOneWidget);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.tap(find.byKey(const ValueKey('resume-match')));
+    await tester.pump();
+
+    game.simulation.player
+      ..age = 3
+      ..segments[0] = SlitherPoint(
+        game.config.arenaWidth - game.config.snakeRadius + 1,
+        game.simulation.player.head.y,
+      );
+    game.update(SlitherSimulation.fixedStep);
+    await pumpUntilFound(tester, find.text('Complete!'));
+
+    expect(find.text('Complete!'), findsOneWidget);
+    expect(find.byKey(const ValueKey('record-result-panel')), findsOneWidget);
+    expect(
+      settings.recordRepository.recordsFor(
+        const GameRecordKey(
+          gameId: 'slither-style-snakes',
+          recordType: 'solo',
+          variant: 'hard',
+        ),
+      ),
+      hasLength(1),
+    );
+    await tester.tap(find.byKey(const ValueKey('play-again')));
+    await tester.pump();
+    expect(game.simulation.isGameOver, isFalse);
+    expect(game.simulation.opponents, hasLength(6));
+    expect(settings.isFavourite('slither-style-snakes'), isTrue);
   });
 
   testWidgets('Rock Paper Scissors friend journey integrates and rematches', (
