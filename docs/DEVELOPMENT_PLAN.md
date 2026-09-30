@@ -44,7 +44,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; 333 host tests and focused iPhone automation passed; user confirmed physical-device functionality |
-| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.3 rules, verified 180-level catalog, solver, controller, and responsive accessible interface complete; all 352 host tests pass |
+| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.4 rules, verified 180-level catalog, accessible interface, saved progress, per-level bests, and shared records complete; M17.5 integration and device validation remain |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
@@ -824,7 +824,7 @@ the number of colors.
   through the production model, and report the exact level ID on failure.
 - [x] M17.3 Build a responsive Flutter tube interface with selected/source states,
   pour animation, color/pattern accessibility, undo, restart, and optional hints.
-- [ ] M17.4 Persist unlocked/completed levels and the active puzzle. Daily, weekly,
+- [x] M17.4 Persist unlocked/completed levels and the active puzzle. Daily, weekly,
   and overall best rank the highest completed level per difficulty, then fewer moves
   and faster completion on that level. Retain per-level personal bests for replay.
 - [ ] M17.5 Integrate effects, favourites, solo filter, lifecycle, model/solver and
@@ -1018,6 +1018,21 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M17.4. Added versioned Water Sort persistence isolated by
+difficulty for unlocked levels, completed-level sets, resumable active puzzles,
+elapsed play time, and per-level personal bests. Active saves store and validate the
+exact legal move history against the shipped level, which restores the board and its
+full undo history while safely ignoring malformed or mismatched data. Completion
+clears the active save, unlocks the next level without moving established progress
+backward, and replaces a personal best only for fewer moves or an equal move count
+with a faster time. The lifecycle-aware controller freezes its timer and input while
+paused, saves on play-state changes and disposal, and reports `level`, `moves`, and
+`time` through the shared solo result flow. The shared record definition ranks the
+highest completed level per difficulty first, then fewer moves and faster completion
+for daily, weekly, and overall windows. Focused repository, controller, record, and
+UI tests pass alongside the 180-level solver replay; static analysis is clean.
+The full host suite passes all 358 tests.
 
 2026-09-30 — Completed M17.3. Added a dedicated Water Sort controller for tube
 selection, destination changes, animation locking, undo, restart, and optional

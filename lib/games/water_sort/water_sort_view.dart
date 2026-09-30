@@ -151,11 +151,36 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '${controller.model.moveCount} MOVES',
-            key: const ValueKey('water-sort-moves'),
-            semanticsLabel: '${controller.model.moveCount} moves',
-            style: const TextStyle(fontWeight: FontWeight.w800),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${controller.model.moveCount} MOVES',
+                key: const ValueKey('water-sort-moves'),
+                semanticsLabel: '${controller.model.moveCount} moves',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              Text(
+                controller.elapsedLabel,
+                key: const ValueKey('water-sort-elapsed'),
+                semanticsLabel: 'Elapsed ${controller.elapsedLabel}',
+                style: const TextStyle(
+                  color: TapTussleColors.mutedText,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (controller.personalBest case final best?)
+                Text(
+                  'BEST ${best.moves} • ${_formatMilliseconds(best.elapsedMilliseconds)}',
+                  key: const ValueKey('water-sort-personal-best'),
+                  style: const TextStyle(
+                    color: TapTussleColors.mutedText,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -422,3 +447,10 @@ const _liquidSymbols = [
 ];
 
 String _liquidName(int color) => _liquidNames[color % _liquidNames.length];
+
+String _formatMilliseconds(int milliseconds) {
+  final duration = Duration(milliseconds: milliseconds);
+  final minutes = duration.inMinutes;
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$minutes:$seconds';
+}

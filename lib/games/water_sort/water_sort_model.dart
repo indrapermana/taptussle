@@ -67,6 +67,7 @@ class WaterSortModel {
       tubes: initial,
       initialTubes: initial,
       history: const [],
+      moves: const [],
       moveCount: 0,
       lastMove: null,
     );
@@ -77,11 +78,29 @@ class WaterSortModel {
     required List<List<int>> tubes,
     required List<List<int>> initialTubes,
     required List<List<List<int>>> history,
+    required List<WaterSortMove> moves,
     required this.moveCount,
     required this.lastMove,
   }) : _tubes = tubes,
        _initialTubes = initialTubes,
-       _history = history;
+       _history = history,
+       _moves = moves;
+
+  factory WaterSortModel.restore({
+    required List<List<int>> initialTubes,
+    required Iterable<WaterSortMove> moves,
+    int capacity = defaultTubeCapacity,
+  }) {
+    var model = WaterSortModel(tubes: initialTubes, capacity: capacity);
+    for (final move in moves) {
+      final result = model.pour(move.source, move.destination);
+      if (!result.accepted || result.move != move) {
+        throw const FormatException('Saved Water Sort move history is invalid');
+      }
+      model = result.model;
+    }
+    return model;
+  }
 
   static const int defaultTubeCapacity = 4;
 
@@ -89,12 +108,14 @@ class WaterSortModel {
   final List<List<int>> _tubes;
   final List<List<int>> _initialTubes;
   final List<List<List<int>>> _history;
+  final List<WaterSortMove> _moves;
   final int moveCount;
   final WaterSortMove? lastMove;
 
   List<List<int>> get tubes => _tubes;
   int get tubeCount => _tubes.length;
   bool get canUndo => _history.isNotEmpty;
+  List<WaterSortMove> get moveHistory => _moves;
 
   bool get isComplete => _tubes.every(
     (tube) =>
@@ -131,6 +152,7 @@ class WaterSortModel {
       tubes: _freezeTubes(nextTubes),
       initialTubes: _initialTubes,
       history: List.unmodifiable([..._history, _tubes]),
+      moves: List.unmodifiable([..._moves, move]),
       moveCount: moveCount + 1,
       lastMove: move,
     );
@@ -148,6 +170,7 @@ class WaterSortModel {
       tubes: _history.last,
       initialTubes: _initialTubes,
       history: List.unmodifiable(_history.take(_history.length - 1)),
+      moves: List.unmodifiable(_moves.take(_moves.length - 1)),
       moveCount: moveCount - 1,
       lastMove: null,
     );
@@ -160,6 +183,7 @@ class WaterSortModel {
       tubes: _initialTubes,
       initialTubes: _initialTubes,
       history: const [],
+      moves: const [],
       moveCount: 0,
       lastMove: null,
     );
