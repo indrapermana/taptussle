@@ -55,7 +55,7 @@ class WaterSortController extends ChangeNotifier {
     if (session != null && _observedPhase == MatchPhase.playing) _startClock();
   }
 
-  final WaterSortLevel level;
+  WaterSortLevel level;
   final MatchSession? session;
   final WaterSortProgressRepository? repository;
   final Duration animationDuration;
@@ -68,6 +68,7 @@ class WaterSortController extends ChangeNotifier {
   DateTime? _activeStartedAt;
   Duration _elapsedBeforeActive;
   MatchPhase _observedPhase = MatchPhase.ready;
+  late int _observedRound = session?.round ?? 0;
   bool _disposed = false;
   bool _completionReported = false;
   int? _selectedTube;
@@ -187,6 +188,11 @@ class WaterSortController extends ChangeNotifier {
 
   void _syncSession() {
     if (_disposed || session == null) return;
+    if (session!.round != _observedRound) {
+      final previousRound = _observedRound;
+      _observedRound = session!.round;
+      if (previousRound > 0) _startNextRound();
+    }
     final next = session!.phase;
     if (_observedPhase == MatchPhase.playing && next != MatchPhase.playing) {
       _stopClock();
@@ -197,6 +203,24 @@ class WaterSortController extends ChangeNotifier {
     }
     _observedPhase = next;
     notifyListeners();
+  }
+
+  void _startNextRound() {
+    _stopClock();
+    final nextLevel = (level.number + 1).clamp(
+      1,
+      WaterSortLevelCatalog.levelsPerDifficulty,
+    );
+    level = WaterSortLevelCatalog.level(level.difficulty, nextLevel);
+    model = level.createModel();
+    _elapsedBeforeActive = Duration.zero;
+    _selectedTube = null;
+    _animatingMove = null;
+    _hintMove = null;
+    _completionReported = false;
+    _animationTimer?.cancel();
+    _animationTimer = null;
+    _saveProgress();
   }
 
   void _startClock() {

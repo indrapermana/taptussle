@@ -44,7 +44,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; 333 host tests and focused iPhone automation passed; user confirmed physical-device functionality |
-| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.4 rules, verified 180-level catalog, accessible interface, saved progress, per-level bests, and shared records complete; M17.5 integration and device validation remain |
+| M17 | Water Sort Puzzle | M16 | In progress | M17.1-M17.4 complete; M17.5 catalog, setup, effects, lifecycle, records, rematch, and host coverage implemented with all 361 host tests passing; physical-device execution remains blocked in Flutter's iOS build/attach stage |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
@@ -830,6 +830,11 @@ the number of colors.
 - [ ] M17.5 Integrate effects, favourites, solo filter, lifecycle, model/solver and
   persistence tests, then verify all difficulties on physical devices.
 
+M17.5 implementation and host verification are complete. Its dedicated iOS
+integration journey is checked in, but two wired-iPhone attempts remained in
+Flutter's build/install/attach phase and never entered the test body. Keep this item
+open until Easy, Normal, and Hard receive a physical-device pass.
+
 ## M18 — Ludo
 
 Confirmed rules: a six is required to move a token out of its starting box. Rolling
@@ -1018,6 +1023,20 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Implemented the M17.5 application scope. Water Sort is registered as
+a one-player puzzle with its supplied catalog artwork, Easy/Normal/Hard descriptions,
+independent difficulty records, and shared setup/result presentation. The view loads
+the saved active puzzle or highest unlocked level, and Play Again advances to the
+next unlocked level with fresh state. Tube selection, invalid actions, pours, hints,
+undo, restart, and puzzle completion use the shared sound and haptic services.
+Automated flow coverage verifies the solo catalog filter, favourites, difficulty
+selection, lifecycle pause/resume and active-save behavior, result records, and
+level-2 rematch; the full host suite passes all 361 tests and static analysis is
+clean. A focused physical iOS integration journey was added. Two attempts on the
+wired iPhone completed signing and entered the Flutter/Xcode device pipeline but
+remained in build/install/attach before any test ran, so physical Easy/Normal/Hard
+acceptance remains open and M17 is not marked Done.
 
 2026-09-30 — Completed M17.4. Added versioned Water Sort persistence isolated by
 difficulty for unlocked levels, completed-level sets, resumable active puzzles,

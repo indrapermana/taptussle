@@ -16,6 +16,8 @@ import '../games/checkers/checkers_view.dart';
 import '../games/mancala/mancala_view.dart';
 import '../games/slither_snakes/slither_records.dart';
 import '../games/slither_snakes/slither_snakes_view.dart';
+import '../games/water_sort/water_sort_records.dart';
+import '../games/water_sort/water_sort_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -43,6 +45,31 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         '${options.difficulty.label.toUpperCase()} • SURVIVE',
     build: (session, options) =>
         SlitherSnakesView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'water-sort-puzzle',
+    artworkAsset: gameLogoAssets['water-sort-puzzle'],
+    title: 'Water Sort Puzzle',
+    subtitle: 'Pour carefully. Sort every color.',
+    instructions:
+        'Tap a tube, then tap a destination to pour its connected top color. '
+        'You may pour into an empty tube or onto the same color when space is '
+        'available. Sort every color into its own full tube. Undo, restart, '
+        'and optional hints are available, and each difficulty has 60 levels.',
+    icon: Icons.science_rounded,
+    supportedModes: const {PlayMode.solo},
+    supportedPlayerCounts: const {PlayerCount.one},
+    difficultyType: DifficultyType.puzzle,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => '3–5 colors and two helper tubes.',
+      BotDifficulty.normal => '5–8 colors with longer solutions.',
+      BotDifficulty.hard => '8–12 colors and only one helper tube.',
+    },
+    recordDefinition: waterSortRecordDefinition,
+    matchLabel: (options) =>
+        '${options.difficulty.label.toUpperCase()} • LEVELS 1–60',
+    build: (session, options) =>
+        WaterSortView(session: session, options: options),
   ),
   MiniGame(
     id: 'sudoku',

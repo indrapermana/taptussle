@@ -23,6 +23,8 @@ import 'package:tap_tussle/games/mancala/mancala_view.dart';
 import 'package:tap_tussle/games/slither_snakes/slither_simulation.dart';
 import 'package:tap_tussle/games/slither_snakes/slither_snakes_game.dart';
 import 'package:tap_tussle/games/slither_snakes/slither_snakes_view.dart';
+import 'package:tap_tussle/games/water_sort/water_sort_solver.dart';
+import 'package:tap_tussle/games/water_sort/water_sort_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -275,6 +277,52 @@ void main() {
     expect(game.simulation.isGameOver, isFalse);
     expect(game.simulation.opponents, hasLength(6));
     expect(settings.isFavourite('slither-style-snakes'), isTrue);
+  });
+
+  testWidgets('Water Sort solo journey records and advances a level', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-onePlayer')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('game-card-water-sort-puzzle')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('play-solo')));
+    await tester.tap(find.byKey(const ValueKey('play-solo')));
+    await tester.pumpAndSettle();
+    await setDifficulty(tester, BotDifficulty.easy);
+    await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+    await pumpUntilFound(tester, find.byType(WaterSortBoard));
+
+    final board = tester.widget<WaterSortBoard>(find.byType(WaterSortBoard));
+    final solution = const WaterSortSolver().solve(board.controller.model)!;
+    for (final move in solution.moves) {
+      board.controller.tapTube(move.source);
+      board.controller.tapTube(move.destination);
+      await tester.pump(board.controller.animationDuration);
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Complete!'), findsOneWidget);
+    expect(
+      settings.recordRepository.recordsFor(
+        const GameRecordKey(
+          gameId: 'water-sort-puzzle',
+          recordType: 'solo',
+          variant: 'easy',
+        ),
+      ),
+      hasLength(1),
+    );
+    await tester.tap(find.byKey(const ValueKey('play-again')));
+    await tester.pump();
+    expect(board.controller.level.number, 2);
+    expect(board.controller.model.moveCount, 0);
+    expect(settings.isFavourite('water-sort-puzzle'), isTrue);
   });
 
   testWidgets('Rock Paper Scissors friend journey integrates and rematches', (

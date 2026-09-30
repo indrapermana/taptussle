@@ -13,9 +13,10 @@ void main() {
           game.id != 'memory-match' &&
           game.id != 'snakes-and-ladders' &&
           game.id != 'sudoku' &&
-          game.id != 'slither-style-snakes',
+          game.id != 'slither-style-snakes' &&
+          game.id != 'water-sort-puzzle',
     );
-    expect(gameCatalog, hasLength(12));
+    expect(gameCatalog, hasLength(13));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
@@ -85,6 +86,27 @@ void main() {
       game.difficultyDescription!(BotDifficulty.hard),
       contains('Advanced'),
     );
+  });
+
+  test('Water Sort is a solo puzzle with level, move, and time records', () {
+    final game = gameCatalog.singleWhere(
+      (game) => game.id == 'water-sort-puzzle',
+    );
+
+    expect(game.supportedPlayerCounts, {PlayerCount.one});
+    expect(game.supportedModes, {PlayMode.solo});
+    expect(game.difficultyType, DifficultyType.puzzle);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.id), [
+      'level',
+      'moves',
+      'time',
+    ]);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.sortOrder), [
+      RecordSortOrder.higherIsBetter,
+      RecordSortOrder.lowerIsBetter,
+      RecordSortOrder.lowerIsBetter,
+    ]);
+    expect(game.difficultyDescription!(BotDifficulty.hard), contains('one'));
   });
 
   test('defaults preserve the original friend-only two-player contract', () {

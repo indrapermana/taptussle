@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/app/tap_tussle_theme.dart';
+import 'package:tap_tussle/core/haptic_service.dart';
+import 'package:tap_tussle/core/sound_service.dart';
 import 'package:tap_tussle/games/water_sort/water_sort_controller.dart';
 import 'package:tap_tussle/games/water_sort/water_sort_levels.dart';
 import 'package:tap_tussle/games/water_sort/water_sort_view.dart';
+
+class _RecordingSoundPlayer implements SoundPlayer {
+  final played = <SoundEffect>[];
+
+  @override
+  Future<void> play(SoundEffect effect) async => played.add(effect);
+
+  @override
+  void setVolume(double value) {}
+}
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  var lightImpacts = 0;
+  var mediumImpacts = 0;
+
+  @override
+  Future<void> preview() async => lightImpacts++;
+
+  @override
+  Future<void> paddleHit() async => mediumImpacts++;
+
+  @override
+  void setEnabled(bool value) {}
+}
 
 void main() {
   testWidgets('renders accessible patterned tubes and responsive controls', (
@@ -79,6 +105,56 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('pours, completion, hints, and controls use shared effects', (
+    tester,
+  ) async {
+    final sounds = _RecordingSoundPlayer();
+    final haptics = _RecordingHapticPlayer();
+    SoundEffects.configure(sounds);
+    HapticEffects.configure(haptics);
+    final level = WaterSortLevel(
+      id: 'effects-01',
+      difficulty: WaterSortDifficulty.easy,
+      number: 1,
+      capacity: 2,
+      helperTubeCount: 1,
+      tubes: const [
+        [0, 0],
+        [1],
+        [1],
+      ],
+      minimumSolutionMoves: 1,
+      branching: const WaterSortBranchingMetadata(
+        initialLegalMoves: 2,
+        mixedColorBoundaries: 0,
+      ),
+    );
+    final controller = WaterSortController(
+      level: level,
+      animationDuration: Duration.zero,
+    );
+    addTearDown(controller.dispose);
+    await _pumpBoard(tester, controller, const Size(430, 760));
+
+    await tester.tap(find.byKey(const ValueKey('water-sort-hint')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('water-sort-tube-1')));
+    await tester.tap(find.byKey(const ValueKey('water-sort-tube-2')));
+    await tester.pump();
+
+    expect(
+      sounds.played,
+      containsAll([
+        SoundEffect.collect,
+        SoundEffect.uiTap,
+        SoundEffect.liquidPour,
+        SoundEffect.puzzleComplete,
+      ]),
+    );
+    expect(haptics.lightImpacts, 1);
+    expect(haptics.mediumImpacts, 1);
+  });
 }
 
 Future<void> _pumpBoard(

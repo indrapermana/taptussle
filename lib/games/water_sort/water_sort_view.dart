@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/haptic_service.dart';
+import '../../core/match_options.dart';
+import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'water_sort_controller.dart';
 import 'water_sort_levels.dart';
 import 'water_sort_model.dart';
+import 'water_sort_progress_repository.dart';
 
 class WaterSortView extends StatefulWidget {
   const WaterSortView({
-    required this.level,
+    this.session,
+    this.options,
+    this.repository,
+    this.level,
     this.initialModel,
     this.controller,
     super.key,
-  });
+  }) : assert(
+         controller != null ||
+             level != null ||
+             (session != null && options != null),
+       );
 
-  final WaterSortLevel level;
+  final MatchSession? session;
+  final MatchOptions? options;
+  final WaterSortProgressRepository? repository;
+  final WaterSortLevel? level;
   final WaterSortModel? initialModel;
   final WaterSortController? controller;
 
@@ -22,22 +38,65 @@ class WaterSortView extends StatefulWidget {
 }
 
 class _WaterSortViewState extends State<WaterSortView> {
-  late final WaterSortController controller =
-      widget.controller ??
-      WaterSortController(
-        level: widget.level,
-        initialModel: widget.initialModel,
-      );
+  WaterSortController? controller;
   late final bool _ownsController = widget.controller == null;
 
   @override
+  void initState() {
+    super.initState();
+    final supplied = widget.controller;
+    if (supplied != null) {
+      controller = supplied;
+      return;
+    }
+    final level = widget.level;
+    if (level != null) {
+      controller = WaterSortController(
+        level: level,
+        initialModel: widget.initialModel,
+        session: widget.session,
+        repository: widget.repository,
+      );
+      return;
+    }
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    final repository =
+        widget.repository ??
+        WaterSortProgressRepository(await SharedPreferences.getInstance());
+    if (!mounted) return;
+    final difficulty =
+        WaterSortDifficulty.values[widget.options!.difficulty.index];
+    final saved = repository.loadActive(difficulty);
+    final levelNumber = saved?.level ?? repository.unlockedLevel(difficulty);
+    setState(() {
+      controller = WaterSortController(
+        level: WaterSortLevelCatalog.level(difficulty, levelNumber),
+        session: widget.session,
+        repository: repository,
+        restoredProgress: saved,
+      );
+    });
+  }
+
+  @override
   void dispose() {
-    if (_ownsController) controller.dispose();
+    if (_ownsController) controller?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => WaterSortBoard(controller: controller);
+  Widget build(BuildContext context) {
+    final loaded = controller;
+    if (loaded == null) {
+      return const Center(
+        child: CircularProgressIndicator(key: ValueKey('water-sort-loading')),
+      );
+    }
+    return WaterSortBoard(controller: loaded);
+  }
 }
 
 class WaterSortBoard extends StatelessWidget {
@@ -228,7 +287,28 @@ class _Tube extends StatelessWidget {
           key: ValueKey('water-sort-tube-$index'),
           borderRadius: BorderRadius.circular(22),
           onTap: controller.acceptsInput
-              ? () => controller.tapTube(index)
+              ? () {
+                  final result = controller.tapTube(index);
+                  switch (result) {
+                    case WaterSortTapResult.poured:
+                      SoundEffects.play(SoundEffect.liquidPour);
+                      if (controller.model.isComplete) {
+                        SoundEffects.play(SoundEffect.puzzleComplete);
+                        HapticEffects.paddleHit();
+                      } else {
+                        HapticEffects.preview();
+                      }
+                    case WaterSortTapResult.selected ||
+                        WaterSortTapResult.selectionCleared ||
+                        WaterSortTapResult.selectionChanged:
+                      SoundEffects.play(SoundEffect.uiTap);
+                    case WaterSortTapResult.invalid:
+                      SoundEffects.play(SoundEffect.uiInvalid);
+                    case WaterSortTapResult.inputLocked ||
+                        WaterSortTapResult.completed:
+                      break;
+                  }
+                }
               : null,
           child: AnimatedRotation(
             turns: sourceAnimating ? .045 : 0,
@@ -370,8 +450,13 @@ class _Controls extends StatelessWidget {
       Expanded(
         child: OutlinedButton.icon(
           key: const ValueKey('water-sort-undo'),
-          onPressed: !controller.isAnimating && controller.model.canUndo
-              ? controller.undo
+          onPressed: controller.acceptsInput && controller.model.canUndo
+              ? () {
+                  if (controller.undo()) {
+                    SoundEffects.play(SoundEffect.uiBack);
+                    HapticEffects.preview();
+                  }
+                }
               : null,
           icon: const Icon(Icons.undo_rounded),
           label: Text(compact ? 'UNDO' : 'UNDO MOVE'),
@@ -381,8 +466,13 @@ class _Controls extends StatelessWidget {
       Expanded(
         child: OutlinedButton.icon(
           key: const ValueKey('water-sort-restart'),
-          onPressed: !controller.isAnimating && controller.model.moveCount > 0
-              ? controller.restart
+          onPressed: controller.acceptsInput && controller.model.moveCount > 0
+              ? () {
+                  if (controller.restart()) {
+                    SoundEffects.play(SoundEffect.uiConfirm);
+                    HapticEffects.preview();
+                  }
+                }
               : null,
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('RESTART'),
@@ -392,7 +482,16 @@ class _Controls extends StatelessWidget {
       Expanded(
         child: FilledButton.icon(
           key: const ValueKey('water-sort-hint'),
-          onPressed: controller.acceptsInput ? controller.requestHint : null,
+          onPressed: controller.acceptsInput
+              ? () {
+                  if (controller.requestHint() != null) {
+                    SoundEffects.play(SoundEffect.collect);
+                    HapticEffects.preview();
+                  } else {
+                    SoundEffects.play(SoundEffect.uiInvalid);
+                  }
+                }
+              : null,
           icon: const Icon(Icons.lightbulb_rounded),
           label: const Text('HINT'),
         ),

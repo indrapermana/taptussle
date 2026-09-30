@@ -260,7 +260,11 @@ void main() {
       find.byKey(const ValueKey('game-card-slither-style-snakes')),
       findsOneWidget,
     );
-    expect(find.text('3 GAMES'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('game-card-water-sort-puzzle')),
+      findsOneWidget,
+    );
+    expect(find.text('4 GAMES'), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 
