@@ -43,8 +43,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
-| M16 | Slither-style Snakes | M15 | In progress | M16.1-M16.5 implementation complete; 333 host tests and the focused iPhone integration journey pass; Android/iPad verification and attached profile capture remain |
-| M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
+| M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; 333 host tests and focused iPhone automation passed; user confirmed physical-device functionality |
+| M17 | Water Sort Puzzle | M16 | In progress | M17.1 immutable rules model complete; 9 focused tests and all 342 host tests pass |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
@@ -815,7 +815,7 @@ minimum verified solution length, and decision branching. A late Easy level must
 remain easier than a typical Normal level. Do not classify difficulty using only
 the number of colors.
 
-- [ ] M17.1 Define tube capacity, legal pours, completion, move counting, undo, and
+- [x] M17.1 Define tube capacity, legal pours, completion, move counting, undo, and
   restart; implement an immutable/testable puzzle model.
 - [ ] M17.2 Choose a curated or generated level source and prove every shipped level
   is solvable. Ship 60 levels in each difficulty and record solver-verified minimum
@@ -1018,6 +1018,18 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M17.1. Added an immutable Water Sort model with four-unit
+tubes by default, bottom-to-top compact color IDs, maximal contiguous legal pours,
+explicit invalid-move results, completion detection, accepted-move counting,
+multi-step undo, and exact restart. Nested board state and legal-move collections
+are immutable so the upcoming solver and UI cannot mutate puzzle state accidentally.
+Focused tests cover capacity validation, every invalid-pour category, partial pours,
+legal-move enumeration, completion, immutability, undo, and restart.
+
+2026-09-30 — Closed M16 after the user confirmed Slither-style Snakes works on a
+physical device. The broader release profile and platform matrix remain scheduled
+under M23.
 
 2026-09-30 — Implemented the M16.5 Slither integration scope. Eating food now uses
 the dedicated snake-eat sound with light haptics; snake crashes and defeated rivals
