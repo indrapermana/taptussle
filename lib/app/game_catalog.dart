@@ -12,6 +12,7 @@ import '../games/memory_match/memory_match_view.dart';
 import '../games/rock_paper_scissors/rock_paper_scissors_view.dart';
 import '../games/snakes_and_ladders/snakes_and_ladders_view.dart';
 import '../games/sudoku/sudoku_view.dart';
+import '../games/checkers/checkers_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -259,5 +260,36 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (_) => 'FIRST TO SQUARE 64',
     build: (session, options) =>
         SnakesAndLaddersView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'checkers',
+    artworkAsset: gameLogoAssets['checkers'],
+    title: 'Checkers',
+    subtitle: 'Capture. Crown. Control the board.',
+    instructions:
+        'Move one red piece diagonally forward on the dark squares. Captures '
+        'are mandatory: jump over an opposing piece into the empty square '
+        'beyond it, and continue jumping with the same piece whenever another '
+        'capture is available. Reach the far edge to crown a king, which can '
+        'move and capture in both directions. Win by taking every opposing '
+        'piece or leaving your opponent without a legal move.',
+    botInstructions:
+        'You control the red pieces and move first. Captures are mandatory, '
+        'including every available jump in a capture chain. Crown kings by '
+        'reaching the far edge and leave the bot without a legal move to win.',
+    icon: Icons.circle_outlined,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {PlayerCount.two},
+    difficultyType: DifficultyType.bot,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Random legal moves with a relaxed thinking pace.',
+      BotDifficulty.normal =>
+        'Looks two turns ahead but occasionally makes a weaker move.',
+      BotDifficulty.hard =>
+        'Looks four turns ahead and values position, promotion, and material.',
+    },
+    matchLabel: (_) => 'AMERICAN CHECKERS',
+    build: (session, options) =>
+        CheckersView(session: session, options: options),
   ),
 ]);

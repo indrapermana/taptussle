@@ -15,6 +15,8 @@ import 'package:tap_tussle/games/rock_paper_scissors/rock_paper_scissors_view.da
 import 'package:tap_tussle/games/snakes_and_ladders/snakes_and_ladders_view.dart';
 import 'package:tap_tussle/games/sudoku/sudoku_model.dart';
 import 'package:tap_tussle/games/sudoku/sudoku_view.dart';
+import 'package:tap_tussle/games/checkers/checkers_model.dart';
+import 'package:tap_tussle/games/checkers/checkers_view.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -367,4 +369,60 @@ void main() {
       expect(board.controller.model.puzzle.level, 2);
     },
   );
+
+  testWidgets('Checkers friend lifecycle, result, and rematch journey', (
+    tester,
+  ) async {
+    final settings = await launchCleanApp(tester);
+    addTearDown(settings.dispose);
+
+    await tester.tap(find.byKey(const ValueKey('player-filter-twoPlayers')));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const ValueKey('game-card-checkers'));
+    await tester.scrollUntilVisible(
+      card,
+      420,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(card);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
+    await tester.pumpAndSettle();
+    expect(settings.isFavourite('checkers'), isTrue);
+    await tester.ensureVisible(find.byKey(const ValueKey('play-vs-friend')));
+    await tester.tap(find.byKey(const ValueKey('play-vs-friend')));
+    await tester.pumpAndSettle();
+
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(find.text('Time out'), findsOneWidget);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.tap(find.byKey(const ValueKey('resume-match')));
+    await tester.pump();
+
+    var board = tester.widget<CheckersBoard>(find.byType(CheckersBoard));
+    board.controller!.model = CheckersModel.fromBoard(
+      board: {
+        40: const CheckersPiece(player: 0),
+        33: const CheckersPiece(player: 1),
+      },
+    );
+    board.controller!.tapSquare(40);
+    board.controller!.tapSquare(26);
+    await tester.pumpAndSettle();
+    expect(find.text('Player 1 wins!'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('play-again')));
+    await tester.pump();
+    board = tester.widget<CheckersBoard>(find.byType(CheckersBoard));
+    expect(board.controller!.model.currentPlayer, 1);
+    expect(board.controller!.model.pieceCount(0), 12);
+    expect(board.controller!.model.pieceCount(1), 12);
+
+    await tester.tap(find.byTooltip('Pause match'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('change-options')));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove favourite'), findsOneWidget);
+  });
 }

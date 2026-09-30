@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'checkers_controller.dart';
 import 'checkers_model.dart';
 
 class CheckersView extends StatefulWidget {
-  const CheckersView({required this.session, required this.options, super.key});
+  const CheckersView({
+    required this.session,
+    required this.options,
+    this.initialModel,
+    super.key,
+  });
 
   final MatchSession session;
   final MatchOptions options;
+  final CheckersModel? initialModel;
 
   @override
   State<CheckersView> createState() => _CheckersViewState();
@@ -17,15 +26,56 @@ class CheckersView extends StatefulWidget {
 
 class _CheckersViewState extends State<CheckersView> {
   late final CheckersController controller;
+  late CheckersModel _observedModel;
+  late List<CheckersPiece?> _observedBoard;
 
   @override
   void initState() {
     super.initState();
-    controller = CheckersController(session: widget.session);
+    controller = CheckersController(
+      session: widget.session,
+      model: widget.initialModel,
+    )..addListener(_playEffects);
+    _observedModel = controller.model;
+    _observedBoard = controller.model.board;
+  }
+
+  void _playEffects() {
+    if (!identical(_observedModel, controller.model)) {
+      _observedModel = controller.model;
+      _observedBoard = controller.model.board;
+      return;
+    }
+    final board = controller.model.board;
+    if (listEquals(board, _observedBoard)) return;
+
+    final previousPieces = _observedBoard.whereType<CheckersPiece>().length;
+    final currentPieces = board.whereType<CheckersPiece>().length;
+    final previousKings = _observedBoard
+        .whereType<CheckersPiece>()
+        .where((piece) => piece.isKing)
+        .length;
+    final currentKings = board
+        .whereType<CheckersPiece>()
+        .where((piece) => piece.isKing)
+        .length;
+    _observedBoard = board;
+
+    if (currentKings > previousKings) {
+      SoundEffects.play(SoundEffect.levelUp);
+      HapticEffects.paddleHit();
+    } else if (currentPieces < previousPieces) {
+      SoundEffects.play(SoundEffect.boardCapture);
+      HapticEffects.paddleHit();
+    } else {
+      SoundEffects.play(SoundEffect.pieceMove);
+      HapticEffects.preview();
+    }
   }
 
   @override
   void dispose() {
+    controller.removeListener(_playEffects);
     controller.dispose();
     super.dispose();
   }
@@ -35,6 +85,7 @@ class _CheckersViewState extends State<CheckersView> {
     listenable: controller,
     builder: (context, _) => CheckersBoard(
       model: controller.model,
+      controller: controller,
       selectedSquare: controller.selectedSquare,
       enabled: controller.acceptsInput,
       statusOverride: controller.isBotThinking
@@ -60,6 +111,7 @@ class CheckersBoard extends StatelessWidget {
     this.playerLabels = const ['Player 1', 'Player 2'],
     this.enabled = true,
     this.statusOverride,
+    this.controller,
     super.key,
   }) : assert(playerLabels.length == 2);
 
@@ -69,6 +121,7 @@ class CheckersBoard extends StatelessWidget {
   final List<String> playerLabels;
   final bool enabled;
   final String? statusOverride;
+  final CheckersController? controller;
 
   static const playerOneColor = Color(0xFFFF664F);
   static const playerTwoColor = Color(0xFF35C8FF);

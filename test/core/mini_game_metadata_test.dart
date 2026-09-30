@@ -14,7 +14,7 @@ void main() {
           game.id != 'snakes-and-ladders' &&
           game.id != 'sudoku',
     );
-    expect(gameCatalog, hasLength(9));
+    expect(gameCatalog, hasLength(10));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
