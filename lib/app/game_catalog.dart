@@ -13,6 +13,7 @@ import '../games/rock_paper_scissors/rock_paper_scissors_view.dart';
 import '../games/snakes_and_ladders/snakes_and_ladders_view.dart';
 import '../games/sudoku/sudoku_view.dart';
 import '../games/checkers/checkers_view.dart';
+import '../games/mancala/mancala_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -291,5 +292,35 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (_) => 'AMERICAN CHECKERS',
     build: (session, options) =>
         CheckersView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'mancala',
+    artworkAsset: gameLogoAssets['mancala'],
+    title: 'Mancala',
+    subtitle: 'Sow stones. Build your store. Think ahead.',
+    instructions:
+        'Choose a non-empty pit on your side and sow its stones one at a time '
+        'counterclockwise. Add stones to your own store and skip your '
+        'opponent’s store. Landing in your store grants another turn. Landing '
+        'in an empty pit on your side captures that stone and every stone '
+        'opposite it. When either side is empty, remaining stones move to the '
+        'other store. The larger store wins.',
+    botInstructions:
+        'You own the orange pits along the bottom. Sow counterclockwise, use '
+        'extra turns and captures, and finish with more stones than the bot.',
+    icon: Icons.circle_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {PlayerCount.two},
+    difficultyType: DifficultyType.bot,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Chooses randomly from its legal pits.',
+      BotDifficulty.normal =>
+        'Looks three moves ahead but occasionally chooses a weaker pit.',
+      BotDifficulty.hard =>
+        'Looks seven moves ahead and values stores, side control, and tempo.',
+    },
+    matchLabel: (_) => 'MOST STONES',
+    build: (session, options) =>
+        MancalaView(session: session, options: options),
   ),
 ]);

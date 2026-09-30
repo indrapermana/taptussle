@@ -88,8 +88,8 @@ class MancalaController extends ChangeNotifier {
 
     _displayBoard = List.of(before)..[source] = 0;
     _activePosition = source;
-    notifyListeners();
     _animateSowing(model.lastTurn!.sowingPath, 0);
+    notifyListeners();
     return MancalaTapResult.accepted;
   }
 

@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'mancala_controller.dart';
 import 'mancala_model.dart';
 
@@ -25,6 +27,9 @@ class MancalaView extends StatefulWidget {
 
 class _MancalaViewState extends State<MancalaView> {
   late final MancalaController controller;
+  late MancalaModel _observedModel;
+  MancalaTurn? _observedTurn;
+  var _wasAnimating = false;
 
   @override
   void initState() {
@@ -32,11 +37,40 @@ class _MancalaViewState extends State<MancalaView> {
     controller = MancalaController(
       session: widget.session,
       model: widget.initialModel,
-    );
+    )..addListener(_playEffects);
+    _observedModel = controller.model;
+    _observedTurn = controller.model.lastTurn;
+  }
+
+  void _playEffects() {
+    if (!identical(_observedModel, controller.model)) {
+      _observedModel = controller.model;
+      _observedTurn = controller.model.lastTurn;
+      _wasAnimating = controller.isAnimating;
+      return;
+    }
+
+    final turn = controller.model.lastTurn;
+    if (!identical(turn, _observedTurn) && controller.isAnimating) {
+      _observedTurn = turn;
+      SoundEffects.play(SoundEffect.collect);
+      HapticEffects.preview();
+    }
+    if (_wasAnimating && !controller.isAnimating && turn != null) {
+      if (turn.wasCapture) {
+        SoundEffects.play(SoundEffect.boardCapture);
+        HapticEffects.paddleHit();
+      } else if (turn.extraTurn) {
+        SoundEffects.play(SoundEffect.uiConfirm);
+        HapticEffects.paddleHit();
+      }
+    }
+    _wasAnimating = controller.isAnimating;
   }
 
   @override
   void dispose() {
+    controller.removeListener(_playEffects);
     controller.dispose();
     super.dispose();
   }

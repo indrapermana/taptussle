@@ -42,7 +42,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M12 | Snakes & Ladders | M9 | Done | M12.1–M12.4 complete; user verified all functionality on physical iPhone and Android devices |
 | M13 | Sudoku | M9 | Done | M13.1–M13.4 complete; user verified Sudoku on physical iPhone and Android devices |
 | M14 | Checkers | M9 | Done | M14.1–M14.4 complete; 34 focused tests and 268 host tests passed; user confirmed the game on a physical device |
-| M15 | Mancala | M14 | In progress | M15.1–M15.3 rules, animated board, and delayed bounded Easy/Normal/Hard bots complete |
+| M15 | Mancala | M14 | In progress | M15.1–M15.4 game, bots, catalog/setup, effects, results, rematch, and responsive coverage complete; M15.5 device acceptance remains |
 | M16 | Slither-style Snakes | M15 | Not started | First solo real-time game with score records |
 | M17 | Water Sort Puzzle | M16 | Not started | Solo level puzzle with move/time records |
 | M18 | Ludo | M17 | Not started | Full 2–4-player board game with required mixed human/bot support and standings |
@@ -751,7 +751,7 @@ The larger store wins, and equal stores produce a draw.
   legal-pit emphasis, sowing animation, current-player state, and final stores.
 - [x] M15.3 Add friend mode plus delayed Easy, Normal, and Hard bots. Use legal moves
   through the model; vary search depth/evaluation and keep bounded thinking time.
-- [ ] M15.4 Integrate setup, results, rematch, effects, favourites, player filters,
+- [x] M15.4 Integrate setup, results, rematch, effects, favourites, player filters,
   pause/resume, and compact/large-screen layouts.
 - [ ] M15.5 Test sowing invariants, captures, extra turns, terminal collection, bot
   legality/lifecycle, and complete every mode on physical iOS and Android devices.
@@ -1015,6 +1015,19 @@ mode → profile on devices → release. Limit work in progress to one game;
 maintenance and bug fixes may replace a monthly addition when necessary.
 
 ## Decisions and completion notes
+
+2026-09-30 — Completed M15.4. Registered Mancala in the two-player catalog with
+its supplied artwork, full Kalah instructions, friend and bot modes, Easy/Normal/
+Hard descriptions, the Most Stones match label, favourites, and persisted setup
+preferences. The shared match flow now receives final store scores, winner or
+draw details, lifecycle pause/resume, and alternating-starter rematches. Sowing
+uses the shared collect sound and light haptic; captures and extra turns add
+distinct confirmation sounds and medium haptics after their animation settles.
+Four new flow tests cover metadata, filtering, favourites, Hard bot setup,
+lifecycle recovery, final scores, rematch, and effects. Existing compact-phone
+and large-tablet board tests retain the responsive layout coverage. Focused
+Mancala coverage is now 34 tests. Keep M15 open for the broader invariants and
+physical iOS/Android acceptance in M15.5.
 
 2026-09-30 — Completed M15.3. Added a Mancala bot that selects exclusively from
 the pure model's legal pits and searches independent state copies without
