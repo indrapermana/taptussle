@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/games/ludo/ludo_controller.dart';
 import 'package:tap_tussle/games/ludo/ludo_model.dart';
 
@@ -87,4 +88,173 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  testWidgets(
+    'bot visibly waits to roll and then waits to choose a legal token',
+    (tester) async {
+      var diceCalls = 0;
+      final model = LudoModel.fromState(
+        playerCount: 3,
+        diceRoller: () {
+          diceCalls++;
+          return 6;
+        },
+        tokenProgress: const [
+          [-1, -1, -1, -1],
+          [-1, -1, -1, -1],
+          [-1, -1, -1, -1],
+        ],
+        currentPlayer: 1,
+      );
+      final participants = _mixedParticipants();
+      final controller = LudoController(
+        playerCount: 3,
+        participants: participants,
+        model: model,
+        movementStepDuration: Duration.zero,
+        botRollDelay: const Duration(milliseconds: 100),
+        botMoveDelay: const Duration(milliseconds: 120),
+      );
+      addTearDown(controller.dispose);
+
+      expect(controller.isBotTurn, isTrue);
+      expect(controller.pendingBotAction, LudoBotAction.rolling);
+      expect(controller.canRoll, isFalse);
+      expect(controller.canChooseToken, isFalse);
+      expect(diceCalls, 0);
+
+      await tester.pump(const Duration(milliseconds: 99));
+      expect(diceCalls, 0);
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(diceCalls, 1);
+      expect(model.pendingRoll, 6);
+      expect(controller.pendingBotAction, LudoBotAction.choosingToken);
+      expect(model.tokenProgress[1], everyElement(LudoModel.boxProgress));
+
+      await tester.pump(const Duration(milliseconds: 119));
+      expect(model.tokenProgress[1], everyElement(LudoModel.boxProgress));
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(
+        model.tokenProgress[1].where((progress) => progress == 0),
+        hasLength(1),
+      );
+      expect(model.lastMove?.playerIndex, 1);
+      expect(
+        model.lastMove?.tokenIndex,
+        isIn(model.lastRoll!.legalTokenIndexes),
+      );
+      expect(controller.pendingBotAction, LudoBotAction.rolling);
+      controller.dispose();
+    },
+  );
+
+  testWidgets(
+    'consecutive bot seats use the same dice source then yield to human',
+    (tester) async {
+      final rolls = [3, 4];
+      var rollIndex = 0;
+      final participants = _mixedParticipants();
+      final model = LudoModel.fromState(
+        playerCount: 3,
+        diceRoller: () => rolls[rollIndex++],
+        tokenProgress: const [
+          [-1, -1, -1, -1],
+          [-1, -1, -1, -1],
+          [-1, -1, -1, -1],
+        ],
+        currentPlayer: 1,
+      );
+      final controller = LudoController(
+        playerCount: 3,
+        participants: participants,
+        model: model,
+        botRollDelay: const Duration(milliseconds: 10),
+        botMoveDelay: const Duration(milliseconds: 10),
+        movementStepDuration: Duration.zero,
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(rollIndex, 1);
+      expect(model.currentPlayer, 2);
+      expect(controller.pendingBotAction, LudoBotAction.rolling);
+
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(rollIndex, 2);
+      expect(model.currentPlayer, 0);
+      expect(controller.isBotTurn, isFalse);
+      expect(controller.isBotThinking, isFalse);
+      expect(controller.canRoll, isTrue);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('disposing cancels a pending bot action', (tester) async {
+    var diceCalls = 0;
+    final controller = LudoController(
+      playerCount: 2,
+      participants: [
+        _bot('Bot', ParticipantColor.coral, ParticipantToken.diamond),
+        _human('You', ParticipantColor.mint, ParticipantToken.circle),
+      ],
+      diceRoller: () {
+        diceCalls++;
+        return 6;
+      },
+      botRollDelay: const Duration(milliseconds: 20),
+    );
+
+    expect(controller.isBotThinking, isTrue);
+    controller.dispose();
+    await tester.pump(const Duration(milliseconds: 30));
+
+    expect(diceCalls, 0);
+  });
+
+  test('rejects participant mismatch and all-bot local matches', () {
+    expect(
+      () => LudoController(
+        playerCount: 2,
+        participants: [
+          _human('Only', ParticipantColor.mint, ParticipantToken.circle),
+        ],
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => LudoController(
+        playerCount: 2,
+        participants: [
+          _bot('Bot 1', ParticipantColor.mint, ParticipantToken.circle),
+          _bot('Bot 2', ParticipantColor.coral, ParticipantToken.diamond),
+        ],
+      ),
+      throwsArgumentError,
+    );
+  });
 }
+
+List<MatchParticipant> _mixedParticipants() => [
+  _human('You', ParticipantColor.mint, ParticipantToken.circle),
+  _bot('Bot 1', ParticipantColor.coral, ParticipantToken.diamond),
+  _bot('Bot 2', ParticipantColor.gold, ParticipantToken.triangle),
+];
+
+MatchParticipant _human(
+  String name,
+  ParticipantColor color,
+  ParticipantToken token,
+) => MatchParticipant.human(displayName: name, color: color, token: token);
+
+MatchParticipant _bot(
+  String name,
+  ParticipantColor color,
+  ParticipantToken token,
+) => MatchParticipant.bot(
+  displayName: name,
+  color: color,
+  token: token,
+  difficulty: BotDifficulty.normal,
+);

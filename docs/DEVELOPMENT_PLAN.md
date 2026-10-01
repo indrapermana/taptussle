@@ -45,7 +45,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; automated coverage and physical-device verification confirmed |
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
-| M18 | Ludo | M17 | In progress | M18.1-M18.2 complete with 21 focused model/controller/view tests; full 382-test host suite passes |
+| M18 | Ludo | M17 | In progress | M18.1-M18.3 complete with 26 focused model/controller/view tests; full 387-test host suite passes |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
@@ -848,7 +848,7 @@ token to move rather than having the game select automatically.
   finish, and win standings with deterministic dice injection and rule tests.
 - [x] M18.2 Build an animated, readable Flutter board for two to four participants
   with current-turn, selectable legal tokens, dice, home-path, and standings states.
-- [ ] M18.3 Support any valid mixture of local humans and bots with at least one
+- [x] M18.3 Support any valid mixture of local humans and bots with at least one
   human. Require a human to choose among multiple legal tokens. Bots use the same
   legal-move list with visible roll/move delays and never influence dice outcomes.
 - [ ] M18.4 If rule choices create meaningful decisions, differentiate Easy,

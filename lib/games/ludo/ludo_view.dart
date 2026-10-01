@@ -69,6 +69,10 @@ class _TurnBanner extends StatelessWidget {
         ? 'FINAL STANDINGS'
         : controller.isAnimating
         ? '${participant.displayName.toUpperCase()} IS MOVING'
+        : controller.pendingBotAction == LudoBotAction.rolling
+        ? '${participant.displayName.toUpperCase()} IS GETTING READY…'
+        : controller.pendingBotAction == LudoBotAction.choosingToken
+        ? '${participant.displayName.toUpperCase()} IS CHOOSING…'
         : model.phase == LudoTurnPhase.awaitingMove
         ? 'ROLL ${model.pendingRoll} • CHOOSE A TOKEN'
         : '${participant.displayName.toUpperCase()}’S TURN';
@@ -303,7 +307,9 @@ class _MatchControls extends StatelessWidget {
         onPressed: controller.canRoll ? controller.roll : null,
         icon: const Icon(Icons.casino_rounded),
         label: Text(
-          controller.model.phase == LudoTurnPhase.awaitingMove
+          controller.isBotTurn || controller.isBotThinking
+              ? 'WAIT'
+              : controller.model.phase == LudoTurnPhase.awaitingMove
               ? 'PICK'
               : controller.isAnimating
               ? 'MOVING'

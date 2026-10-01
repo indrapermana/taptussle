@@ -3,14 +3,21 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/match_options.dart';
 import 'ludo_model.dart';
+
+enum LudoBotAction { rolling, choosingToken }
 
 class LudoController extends ChangeNotifier {
   factory LudoController({
     required int playerCount,
+    List<MatchParticipant>? participants,
     LudoDiceRoller? diceRoller,
     LudoModel? model,
     Duration movementStepDuration = const Duration(milliseconds: 150),
+    Duration? botRollDelay,
+    Duration? botMoveDelay,
+    Random? random,
   }) {
     final resolvedModel =
         model ??
@@ -22,6 +29,10 @@ class LudoController extends ChangeNotifier {
       playerCount: playerCount,
       model: resolvedModel,
       movementStepDuration: movementStepDuration,
+      participants: participants,
+      botRollDelay: botRollDelay,
+      botMoveDelay: botMoveDelay,
+      random: random ?? Random(),
     );
   }
 
@@ -29,9 +40,17 @@ class LudoController extends ChangeNotifier {
     required int playerCount,
     required this.model,
     required this.movementStepDuration,
+    required List<MatchParticipant>? participants,
+    required this.botRollDelay,
+    required this.botMoveDelay,
+    required Random random,
   }) : _displayProgress = [
          for (final tokens in model.tokenProgress) List<int>.of(tokens),
-       ] {
+       ],
+       _participants = participants == null
+           ? List<MatchParticipant?>.filled(playerCount, null)
+           : List<MatchParticipant?>.of(participants),
+       _random = random {
     if (model.playerCount != playerCount) {
       throw ArgumentError.value(
         playerCount,
@@ -39,21 +58,48 @@ class LudoController extends ChangeNotifier {
         'Must match the supplied model',
       );
     }
+    if (_participants.length != playerCount) {
+      throw ArgumentError.value(
+        _participants.length,
+        'participants',
+        'Must contain one descriptor per participant',
+      );
+    }
+    if (_participants.every((participant) => participant?.isBot ?? false)) {
+      throw ArgumentError('A local Ludo match requires at least one human');
+    }
+    _scheduleBotAction();
   }
 
   final LudoModel model;
   final Duration movementStepDuration;
+  final Duration? botRollDelay;
+  final Duration? botMoveDelay;
   final List<List<int>> _displayProgress;
+  final List<MatchParticipant?> _participants;
+  final Random _random;
 
   List<List<int>> get displayProgress => List.unmodifiable(
     _displayProgress.map((tokens) => List<int>.unmodifiable(tokens)),
   );
 
   bool get isAnimating => _movementTimer != null || _pendingProgress.isNotEmpty;
+  bool get isBotTurn =>
+      !model.isFinished && (_participants[model.currentPlayer]?.isBot ?? false);
+  bool get isBotThinking => _botTimer?.isActive ?? false;
+  LudoBotAction? get pendingBotAction => _pendingBotAction;
   bool get canRoll =>
-      !_disposed && !isAnimating && model.phase == LudoTurnPhase.awaitingRoll;
+      !_disposed &&
+      !isAnimating &&
+      !isBotTurn &&
+      !isBotThinking &&
+      model.phase == LudoTurnPhase.awaitingRoll;
   bool get canChooseToken =>
-      !_disposed && !isAnimating && model.phase == LudoTurnPhase.awaitingMove;
+      !_disposed &&
+      !isAnimating &&
+      !isBotTurn &&
+      !isBotThinking &&
+      model.phase == LudoTurnPhase.awaitingMove;
   List<int> get legalTokenIndexes =>
       canChooseToken ? model.legalTokenIndexes : const [];
 
@@ -63,12 +109,19 @@ class LudoController extends ChangeNotifier {
   int? get animationToken => _animationToken;
   final List<int> _pendingProgress = [];
   Timer? _movementTimer;
+  Timer? _botTimer;
+  LudoBotAction? _pendingBotAction;
   bool _disposed = false;
 
   LudoRoll? roll() {
     if (!canRoll) return null;
+    return _performRoll();
+  }
+
+  LudoRoll _performRoll() {
     final result = model.rollDice();
     notifyListeners();
+    if (isBotTurn) _scheduleBotAction();
     return result;
   }
 
@@ -78,6 +131,10 @@ class LudoController extends ChangeNotifier {
       return LudoMoveResult.invalidToken;
     }
     final player = model.currentPlayer;
+    return _moveToken(player, tokenIndex);
+  }
+
+  LudoMoveResult _moveToken(int player, int tokenIndex) {
     final start = model.progressFor(player, tokenIndex);
     final result = model.moveToken(player, tokenIndex);
     if (result != LudoMoveResult.accepted) return result;
@@ -133,6 +190,41 @@ class LudoController extends ChangeNotifier {
     _animationPlayer = null;
     _animationToken = null;
     notifyListeners();
+    _scheduleBotAction();
+  }
+
+  void _scheduleBotAction() {
+    if (_disposed ||
+        model.isFinished ||
+        isAnimating ||
+        !isBotTurn ||
+        _botTimer != null) {
+      return;
+    }
+    final action = model.phase == LudoTurnPhase.awaitingRoll
+        ? LudoBotAction.rolling
+        : LudoBotAction.choosingToken;
+    _pendingBotAction = action;
+    final delay = switch (action) {
+      LudoBotAction.rolling => botRollDelay ?? _naturalRollDelay(),
+      LudoBotAction.choosingToken => botMoveDelay ?? _naturalMoveDelay(),
+    };
+    _botTimer = Timer(delay, () {
+      _botTimer = null;
+      _pendingBotAction = null;
+      if (_disposed || model.isFinished || !isBotTurn || isAnimating) return;
+      switch (action) {
+        case LudoBotAction.rolling:
+          if (model.phase == LudoTurnPhase.awaitingRoll) _performRoll();
+        case LudoBotAction.choosingToken:
+          if (model.phase != LudoTurnPhase.awaitingMove) return;
+          final legalTokens = model.legalTokenIndexes;
+          if (legalTokens.isEmpty) return;
+          final token = legalTokens[_random.nextInt(legalTokens.length)];
+          _moveToken(model.currentPlayer, token);
+      }
+    });
+    notifyListeners();
   }
 
   @override
@@ -141,8 +233,17 @@ class LudoController extends ChangeNotifier {
     _disposed = true;
     _movementTimer?.cancel();
     _movementTimer = null;
+    _botTimer?.cancel();
+    _botTimer = null;
+    _pendingBotAction = null;
     super.dispose();
   }
+
+  Duration _naturalRollDelay() =>
+      Duration(milliseconds: 650 + _random.nextInt(351));
+
+  Duration _naturalMoveDelay() =>
+      Duration(milliseconds: 500 + _random.nextInt(351));
 
   static int _randomRoll() => Random().nextInt(6) + 1;
 }

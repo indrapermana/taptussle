@@ -115,6 +115,72 @@ void main() {
     expect(find.byKey(const ValueKey('ludo-roll')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('shows separate locked bot roll and move thinking states', (
+    tester,
+  ) async {
+    final options = MatchOptions.custom(
+      mode: PlayMode.bot,
+      participants: [
+        const MatchParticipant.human(
+          displayName: 'You',
+          color: ParticipantColor.mint,
+          token: ParticipantToken.circle,
+        ),
+        const MatchParticipant.bot(
+          displayName: 'Rival',
+          color: ParticipantColor.coral,
+          token: ParticipantToken.diamond,
+          difficulty: BotDifficulty.normal,
+        ),
+      ],
+    );
+    final model = LudoModel.fromState(
+      playerCount: 2,
+      diceRoller: () => 6,
+      tokenProgress: const [
+        [-1, -1, -1, -1],
+        [-1, -1, -1, -1],
+      ],
+      currentPlayer: 1,
+    );
+    final controller = LudoController(
+      playerCount: 2,
+      participants: options.participants,
+      model: model,
+      movementStepDuration: Duration.zero,
+      botRollDelay: const Duration(milliseconds: 100),
+      botMoveDelay: const Duration(milliseconds: 100),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller, options));
+
+    expect(find.text('RIVAL IS GETTING READY…'), findsOneWidget);
+    expect(find.text('WAIT'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const ValueKey('ludo-roll')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('RIVAL IS CHOOSING…'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        'Rival, token 1, in the starting box, available to move',
+      ),
+      findsNothing,
+    );
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      model.tokenProgress[1].where((progress) => progress == 0),
+      hasLength(1),
+    );
+    controller.dispose();
+  });
 }
 
 Widget _app(LudoController controller, MatchOptions options) => MaterialApp(
