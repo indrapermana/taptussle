@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../../core/match_options.dart';
+import 'ludo_bot.dart';
 import 'ludo_model.dart';
 
 enum LudoBotAction { rolling, choosingToken }
@@ -18,7 +19,9 @@ class LudoController extends ChangeNotifier {
     Duration? botRollDelay,
     Duration? botMoveDelay,
     Random? random,
+    LudoBot? bot,
   }) {
+    final resolvedRandom = random ?? Random();
     final resolvedModel =
         model ??
         LudoModel(
@@ -32,7 +35,8 @@ class LudoController extends ChangeNotifier {
       participants: participants,
       botRollDelay: botRollDelay,
       botMoveDelay: botMoveDelay,
-      random: random ?? Random(),
+      random: resolvedRandom,
+      bot: bot ?? LudoBot(random: resolvedRandom),
     );
   }
 
@@ -44,13 +48,15 @@ class LudoController extends ChangeNotifier {
     required this.botRollDelay,
     required this.botMoveDelay,
     required Random random,
+    required LudoBot bot,
   }) : _displayProgress = [
          for (final tokens in model.tokenProgress) List<int>.of(tokens),
        ],
        _participants = participants == null
            ? List<MatchParticipant?>.filled(playerCount, null)
            : List<MatchParticipant?>.of(participants),
-       _random = random {
+       _random = random,
+       _bot = bot {
     if (model.playerCount != playerCount) {
       throw ArgumentError.value(
         playerCount,
@@ -78,6 +84,7 @@ class LudoController extends ChangeNotifier {
   final List<List<int>> _displayProgress;
   final List<MatchParticipant?> _participants;
   final Random _random;
+  final LudoBot _bot;
 
   List<List<int>> get displayProgress => List.unmodifiable(
     _displayProgress.map((tokens) => List<int>.unmodifiable(tokens)),
@@ -220,7 +227,8 @@ class LudoController extends ChangeNotifier {
           if (model.phase != LudoTurnPhase.awaitingMove) return;
           final legalTokens = model.legalTokenIndexes;
           if (legalTokens.isEmpty) return;
-          final token = legalTokens[_random.nextInt(legalTokens.length)];
+          final difficulty = _participants[model.currentPlayer]!.botDifficulty!;
+          final token = _bot.chooseToken(model, difficulty);
           _moveToken(model.currentPlayer, token);
       }
     });

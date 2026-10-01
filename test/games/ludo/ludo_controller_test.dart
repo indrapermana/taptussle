@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
+import 'package:tap_tussle/games/ludo/ludo_bot.dart';
 import 'package:tap_tussle/games/ludo/ludo_controller.dart';
 import 'package:tap_tussle/games/ludo/ludo_model.dart';
 
@@ -234,6 +235,36 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  testWidgets('uses the difficulty configured on the active bot seat', (
+    tester,
+  ) async {
+    final recordingBot = _RecordingBot();
+    final participants = [
+      _bot(
+        'Hard Bot',
+        ParticipantColor.coral,
+        ParticipantToken.diamond,
+        difficulty: BotDifficulty.hard,
+      ),
+      _human('You', ParticipantColor.mint, ParticipantToken.circle),
+    ];
+    final controller = LudoController(
+      playerCount: 2,
+      participants: participants,
+      diceRoller: () => 6,
+      bot: recordingBot,
+      botRollDelay: const Duration(milliseconds: 10),
+      botMoveDelay: const Duration(milliseconds: 10),
+      movementStepDuration: Duration.zero,
+    );
+
+    await tester.pump(const Duration(milliseconds: 20));
+
+    expect(recordingBot.observedDifficulty, BotDifficulty.hard);
+    expect(recordingBot.observedLegalTokens, [0, 1, 2, 3]);
+    controller.dispose();
+  });
 }
 
 List<MatchParticipant> _mixedParticipants() => [
@@ -251,10 +282,23 @@ MatchParticipant _human(
 MatchParticipant _bot(
   String name,
   ParticipantColor color,
-  ParticipantToken token,
-) => MatchParticipant.bot(
+  ParticipantToken token, {
+  BotDifficulty difficulty = BotDifficulty.normal,
+}) => MatchParticipant.bot(
   displayName: name,
   color: color,
   token: token,
-  difficulty: BotDifficulty.normal,
+  difficulty: difficulty,
 );
+
+class _RecordingBot extends LudoBot {
+  BotDifficulty? observedDifficulty;
+  List<int>? observedLegalTokens;
+
+  @override
+  int chooseToken(LudoModel model, BotDifficulty difficulty) {
+    observedDifficulty = difficulty;
+    observedLegalTokens = List.of(model.legalTokenIndexes);
+    return model.legalTokenIndexes.first;
+  }
+}

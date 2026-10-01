@@ -45,7 +45,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; automated coverage and physical-device verification confirmed |
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
-| M18 | Ludo | M17 | In progress | M18.1-M18.3 complete with 26 focused model/controller/view tests; full 387-test host suite passes |
+| M18 | Ludo | M17 | In progress | M18.1-M18.4 complete with 34 focused model/bot/controller/view tests; full 395-test host suite passes |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
@@ -843,6 +843,14 @@ required number to reach its final home position; an oversized roll cannot move
 that token. When more than one token has a legal move, the player must choose which
 token to move rather than having the game select automatically.
 
+Bot difficulty changes legal token selection, never dice outcomes:
+
+- **Easy:** chooses randomly from the legal tokens.
+- **Normal:** prioritizes immediate gains such as finishing, capturing, entering
+  the board, and reaching the home path.
+- **Hard:** adds safe-square, opponent threat, exposed-token, and home-progress
+  evaluation while retaining the same legal moves and fair dice source.
+
 - [x] M18.1 Implement six-to-enter, capture return, safe-square immunity, no
   blockades, bonus rolls, unrestricted consecutive sixes, home movement, exact
   finish, and win standings with deterministic dice injection and rule tests.
@@ -851,7 +859,7 @@ token to move rather than having the game select automatically.
 - [x] M18.3 Support any valid mixture of local humans and bots with at least one
   human. Require a human to choose among multiple legal tokens. Bots use the same
   legal-move list with visible roll/move delays and never influence dice outcomes.
-- [ ] M18.4 If rule choices create meaningful decisions, differentiate Easy,
+- [x] M18.4 If rule choices create meaningful decisions, differentiate Easy,
   Normal, and Hard move selection; otherwise expose one honest bot profile rather
   than artificial difficulty labels.
 - [ ] M18.5 Integrate participant setup, pause/resume, saved match restoration,
