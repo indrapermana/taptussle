@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/app/tap_tussle_theme.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
+import 'package:tap_tussle/core/haptic_service.dart';
+import 'package:tap_tussle/core/sound_service.dart';
 import 'package:tap_tussle/games/solitaire/solitaire_controller.dart';
 import 'package:tap_tussle/games/solitaire/solitaire_model.dart';
 import 'package:tap_tussle/games/solitaire/solitaire_view.dart';
@@ -108,6 +110,56 @@ void main() {
     controller.dispose();
     session.dispose();
   });
+
+  testWidgets('draw, hint, move, completion, and invalid actions use effects', (
+    tester,
+  ) async {
+    final sounds = _RecordingSoundPlayer();
+    final haptics = _RecordingHapticPlayer();
+    SoundEffects.configure(sounds);
+    HapticEffects.configure(haptics);
+    final controller = SolitaireController(
+      initialModel: _almostCompleteModel(),
+      animationDuration: Duration.zero,
+    );
+    addTearDown(controller.dispose);
+    await _pumpBoard(tester, controller, const Size(430, 760));
+
+    await tester.tap(find.byKey(const ValueKey('solitaire-hint')));
+    await tester.tap(find.byKey(const ValueKey('solitaire-tableau-0-card-0')));
+    await tester.tap(find.byKey(const ValueKey('solitaire-foundation-spades')));
+    await tester.pump();
+
+    expect(
+      sounds.played,
+      containsAll([
+        SoundEffect.collect,
+        SoundEffect.cardPlace,
+        SoundEffect.puzzleComplete,
+      ]),
+    );
+    expect(haptics.lightImpacts, greaterThanOrEqualTo(2));
+    expect(haptics.mediumImpacts, 1);
+  });
+}
+
+class _RecordingSoundPlayer implements SoundPlayer {
+  final played = <SoundEffect>[];
+  @override
+  Future<void> play(SoundEffect effect) async => played.add(effect);
+  @override
+  void setVolume(double value) {}
+}
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  int lightImpacts = 0;
+  int mediumImpacts = 0;
+  @override
+  Future<void> preview() async => lightImpacts++;
+  @override
+  Future<void> paddleHit() async => mediumImpacts++;
+  @override
+  void setEnabled(bool value) {}
 }
 
 SolitaireController _controller() => SolitaireController(
@@ -137,6 +189,26 @@ SolitaireModel _model() => SolitaireModel.fromState(
       ),
     ],
   }),
+);
+
+SolitaireModel _almostCompleteModel() => SolitaireModel.fromState(
+  drawMode: SolitaireDrawMode.drawOne,
+  tableau: _piles({
+    0: [
+      const SolitaireTableauCard(
+        SolitaireCard(SolitaireSuit.spades, SolitaireRank.king),
+        isFaceUp: true,
+      ),
+    ],
+  }),
+  foundations: {
+    for (final suit in SolitaireSuit.values)
+      suit: [
+        for (final rank in SolitaireRank.values)
+          if (suit != SolitaireSuit.spades || rank != SolitaireRank.king)
+            SolitaireCard(suit, rank),
+      ],
+  },
 );
 
 List<List<SolitaireTableauCard>> _piles(

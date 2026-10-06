@@ -16,9 +16,10 @@ void main() {
           game.id != 'slither-style-snakes' &&
           game.id != 'water-sort-puzzle' &&
           game.id != 'nuts-and-bolts' &&
+          game.id != 'solitaire' &&
           game.id != 'ludo',
     );
-    expect(gameCatalog, hasLength(15));
+    expect(gameCatalog, hasLength(16));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
@@ -128,6 +129,24 @@ void main() {
       RecordSortOrder.lowerIsBetter,
     ]);
     expect(game.difficultyDescription!(BotDifficulty.hard), contains('one'));
+  });
+
+  test('Solitaire is a solo challenge with time and move records', () {
+    final game = gameCatalog.singleWhere((game) => game.id == 'solitaire');
+
+    expect(game.supportedPlayerCounts, {PlayerCount.one});
+    expect(game.supportedModes, {PlayMode.solo});
+    expect(game.difficultyType, DifficultyType.challenge);
+    expect(game.recordDefinition!.recordType, 'win');
+    expect(game.recordDefinition!.metrics.map((metric) => metric.id), [
+      'time',
+      'moves',
+    ]);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.sortOrder), [
+      RecordSortOrder.lowerIsBetter,
+      RecordSortOrder.lowerIsBetter,
+    ]);
+    expect(game.difficultyDescription!(BotDifficulty.hard), contains('three'));
   });
 
   test('defaults preserve the original friend-only two-player contract', () {

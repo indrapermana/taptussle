@@ -268,7 +268,8 @@ void main() {
       find.byKey(const ValueKey('game-card-nuts-and-bolts')),
       findsOneWidget,
     );
-    expect(find.text('5 GAMES'), findsOneWidget);
+    expect(find.byKey(const ValueKey('game-card-solitaire')), findsOneWidget);
+    expect(find.text('6 GAMES'), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 

@@ -20,10 +20,38 @@ import '../games/water_sort/water_sort_records.dart';
 import '../games/water_sort/water_sort_view.dart';
 import '../games/nuts_and_bolts/nuts_and_bolts_records.dart';
 import '../games/nuts_and_bolts/nuts_and_bolts_view.dart';
+import '../games/solitaire/solitaire_records.dart';
+import '../games/solitaire/solitaire_view.dart';
 import '../games/ludo/ludo_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'solitaire',
+    artworkAsset: gameLogoAssets['solitaire'],
+    title: 'Solitaire',
+    subtitle: 'Sort the deck. Build every foundation.',
+    instructions:
+        'Build each foundation from Ace to King by suit. Tableau cards descend '
+        'in alternating colors, and only Kings may fill empty columns. Tap or '
+        'drag cards to move them, use the stock when no move is available, and '
+        'undo or request a hint when needed. Easy and Normal draw one card; '
+        'Hard draws three. Stock recycling is unlimited.',
+    icon: Icons.style_rounded,
+    supportedModes: const {PlayMode.solo},
+    supportedPlayerCounts: const {PlayerCount.one},
+    difficultyType: DifficultyType.challenge,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Draw one card for a relaxed game.',
+      BotDifficulty.normal => 'Draw one card and improve your time and moves.',
+      BotDifficulty.hard => 'Draw three cards for the classic challenge.',
+    },
+    recordDefinition: solitaireRecordDefinition,
+    matchLabel: (options) =>
+        '${options.difficulty.label.toUpperCase()} • CLEAR THE DECK',
+    build: (session, options) =>
+        SolitaireView(session: session, options: options),
+  ),
   MiniGame(
     id: 'nuts-and-bolts',
     artworkAsset: gameLogoAssets['nuts-and-bolts'],

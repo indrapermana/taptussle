@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../core/match_session.dart';
+import '../../core/haptic_service.dart';
+import '../../core/sound_service.dart';
 import 'solitaire_model.dart';
 import 'solitaire_progress_repository.dart';
 
@@ -120,8 +122,13 @@ class SolitaireController extends ChangeNotifier {
     if (!acceptsInput) return _lockedResult;
     final recycling = model.stock.isEmpty && model.waste.isNotEmpty;
     final result = model.drawOrRecycle();
-    if (!result.accepted) return SolitaireInteractionResult.invalid;
+    if (!result.accepted) {
+      _playInvalidEffect();
+      return SolitaireInteractionResult.invalid;
+    }
     _accept(result);
+    SoundEffects.play(SoundEffect.cardDraw);
+    HapticEffects.preview();
     return recycling
         ? SolitaireInteractionResult.recycled
         : SolitaireInteractionResult.drew;
@@ -276,6 +283,8 @@ class SolitaireController extends ChangeNotifier {
     _selection = null;
     _shownHint = null;
     _saveProgress();
+    SoundEffects.play(SoundEffect.uiBack);
+    HapticEffects.preview();
     notifyListeners();
     return true;
   }
@@ -284,6 +293,14 @@ class SolitaireController extends ChangeNotifier {
     if (!acceptsInput) return null;
     _selection = null;
     _shownHint = model.hint;
+    SoundEffects.play(
+      _shownHint == null ? SoundEffect.uiInvalid : SoundEffect.collect,
+    );
+    if (_shownHint == null) {
+      HapticEffects.paddleHit();
+    } else {
+      HapticEffects.preview();
+    }
     notifyListeners();
     return _shownHint;
   }
@@ -291,10 +308,13 @@ class SolitaireController extends ChangeNotifier {
   SolitaireInteractionResult _acceptMove(SolitaireMoveResult result) {
     if (!result.accepted) {
       _selection = null;
+      _playInvalidEffect();
       notifyListeners();
       return SolitaireInteractionResult.invalid;
     }
     _accept(result);
+    SoundEffects.play(SoundEffect.cardPlace);
+    HapticEffects.preview();
     return model.isComplete
         ? SolitaireInteractionResult.completed
         : SolitaireInteractionResult.moved;
@@ -342,6 +362,9 @@ class SolitaireController extends ChangeNotifier {
   void _syncSession() {
     if (_disposed || session == null) return;
     final next = session!.phase;
+    if (_observedPhase == MatchPhase.finished && next == MatchPhase.playing) {
+      _resetForRematch();
+    }
     if (_observedPhase == MatchPhase.playing && next != MatchPhase.playing) {
       _stopClock();
       _animationTimer?.cancel();
@@ -355,6 +378,20 @@ class SolitaireController extends ChangeNotifier {
     }
     _observedPhase = next;
     notifyListeners();
+  }
+
+  void _resetForRematch() {
+    _animationTimer?.cancel();
+    _animationTimer = null;
+    _animating = false;
+    _selection = null;
+    _shownHint = null;
+    _completionReported = false;
+    _elapsedBeforeActive = Duration.zero;
+    _activeStartedAt = null;
+    model = SolitaireModel.newGame(drawMode: difficulty.drawMode);
+    final storage = repository;
+    if (storage != null) unawaited(storage.clearActive(difficulty));
   }
 
   void _startClock() {
@@ -392,6 +429,8 @@ class SolitaireController extends ChangeNotifier {
     if (_completionReported) return;
     _completionReported = true;
     _stopClock();
+    SoundEffects.play(SoundEffect.puzzleComplete);
+    HapticEffects.paddleHit();
     final completionTime = elapsed;
     final storage = repository;
     if (storage != null) {
@@ -421,6 +460,11 @@ class SolitaireController extends ChangeNotifier {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
+  }
+
+  void _playInvalidEffect() {
+    SoundEffects.play(SoundEffect.uiInvalid);
+    HapticEffects.paddleHit();
   }
 
   @override
