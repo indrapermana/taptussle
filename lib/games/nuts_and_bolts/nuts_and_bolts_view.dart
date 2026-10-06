@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
 import '../../core/haptic_service.dart';
+import '../../core/match_options.dart';
+import '../../core/match_session.dart';
 import '../../core/sound_service.dart';
 import 'nuts_and_bolts_controller.dart';
 import 'nuts_and_bolts_levels.dart';
 import 'nuts_and_bolts_model.dart';
+import 'nuts_and_bolts_progress_repository.dart';
 
 class NutsAndBoltsView extends StatefulWidget {
   const NutsAndBoltsView({
-    required this.level,
+    this.session,
+    this.options,
+    this.repository,
+    this.level,
     this.initialModel,
     this.controller,
     super.key,
-  });
+  }) : assert(
+         controller != null ||
+             level != null ||
+             (session != null && options != null),
+       );
 
-  final NutsAndBoltsLevel level;
+  final MatchSession? session;
+  final MatchOptions? options;
+  final NutsAndBoltsProgressRepository? repository;
+  final NutsAndBoltsLevel? level;
   final NutsAndBoltsModel? initialModel;
   final NutsAndBoltsController? controller;
 
@@ -24,23 +38,65 @@ class NutsAndBoltsView extends StatefulWidget {
 }
 
 class _NutsAndBoltsViewState extends State<NutsAndBoltsView> {
-  late final NutsAndBoltsController controller =
-      widget.controller ??
-      NutsAndBoltsController(
-        level: widget.level,
-        initialModel: widget.initialModel,
-      );
+  NutsAndBoltsController? controller;
   late final bool _ownsController = widget.controller == null;
 
   @override
+  void initState() {
+    super.initState();
+    final supplied = widget.controller;
+    if (supplied != null) {
+      controller = supplied;
+      return;
+    }
+    final level = widget.level;
+    if (level != null) {
+      controller = NutsAndBoltsController(
+        level: level,
+        initialModel: widget.initialModel,
+        session: widget.session,
+        repository: widget.repository,
+      );
+      return;
+    }
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    final repository =
+        widget.repository ??
+        NutsAndBoltsProgressRepository(await SharedPreferences.getInstance());
+    if (!mounted) return;
+    final difficulty =
+        NutsAndBoltsDifficulty.values[widget.options!.difficulty.index];
+    final saved = repository.loadActive(difficulty);
+    final levelNumber = saved?.level ?? repository.unlockedLevel(difficulty);
+    setState(() {
+      controller = NutsAndBoltsController(
+        level: NutsAndBoltsLevelCatalog.level(difficulty, levelNumber),
+        session: widget.session,
+        repository: repository,
+        restoredProgress: saved,
+      );
+    });
+  }
+
+  @override
   void dispose() {
-    if (_ownsController) controller.dispose();
+    if (_ownsController) controller?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) =>
-      NutsAndBoltsBoard(controller: controller);
+  Widget build(BuildContext context) {
+    final loaded = controller;
+    if (loaded == null) {
+      return const Center(
+        child: CircularProgressIndicator(key: ValueKey('nuts-bolts-loading')),
+      );
+    }
+    return NutsAndBoltsBoard(controller: loaded);
+  }
 }
 
 class NutsAndBoltsBoard extends StatelessWidget {
@@ -154,11 +210,36 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '${controller.model.moveCount} MOVES',
-            key: const ValueKey('nuts-bolts-moves'),
-            semanticsLabel: '${controller.model.moveCount} moves',
-            style: const TextStyle(fontWeight: FontWeight.w800),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${controller.model.moveCount} MOVES',
+                key: const ValueKey('nuts-bolts-moves'),
+                semanticsLabel: '${controller.model.moveCount} moves',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              Text(
+                controller.elapsedLabel,
+                key: const ValueKey('nuts-bolts-elapsed'),
+                semanticsLabel: 'Elapsed ${controller.elapsedLabel}',
+                style: const TextStyle(
+                  color: TapTussleColors.mutedText,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (controller.personalBest case final best?)
+                Text(
+                  'BEST ${best.moves} • ${_formatMilliseconds(best.elapsedMilliseconds)}',
+                  key: const ValueKey('nuts-bolts-personal-best'),
+                  style: const TextStyle(
+                    color: TapTussleColors.mutedText,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -527,3 +608,10 @@ const _nutSymbols = [
 ];
 
 String _nutName(int color) => _nutNames[color % _nutNames.length];
+
+String _formatMilliseconds(int milliseconds) {
+  final duration = Duration(milliseconds: milliseconds);
+  final minutes = duration.inMinutes;
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$minutes:$seconds';
+}
