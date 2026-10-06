@@ -34,6 +34,16 @@ enum SolitaireDrawMode {
   final int count;
 }
 
+enum SolitaireDifficulty {
+  easy(SolitaireDrawMode.drawOne),
+  normal(SolitaireDrawMode.drawOne),
+  hard(SolitaireDrawMode.drawThree);
+
+  const SolitaireDifficulty(this.drawMode);
+
+  final SolitaireDrawMode drawMode;
+}
+
 enum SolitaireMoveStatus {
   accepted,
   matchFinished,
@@ -142,6 +152,34 @@ class SolitaireMoveResult {
   bool get accepted => status == SolitaireMoveStatus.accepted;
 }
 
+class SolitaireStateSnapshot {
+  SolitaireStateSnapshot({
+    required List<SolitaireCard> stock,
+    required List<SolitaireCard> waste,
+    required List<List<SolitaireTableauCard>> tableau,
+    required Map<SolitaireSuit, List<SolitaireCard>> foundations,
+    required this.moveCount,
+    required this.score,
+  }) : stock = List.unmodifiable(stock),
+       waste = List.unmodifiable(waste),
+       tableau = List.unmodifiable(
+         tableau.map((pile) => List<SolitaireTableauCard>.unmodifiable(pile)),
+       ),
+       foundations = Map.unmodifiable({
+         for (final suit in SolitaireSuit.values)
+           suit: List<SolitaireCard>.unmodifiable(
+             foundations[suit] ?? const [],
+           ),
+       });
+
+  final List<SolitaireCard> stock;
+  final List<SolitaireCard> waste;
+  final List<List<SolitaireTableauCard>> tableau;
+  final Map<SolitaireSuit, List<SolitaireCard>> foundations;
+  final int moveCount;
+  final int score;
+}
+
 /// Immutable Klondike rules and state, independent from Flutter rendering.
 ///
 /// Piles are stored bottom-to-top, so the last element is always playable.
@@ -219,6 +257,54 @@ class SolitaireModel {
     );
   }
 
+  factory SolitaireModel.restore({
+    required SolitaireDrawMode drawMode,
+    required List<SolitaireStateSnapshot> snapshots,
+  }) {
+    if (snapshots.isEmpty) {
+      throw ArgumentError.value(snapshots, 'snapshots', 'Cannot be empty');
+    }
+    Set<SolitaireCard>? expectedCards;
+    for (var index = 0; index < snapshots.length; index++) {
+      final snapshot = snapshots[index];
+      if (snapshot.moveCount < 0 || snapshot.score < 0) {
+        throw const FormatException('Saved counters cannot be negative');
+      }
+      _validateState(
+        snapshot.stock,
+        snapshot.waste,
+        snapshot.tableau,
+        snapshot.foundations,
+      );
+      final cards = _cardsIn(
+        snapshot.stock,
+        snapshot.waste,
+        snapshot.tableau,
+        snapshot.foundations,
+      ).toSet();
+      expectedCards ??= cards;
+      if (expectedCards.length != cards.length ||
+          !expectedCards.containsAll(cards)) {
+        throw const FormatException('Saved states must contain the same cards');
+      }
+      if (index > 0 &&
+          snapshot.moveCount != snapshots[index - 1].moveCount + 1) {
+        throw const FormatException('Saved move counts must be consecutive');
+      }
+    }
+    final current = snapshots.last;
+    return SolitaireModel._(
+      drawMode: drawMode,
+      stock: current.stock,
+      waste: current.waste,
+      tableau: current.tableau,
+      foundations: current.foundations,
+      moveCount: current.moveCount,
+      score: current.score,
+      history: snapshots.take(snapshots.length - 1).toList(),
+    );
+  }
+
   SolitaireModel._({
     required this.drawMode,
     required List<SolitaireCard> stock,
@@ -227,7 +313,7 @@ class SolitaireModel {
     required Map<SolitaireSuit, List<SolitaireCard>> foundations,
     required this.moveCount,
     required this.score,
-    required List<_SolitaireSnapshot> history,
+    required List<SolitaireStateSnapshot> history,
   }) : _stock = List.unmodifiable(stock),
        _waste = List.unmodifiable(waste),
        _tableau = List.unmodifiable(
@@ -254,7 +340,7 @@ class SolitaireModel {
   final Map<SolitaireSuit, List<SolitaireCard>> _foundations;
   final int moveCount;
   final int score;
-  final List<_SolitaireSnapshot> _history;
+  final List<SolitaireStateSnapshot> _history;
 
   UnmodifiableListView<SolitaireCard> get stock => UnmodifiableListView(_stock);
   UnmodifiableListView<SolitaireCard> get waste => UnmodifiableListView(_waste);
@@ -262,6 +348,17 @@ class SolitaireModel {
   Map<SolitaireSuit, List<SolitaireCard>> get foundations => _foundations;
   SolitaireCard? get wasteTop => _waste.lastOrNull;
   bool get canUndo => _history.isNotEmpty;
+  List<SolitaireStateSnapshot> get snapshots => List.unmodifiable([
+    ..._history,
+    SolitaireStateSnapshot(
+      stock: _stock,
+      waste: _waste,
+      tableau: _tableau,
+      foundations: _foundations,
+      moveCount: moveCount,
+      score: score,
+    ),
+  ]);
   bool get isComplete =>
       _foundations.values.fold<int>(0, (sum, pile) => sum + pile.length) == 52;
 
@@ -576,7 +673,7 @@ class SolitaireModel {
       score: max(0, score + scoreDelta),
       history: [
         ..._history,
-        _SolitaireSnapshot(
+        SolitaireStateSnapshot(
           stock: _stock,
           waste: _waste,
           tableau: _tableau,
@@ -666,13 +763,7 @@ class SolitaireModel {
     List<List<SolitaireTableauCard>> tableau,
     Map<SolitaireSuit, List<SolitaireCard>> foundations,
   ) {
-    final cards = <SolitaireCard>[
-      ...stock,
-      ...waste,
-      for (final pile in tableau)
-        for (final entry in pile) entry.card,
-      for (final pile in foundations.values) ...pile,
-    ];
+    final cards = _cardsIn(stock, waste, tableau, foundations);
     if (cards.length != cards.toSet().length) {
       throw ArgumentError.value(cards, 'state', 'Cards must be unique');
     }
@@ -689,22 +780,17 @@ class SolitaireModel {
       }
     }
   }
-}
 
-class _SolitaireSnapshot {
-  const _SolitaireSnapshot({
-    required this.stock,
-    required this.waste,
-    required this.tableau,
-    required this.foundations,
-    required this.moveCount,
-    required this.score,
-  });
-
-  final List<SolitaireCard> stock;
-  final List<SolitaireCard> waste;
-  final List<List<SolitaireTableauCard>> tableau;
-  final Map<SolitaireSuit, List<SolitaireCard>> foundations;
-  final int moveCount;
-  final int score;
+  static List<SolitaireCard> _cardsIn(
+    List<SolitaireCard> stock,
+    List<SolitaireCard> waste,
+    List<List<SolitaireTableauCard>> tableau,
+    Map<SolitaireSuit, List<SolitaireCard>> foundations,
+  ) => <SolitaireCard>[
+    ...stock,
+    ...waste,
+    for (final pile in tableau)
+      for (final entry in pile) entry.card,
+    for (final pile in foundations.values) ...pile,
+  ];
 }

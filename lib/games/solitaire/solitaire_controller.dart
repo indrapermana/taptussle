@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/match_session.dart';
 import 'solitaire_model.dart';
+import 'solitaire_progress_repository.dart';
 
 enum SolitaireInteractionResult {
   selected,
@@ -48,19 +49,38 @@ class SolitaireSelection {
 class SolitaireController extends ChangeNotifier {
   SolitaireController({
     SolitaireModel? initialModel,
-    SolitaireDrawMode drawMode = SolitaireDrawMode.drawOne,
+    this.difficulty = SolitaireDifficulty.easy,
+    this.repository,
+    SolitaireProgressSnapshot? restoredProgress,
     this.session,
     DateTime Function()? now,
     this.clockTick = const Duration(seconds: 1),
     this.animationDuration = const Duration(milliseconds: 220),
-  }) : model = initialModel ?? SolitaireModel.newGame(drawMode: drawMode),
+  }) : model =
+           restoredProgress?.restoreModel() ??
+           initialModel ??
+           SolitaireModel.newGame(drawMode: difficulty.drawMode),
+       _elapsedBeforeActive = Duration(
+         milliseconds: restoredProgress?.elapsedMilliseconds ?? 0,
+       ),
        _now = now ?? DateTime.now {
+    if (initialModel != null && restoredProgress != null) {
+      throw ArgumentError('Provide initialModel or restoredProgress, not both');
+    }
+    if (restoredProgress != null && restoredProgress.difficulty != difficulty) {
+      throw ArgumentError('Restored progress belongs to another difficulty');
+    }
+    if (model.drawMode != difficulty.drawMode) {
+      throw ArgumentError('Model draw mode does not match difficulty');
+    }
     session?.addListener(_syncSession);
     _observedPhase = session?.phase ?? MatchPhase.playing;
     if (_observedPhase == MatchPhase.playing) _startClock();
   }
 
   SolitaireModel model;
+  final SolitaireDifficulty difficulty;
+  final SolitaireProgressRepository? repository;
   final MatchSession? session;
   final DateTime Function() _now;
   final Duration clockTick;
@@ -68,12 +88,13 @@ class SolitaireController extends ChangeNotifier {
   Timer? _clockTimer;
   Timer? _animationTimer;
   DateTime? _activeStartedAt;
-  Duration _elapsedBeforeActive = Duration.zero;
+  Duration _elapsedBeforeActive;
   MatchPhase _observedPhase = MatchPhase.ready;
   SolitaireSelection? _selection;
   SolitaireHint? _shownHint;
   bool _disposed = false;
   bool _animating = false;
+  bool _completionReported = false;
 
   SolitaireSelection? get selection => _selection;
   SolitaireHint? get shownHint => _shownHint;
@@ -254,6 +275,7 @@ class SolitaireController extends ChangeNotifier {
     model = model.undo();
     _selection = null;
     _shownHint = null;
+    _saveProgress();
     notifyListeners();
     return true;
   }
@@ -282,7 +304,11 @@ class SolitaireController extends ChangeNotifier {
     model = result.model;
     _selection = null;
     _shownHint = null;
-    if (model.isComplete) _stopClock();
+    if (model.isComplete) {
+      _completeGame();
+    } else {
+      _saveProgress();
+    }
     _beginAnimation();
   }
 
@@ -322,6 +348,7 @@ class SolitaireController extends ChangeNotifier {
       _animationTimer = null;
       _animating = false;
       _selection = null;
+      _saveProgress();
     } else if (_observedPhase != MatchPhase.playing &&
         next == MatchPhase.playing) {
       _startClock();
@@ -349,11 +376,59 @@ class SolitaireController extends ChangeNotifier {
     _clockTimer = null;
   }
 
+  void _saveProgress() {
+    final storage = repository;
+    if (storage == null || model.isComplete) return;
+    unawaited(
+      storage.saveActive(
+        difficulty: difficulty,
+        model: model,
+        elapsed: elapsed,
+      ),
+    );
+  }
+
+  void _completeGame() {
+    if (_completionReported) return;
+    _completionReported = true;
+    _stopClock();
+    final completionTime = elapsed;
+    final storage = repository;
+    if (storage != null) {
+      unawaited(
+        storage.recordWin(
+          difficulty: difficulty,
+          moves: model.moveCount,
+          elapsed: completionTime,
+        ),
+      );
+    }
+    if (session?.phase == MatchPhase.playing) {
+      session!.reportCompletion(
+        scores: [model.score],
+        details:
+            'Won in ${model.moveCount} moves • '
+            '${_formatElapsed(completionTime)}',
+        recordMetrics: {
+          'time': completionTime.inMilliseconds,
+          'moves': model.moveCount,
+        },
+      );
+    }
+  }
+
+  String _formatElapsed(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
   @override
   void dispose() {
     _disposed = true;
     _animationTimer?.cancel();
     _stopClock();
+    _saveProgress();
     session?.removeListener(_syncSession);
     super.dispose();
   }

@@ -1,44 +1,78 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
 import 'solitaire_controller.dart';
 import 'solitaire_model.dart';
+import 'solitaire_progress_repository.dart';
 
 class SolitaireView extends StatefulWidget {
-  const SolitaireView({this.session, this.options, this.controller, super.key})
-    : assert(controller != null || (session != null && options != null));
+  const SolitaireView({
+    this.session,
+    this.options,
+    this.controller,
+    this.repository,
+    super.key,
+  }) : assert(controller != null || (session != null && options != null));
 
   final MatchSession? session;
   final MatchOptions? options;
   final SolitaireController? controller;
+  final SolitaireProgressRepository? repository;
 
   @override
   State<SolitaireView> createState() => _SolitaireViewState();
 }
 
 class _SolitaireViewState extends State<SolitaireView> {
-  late final SolitaireController controller =
-      widget.controller ??
-      SolitaireController(
-        session: widget.session,
-        drawMode: widget.options!.difficulty == BotDifficulty.hard
-            ? SolitaireDrawMode.drawThree
-            : SolitaireDrawMode.drawOne,
-      );
+  SolitaireController? controller;
   late final bool _ownsController = widget.controller == null;
 
   @override
+  void initState() {
+    super.initState();
+    controller = widget.controller;
+    if (controller == null) _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    final repository =
+        widget.repository ??
+        SolitaireProgressRepository(await SharedPreferences.getInstance());
+    if (!mounted) return;
+    final difficulty =
+        SolitaireDifficulty.values[widget.options!.difficulty.index];
+    final saved = repository.loadActive(difficulty);
+    setState(() {
+      controller = SolitaireController(
+        session: widget.session,
+        difficulty: difficulty,
+        repository: repository,
+        restoredProgress: saved,
+      );
+    });
+  }
+
+  @override
   void dispose() {
-    if (_ownsController) controller.dispose();
+    if (_ownsController) controller?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => SolitaireBoard(controller: controller);
+  Widget build(BuildContext context) {
+    final loaded = controller;
+    if (loaded == null) {
+      return const Center(
+        child: CircularProgressIndicator(key: ValueKey('solitaire-loading')),
+      );
+    }
+    return SolitaireBoard(controller: loaded);
+  }
 }
 
 class SolitaireBoard extends StatelessWidget {

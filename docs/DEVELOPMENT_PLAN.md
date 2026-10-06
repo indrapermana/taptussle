@@ -47,7 +47,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
-| M20 | Solitaire | M19 | In progress | M20.1-M20.3 complete with immutable rules and a responsive accessible card table; 38 focused and all 483 host tests pass |
+| M20 | Solitaire | M19 | In progress | M20.1-M20.4 complete with restorable deals, per-difficulty win totals, and daily/weekly/overall records; 43 focused and all 488 host tests pass |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
@@ -999,8 +999,17 @@ tracks elapsed time, freezes and hides the table while paused, and stops its clo
 on completion. Card, stock, foundation, and tableau semantics expose names, counts,
 face-down totals, selection, and available actions. All 38 focused Solitaire tests
 and all 483 host tests pass with clean static analysis.
-- [ ] M20.4 Persist the active deal and track wins, fastest completion, and fewest
+- [x] M20.4 Persist the active deal and track wins, fastest completion, and fewest
   moves for daily, weekly, and overall views.
+
+M20.4 persists each difficulty's active deal, elapsed time, score, move count, and
+complete undo history, then restores that exact state after relaunch. Easy, Normal,
+and Hard progress and lifetime win totals remain independent. Completed wins enter
+the shared record store with completion time as the primary metric and move count
+as the tie-breaker, providing Daily Best, Weekly Best, and Overall Best rankings.
+Malformed saved data is ignored safely, completed games clear the active deal, and
+records only improve fastest-time and fewest-move personal statistics. All 43
+focused Solitaire tests and all 488 host tests pass with clean static analysis.
 - [ ] M20.5 Integrate effects, favourites, solo filter, lifecycle, restoration,
   device-sized widget tests, and physical-device validation.
 

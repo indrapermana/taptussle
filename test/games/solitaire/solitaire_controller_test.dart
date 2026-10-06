@@ -1,10 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/solitaire/solitaire_controller.dart';
 import 'package:tap_tussle/games/solitaire/solitaire_model.dart';
+import 'package:tap_tussle/games/solitaire/solitaire_progress_repository.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   test('tap selection moves waste to tableau and supports undo', () {
     final queen = _card(SolitaireSuit.hearts, 12);
     final king = _card(SolitaireSuit.spades, 13);
@@ -126,6 +130,66 @@ void main() {
       SolitaireInteractionResult.moved,
     );
     expect(controller.model.foundations[SolitaireSuit.hearts], [ace]);
+  });
+
+  testWidgets('pause saves and completion records the win and result metrics', (
+    tester,
+  ) async {
+    var now = DateTime(2026);
+    final repository = SolitaireProgressRepository(
+      await SharedPreferences.getInstance(),
+    );
+    final session = MatchSession(options: MatchOptions.solo())..start();
+    final foundations = {
+      for (final suit in SolitaireSuit.values)
+        suit: [
+          for (final rank in SolitaireRank.values)
+            if (suit != SolitaireSuit.spades || rank != SolitaireRank.king)
+              SolitaireCard(suit, rank),
+        ],
+    };
+    final king = _card(SolitaireSuit.spades, 13);
+    final controller = SolitaireController(
+      session: session,
+      difficulty: SolitaireDifficulty.easy,
+      repository: repository,
+      initialModel: SolitaireModel.fromState(
+        drawMode: SolitaireDrawMode.drawOne,
+        tableau: _piles({
+          0: [_up(king)],
+        }),
+        foundations: foundations,
+      ),
+      now: () => now,
+      animationDuration: Duration.zero,
+    );
+
+    now = now.add(const Duration(seconds: 12));
+    session.pause();
+    await repository.completed;
+    expect(
+      repository.loadActive(SolitaireDifficulty.easy)?.elapsedMilliseconds,
+      12000,
+    );
+    session.resume();
+    now = now.add(const Duration(seconds: 8));
+    controller.tapTableau(0);
+    expect(
+      controller.moveSelectionToFoundation(),
+      SolitaireInteractionResult.completed,
+    );
+    await repository.completed;
+
+    expect(controller.model.isComplete, isTrue);
+    expect(session.phase, MatchPhase.finished);
+    expect(session.recordMetrics, {'time': 20000, 'moves': 1});
+    expect(repository.loadActive(SolitaireDifficulty.easy), isNull);
+    final stats = repository.stats(SolitaireDifficulty.easy);
+    expect(stats.wins, 1);
+    expect(stats.fastestMilliseconds, 20000);
+    expect(stats.fewestMoves, 1);
+    controller.dispose();
+    session.dispose();
   });
 }
 
