@@ -46,7 +46,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; automated coverage and physical-device verification confirmed |
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
-| M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
+| M19 | Nuts and Bolts | M18 | In progress | M19.1 immutable puzzle model complete with 11 focused tests; all 422 host tests and analysis pass |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
@@ -906,7 +906,7 @@ and decision branching inside the selected difficulty band. Generation must begi
 from or prove reachability to a solved state, and a solver must reject impossible,
 duplicate, already-solved, or incorrectly classified levels.
 
-- [ ] M19.1 Implement bolt capacity, top-nut-only moves, empty/same-color
+- [x] M19.1 Implement bolt capacity, top-nut-only moves, empty/same-color
   destinations, completion, undo, hint, and restart in a pure Dart puzzle model.
 - [ ] M19.2 Ship 60 solver-verified levels in each difficulty with deterministic IDs
   and metadata. Reject duplicate, impossible, already-solved, or incorrectly
