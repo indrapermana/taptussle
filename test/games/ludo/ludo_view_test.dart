@@ -72,7 +72,7 @@ void main() {
       playerCount: 2,
       diceRoller: () => 1,
       tokenProgress: const [
-        [57, 57, 57, 56],
+        [56, 56, 56, 55],
         [40, 30, 20, 10],
       ],
     );
@@ -179,6 +179,60 @@ void main() {
       model.tokenProgress[1].where((progress) => progress == 0),
       hasLength(1),
     );
+    controller.dispose();
+  });
+
+  testWidgets('selects a human token beneath overlapping bot tokens', (
+    tester,
+  ) async {
+    final options = MatchOptions.custom(
+      mode: PlayMode.bot,
+      participants: const [
+        MatchParticipant.human(
+          displayName: 'You',
+          color: ParticipantColor.mint,
+          token: ParticipantToken.circle,
+        ),
+        MatchParticipant.bot(
+          displayName: 'Bot 1',
+          color: ParticipantColor.coral,
+          token: ParticipantToken.diamond,
+          difficulty: BotDifficulty.normal,
+        ),
+        MatchParticipant.bot(
+          displayName: 'Bot 2',
+          color: ParticipantColor.gold,
+          token: ParticipantToken.triangle,
+          difficulty: BotDifficulty.normal,
+        ),
+      ],
+    );
+    final model = LudoModel.fromState(
+      playerCount: 3,
+      diceRoller: () => 1,
+      tokenProgress: const [
+        [13, -1, -1, -1],
+        [0, -1, -1, -1],
+        [39, -1, -1, -1],
+      ],
+      currentPlayer: 0,
+      pendingRoll: 1,
+    );
+    final controller = LudoController(
+      playerCount: 3,
+      participants: options.participants,
+      model: model,
+      movementStepDuration: Duration.zero,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller, options));
+    await tester.tap(find.byKey(const ValueKey('ludo-token-0-0')));
+    await tester.pump();
+
+    expect(model.progressFor(0, 0), 14);
+    expect(model.pendingRoll, isNull);
+    expect(tester.takeException(), isNull);
     controller.dispose();
   });
 }

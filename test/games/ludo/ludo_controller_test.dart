@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
+import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/ludo/ludo_bot.dart';
 import 'package:tap_tussle/games/ludo/ludo_controller.dart';
 import 'package:tap_tussle/games/ludo/ludo_model.dart';
@@ -264,6 +265,111 @@ void main() {
     expect(recordingBot.observedDifficulty, BotDifficulty.hard);
     expect(recordingBot.observedLegalTokens, [0, 1, 2, 3]);
     controller.dispose();
+  });
+
+  testWidgets('pause freezes input and resume preserves a rolled choice', (
+    tester,
+  ) async {
+    final options = MatchOptions.friend();
+    final session = MatchSession(options: options)..start();
+    final controller = LudoController(
+      playerCount: 2,
+      participants: options.participants,
+      diceRoller: () => 6,
+      movementStepDuration: const Duration(milliseconds: 100),
+      session: session,
+    );
+    addTearDown(session.dispose);
+
+    controller.roll();
+    expect(controller.canChooseToken, isTrue);
+    session.pause();
+    expect(controller.canChooseToken, isFalse);
+    expect(controller.model.pendingRoll, 6);
+
+    session.resume();
+    expect(controller.canChooseToken, isTrue);
+    expect(controller.chooseToken(0), LudoMoveResult.accepted);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(controller.displayProgress[0][0], 0);
+    controller.dispose();
+  });
+
+  test('publishes winner, home counts, and ordered standings', () {
+    final options = MatchOptions.custom(
+      mode: PlayMode.friend,
+      participants: _mixedParticipants()
+          .map(
+            (participant) => MatchParticipant.human(
+              displayName: participant.displayName,
+              color: participant.color,
+              token: participant.token,
+            ),
+          )
+          .toList(),
+    );
+    final session = MatchSession(options: options)..start();
+    final model = LudoModel.fromState(
+      playerCount: 3,
+      diceRoller: () => 1,
+      tokenProgress: const [
+        [56, 56, 56, 55],
+        [56, 56, 56, 56],
+        [40, 30, 20, 10],
+      ],
+      standings: const [1],
+      currentPlayer: 0,
+    );
+    final controller = LudoController(
+      playerCount: 3,
+      participants: options.participants,
+      model: model,
+      movementStepDuration: Duration.zero,
+      session: session,
+    );
+    addTearDown(session.dispose);
+
+    controller.roll();
+    controller.chooseToken(3);
+
+    expect(session.phase, MatchPhase.finished);
+    expect(session.winner, 1);
+    expect(session.scores, [4, 4, 0]);
+    expect(session.standings, [1, 0, 2]);
+    expect(session.resultDetails, contains('1. Bot 1'));
+    controller.dispose();
+  });
+
+  test('rematch resets every token and clears prior turn state', () {
+    final options = MatchOptions.friend();
+    final session = MatchSession(options: options)..start();
+    final controller = LudoController(
+      playerCount: 2,
+      participants: options.participants,
+      diceRoller: () => 6,
+      movementStepDuration: Duration.zero,
+      session: session,
+    );
+    controller.roll();
+    controller.chooseToken(0);
+    expect(controller.model.progressFor(0, 0), 0);
+
+    session.reportNonPointResult(
+      winner: 0,
+      scores: const [4, 0],
+      standings: const [0, 1],
+      details: 'Done',
+    );
+    session.start();
+
+    expect(
+      controller.model.tokenProgress.expand((tokens) => tokens),
+      everyElement(LudoModel.boxProgress),
+    );
+    expect(controller.model.pendingRoll, isNull);
+    expect(controller.model.standings, isEmpty);
+    controller.dispose();
+    session.dispose();
   });
 }
 

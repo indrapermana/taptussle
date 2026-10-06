@@ -45,7 +45,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M15 | Mancala | M14 | Done | M15.1–M15.5 complete; 36 focused tests and 304 host tests passed; user confirmed physical-device functionality |
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; automated coverage and physical-device verification confirmed |
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
-| M18 | Ludo | M17 | In progress | M18.1-M18.4 complete with 34 focused model/bot/controller/view tests; full 395-test host suite passes |
+| M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Not started | Solo spatial puzzle with difficulty and records |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
@@ -834,14 +834,17 @@ complete.
 ## M18 — Ludo
 
 Confirmed rules: a six is required to move a token out of its starting box. Rolling
-a six or moving a token out of the box grants a bonus roll. Capturing an opposing
-token returns it to its box and grants the capturing player a bonus roll. Tokens on
-safe squares cannot be captured. Consecutive sixes are allowed without a three-six
-forfeit. Same-color tokens do not form blockades; opposing tokens may pass their
-square and normal landing/capture rules still apply. A token must roll the exact
-required number to reach its final home position; an oversized roll cannot move
-that token. When more than one token has a legal move, the player must choose which
-token to move rather than having the game select automatically.
+a six, moving a token out of the box, capturing, or moving a token into the final
+goal grants a bonus roll while that player still has active tokens. Capturing an
+opposing token returns it to its box. Tokens on safe squares cannot be captured.
+Consecutive sixes are allowed without a three-six forfeit. Same-color tokens do not
+form blockades; opposing tokens may pass their square and normal landing/capture
+rules still apply. After completing the shared circuit, a token turns directly
+into its colored home column without revisiting the square before its starting
+square. A token must roll the exact required number to reach its final home
+position; an oversized roll cannot move that token. When more than one token has a
+legal move, the player must choose which token to move rather than having the game
+select automatically.
 
 Bot difficulty changes legal token selection, never dice outcomes:
 
@@ -862,8 +865,17 @@ Bot difficulty changes legal token selection, never dice outcomes:
 - [x] M18.4 If rule choices create meaningful decisions, differentiate Easy,
   Normal, and Hard move selection; otherwise expose one honest bot profile rather
   than artificial difficulty labels.
-- [ ] M18.5 Integrate participant setup, pause/resume, saved match restoration,
+- [x] M18.5 Integrate participant setup, pause/resume, saved match restoration,
   results, rematch, effects, favourites, filters, tests, and physical-device passes.
+
+M18.5 implementation and host verification are complete. Ludo is registered in
+the shared catalog for two to four participants, supports mixed human and bot
+seat setup, persists and restores active matches (including a pending rolled-die
+choice), pauses timers and input safely, publishes ordered results, resets on
+rematch, and uses the shared sound and haptic effects. Non-selectable overlapping
+tokens ignore pointer input so a legal human token remains tappable underneath
+other participants' tokens. The user confirmed the corrected goal bonus rule,
+direct home-column entry, and final physical-device pass. M18 is complete.
 
 ## M19 — Nuts and Bolts
 

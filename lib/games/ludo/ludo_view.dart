@@ -1,11 +1,147 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
+import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'ludo_controller.dart';
 import 'ludo_model.dart';
+import 'ludo_progress_repository.dart';
+
+class LudoView extends StatefulWidget {
+  const LudoView({
+    required this.session,
+    required this.options,
+    this.repository,
+    this.controller,
+    this.diceRoller,
+    this.movementStepDuration = const Duration(milliseconds: 150),
+    this.botRollDelay,
+    this.botMoveDelay,
+    super.key,
+  });
+
+  final MatchSession session;
+  final MatchOptions options;
+  final LudoProgressRepository? repository;
+  final LudoController? controller;
+  final LudoDiceRoller? diceRoller;
+  final Duration movementStepDuration;
+  final Duration? botRollDelay;
+  final Duration? botMoveDelay;
+
+  @override
+  State<LudoView> createState() => _LudoViewState();
+}
+
+class _LudoViewState extends State<LudoView> {
+  LudoController? controller;
+  late final bool _ownsController = widget.controller == null;
+  LudoRoll? _observedRoll;
+  LudoMove? _observedMove;
+  var _wasAnimating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final supplied = widget.controller;
+    if (supplied != null) {
+      _attach(supplied);
+    } else if (widget.repository case final repository?) {
+      _createController(repository);
+    } else {
+      _loadController();
+    }
+  }
+
+  Future<void> _loadController() async {
+    final repository = LudoProgressRepository(
+      await SharedPreferences.getInstance(),
+    );
+    if (!mounted) return;
+    setState(() => _createController(repository));
+  }
+
+  void _createController(LudoProgressRepository repository) {
+    final random = math.Random();
+    final diceRoller = widget.diceRoller ?? () => random.nextInt(6) + 1;
+    final restored = repository.load(widget.options)?.restoreModel(diceRoller);
+    _attach(
+      LudoController(
+        playerCount: widget.options.participants.length,
+        participants: widget.options.participants,
+        diceRoller: diceRoller,
+        model: restored,
+        movementStepDuration: widget.movementStepDuration,
+        botRollDelay: widget.botRollDelay,
+        botMoveDelay: widget.botMoveDelay,
+        session: widget.session,
+        repository: repository,
+      ),
+    );
+  }
+
+  void _attach(LudoController next) {
+    controller = next..addListener(_playEffects);
+    _observedRoll = next.model.lastRoll;
+    _observedMove = next.model.lastMove;
+    _wasAnimating = next.isAnimating;
+  }
+
+  void _playEffects() {
+    final active = controller!;
+    final roll = active.model.lastRoll;
+    if (!identical(roll, _observedRoll)) {
+      _observedRoll = roll;
+      if (roll != null) {
+        SoundEffects.play(SoundEffect.diceRoll);
+        HapticEffects.preview();
+      }
+    }
+    final move = active.model.lastMove;
+    if (!identical(move, _observedMove)) {
+      _observedMove = move;
+      if (move != null) {
+        SoundEffects.play(SoundEffect.pieceMove);
+        HapticEffects.preview();
+      }
+    }
+    if (_wasAnimating && !active.isAnimating && move != null) {
+      if (move.wasCapture) {
+        SoundEffects.play(SoundEffect.boardCapture);
+        HapticEffects.paddleHit();
+      } else if (move.reachedFinalHome) {
+        SoundEffects.play(SoundEffect.tokenHome);
+        HapticEffects.paddleHit();
+      } else if (move.bonusRoll) {
+        SoundEffects.play(SoundEffect.uiConfirm);
+      }
+    }
+    _wasAnimating = active.isAnimating;
+  }
+
+  @override
+  void dispose() {
+    controller?.removeListener(_playEffects);
+    if (_ownsController) controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = controller;
+    if (active == null) {
+      return const Center(
+        child: CircularProgressIndicator(key: ValueKey('ludo-loading')),
+      );
+    }
+    return LudoBoard(controller: active, options: widget.options);
+  }
+}
 
 class LudoBoard extends StatelessWidget {
   const LudoBoard({required this.controller, required this.options, super.key});
@@ -238,20 +374,23 @@ class _PositionedToken extends StatelessWidget {
       top: center.dy - tokenSize / 2,
       width: tokenSize,
       height: tokenSize,
-      child: Semantics(
-        button: selectable,
-        enabled: selectable,
-        label: label,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: selectable ? onTap : null,
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 130),
-            scale: selectable ? 1.12 : 1,
-            child: _LudoToken(
-              participant: participant,
-              size: tokenSize,
-              highlighted: selectable,
+      child: IgnorePointer(
+        ignoring: !selectable,
+        child: Semantics(
+          button: selectable,
+          enabled: selectable,
+          label: label,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: selectable ? onTap : null,
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 130),
+              scale: selectable ? 1.12 : 1,
+              child: _LudoToken(
+                participant: participant,
+                size: tokenSize,
+                highlighted: selectable,
+              ),
             ),
           ),
         ),

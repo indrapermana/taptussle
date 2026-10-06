@@ -4,8 +4,10 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../../core/match_options.dart';
+import '../../core/match_session.dart';
 import 'ludo_bot.dart';
 import 'ludo_model.dart';
+import 'ludo_progress_repository.dart';
 
 enum LudoBotAction { rolling, choosingToken }
 
@@ -20,6 +22,8 @@ class LudoController extends ChangeNotifier {
     Duration? botMoveDelay,
     Random? random,
     LudoBot? bot,
+    MatchSession? session,
+    LudoProgressRepository? repository,
   }) {
     final resolvedRandom = random ?? Random();
     final resolvedModel =
@@ -32,11 +36,13 @@ class LudoController extends ChangeNotifier {
       playerCount: playerCount,
       model: resolvedModel,
       movementStepDuration: movementStepDuration,
-      participants: participants,
+      participants: participants ?? session?.options.participants,
       botRollDelay: botRollDelay,
       botMoveDelay: botMoveDelay,
       random: resolvedRandom,
       bot: bot ?? LudoBot(random: resolvedRandom),
+      session: session,
+      repository: repository,
     );
   }
 
@@ -49,6 +55,8 @@ class LudoController extends ChangeNotifier {
     required this.botMoveDelay,
     required Random random,
     required LudoBot bot,
+    required this.session,
+    required this.repository,
   }) : _displayProgress = [
          for (final tokens in model.tokenProgress) List<int>.of(tokens),
        ],
@@ -74,7 +82,11 @@ class LudoController extends ChangeNotifier {
     if (_participants.every((participant) => participant?.isBot ?? false)) {
       throw ArgumentError('A local Ludo match requires at least one human');
     }
-    _scheduleBotAction();
+    _observedRound = session?.round ?? 0;
+    _observedPhase = session?.phase ?? MatchPhase.playing;
+    _hasStartedRound = _observedRound > 0;
+    session?.addListener(_syncSession);
+    if (_acceptsTurns) _scheduleBotAction();
   }
 
   final LudoModel model;
@@ -85,6 +97,8 @@ class LudoController extends ChangeNotifier {
   final List<MatchParticipant?> _participants;
   final Random _random;
   final LudoBot _bot;
+  final MatchSession? session;
+  final LudoProgressRepository? repository;
 
   List<List<int>> get displayProgress => List.unmodifiable(
     _displayProgress.map((tokens) => List<int>.unmodifiable(tokens)),
@@ -97,12 +111,14 @@ class LudoController extends ChangeNotifier {
   LudoBotAction? get pendingBotAction => _pendingBotAction;
   bool get canRoll =>
       !_disposed &&
+      _acceptsTurns &&
       !isAnimating &&
       !isBotTurn &&
       !isBotThinking &&
       model.phase == LudoTurnPhase.awaitingRoll;
   bool get canChooseToken =>
       !_disposed &&
+      _acceptsTurns &&
       !isAnimating &&
       !isBotTurn &&
       !isBotThinking &&
@@ -118,7 +134,13 @@ class LudoController extends ChangeNotifier {
   Timer? _movementTimer;
   Timer? _botTimer;
   LudoBotAction? _pendingBotAction;
+  int _observedRound = 0;
+  MatchPhase _observedPhase = MatchPhase.playing;
+  bool _hasStartedRound = false;
   bool _disposed = false;
+
+  bool get _acceptsTurns =>
+      session == null || session!.phase == MatchPhase.playing;
 
   LudoRoll? roll() {
     if (!canRoll) return null;
@@ -127,6 +149,7 @@ class LudoController extends ChangeNotifier {
 
   LudoRoll _performRoll() {
     final result = model.rollDice();
+    _saveProgress();
     notifyListeners();
     if (isBotTurn) _scheduleBotAction();
     return result;
@@ -170,10 +193,15 @@ class LudoController extends ChangeNotifier {
   }
 
   void _scheduleNextStep() {
-    if (_disposed || _movementTimer != null || _pendingProgress.isEmpty) return;
+    if (_disposed ||
+        !_acceptsTurns ||
+        _movementTimer != null ||
+        _pendingProgress.isEmpty) {
+      return;
+    }
     _movementTimer = Timer(movementStepDuration, () {
       _movementTimer = null;
-      if (_disposed) return;
+      if (_disposed || !_acceptsTurns) return;
       _displayProgress[_animationPlayer!][_animationToken!] = _pendingProgress
           .removeAt(0);
       notifyListeners();
@@ -196,12 +224,18 @@ class LudoController extends ChangeNotifier {
     }
     _animationPlayer = null;
     _animationToken = null;
+    _saveProgress();
     notifyListeners();
+    if (model.isFinished) {
+      _publishResult();
+      return;
+    }
     _scheduleBotAction();
   }
 
   void _scheduleBotAction() {
     if (_disposed ||
+        !_acceptsTurns ||
         model.isFinished ||
         isAnimating ||
         !isBotTurn ||
@@ -219,7 +253,13 @@ class LudoController extends ChangeNotifier {
     _botTimer = Timer(delay, () {
       _botTimer = null;
       _pendingBotAction = null;
-      if (_disposed || model.isFinished || !isBotTurn || isAnimating) return;
+      if (_disposed ||
+          !_acceptsTurns ||
+          model.isFinished ||
+          !isBotTurn ||
+          isAnimating) {
+        return;
+      }
       switch (action) {
         case LudoBotAction.rolling:
           if (model.phase == LudoTurnPhase.awaitingRoll) _performRoll();
@@ -235,15 +275,104 @@ class LudoController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _syncSession() {
+    if (_disposed || session == null) return;
+    final roundChanged = session!.round != _observedRound;
+    if (roundChanged) {
+      _observedRound = session!.round;
+      if (_hasStartedRound) {
+        _cancelTimers(clearMovement: true);
+        model.reset();
+        _syncDisplayToModel();
+        final storage = repository;
+        if (storage != null) unawaited(storage.clear(session!.options));
+      } else {
+        _hasStartedRound = true;
+      }
+    }
+
+    final phaseChanged = session!.phase != _observedPhase;
+    _observedPhase = session!.phase;
+    if (!_acceptsTurns) {
+      _movementTimer?.cancel();
+      _movementTimer = null;
+      _cancelBotAction();
+      _saveProgress();
+    } else if (roundChanged || phaseChanged) {
+      if (_pendingProgress.isNotEmpty) {
+        _scheduleNextStep();
+      } else {
+        _scheduleBotAction();
+      }
+    }
+    if (roundChanged || phaseChanged) notifyListeners();
+  }
+
+  void _publishResult() {
+    final activeSession = session;
+    if (activeSession == null ||
+        activeSession.phase != MatchPhase.playing ||
+        !model.isFinished) {
+      return;
+    }
+    final standings = model.standings;
+    final details = standings.indexed
+        .map(
+          (entry) =>
+              '${entry.$1 + 1}. ${activeSession.options.playerLabel(entry.$2)}',
+        )
+        .join('  •  ');
+    activeSession.reportNonPointResult(
+      winner: model.winner,
+      scores: [
+        for (final tokens in model.tokenProgress)
+          tokens
+              .where((progress) => progress == LudoModel.finishProgress)
+              .length,
+      ],
+      standings: standings,
+      details: '$details  •  Another match?',
+    );
+  }
+
+  void _saveProgress() {
+    final storage = repository;
+    final options = session?.options;
+    if (storage == null || options == null) return;
+    unawaited(storage.save(options, model));
+  }
+
+  void _syncDisplayToModel() {
+    for (var player = 0; player < model.playerCount; player++) {
+      for (var token = 0; token < LudoModel.tokensPerPlayer; token++) {
+        _displayProgress[player][token] = model.progressFor(player, token);
+      }
+    }
+  }
+
+  void _cancelBotAction() {
+    _botTimer?.cancel();
+    _botTimer = null;
+    _pendingBotAction = null;
+  }
+
+  void _cancelTimers({required bool clearMovement}) {
+    _movementTimer?.cancel();
+    _movementTimer = null;
+    if (clearMovement) {
+      _pendingProgress.clear();
+      _animationPlayer = null;
+      _animationToken = null;
+    }
+    _cancelBotAction();
+  }
+
   @override
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    _movementTimer?.cancel();
-    _movementTimer = null;
-    _botTimer?.cancel();
-    _botTimer = null;
-    _pendingBotAction = null;
+    session?.removeListener(_syncSession);
+    _cancelTimers(clearMovement: true);
     super.dispose();
   }
 

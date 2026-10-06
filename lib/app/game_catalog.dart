@@ -18,6 +18,7 @@ import '../games/slither_snakes/slither_records.dart';
 import '../games/slither_snakes/slither_snakes_view.dart';
 import '../games/water_sort/water_sort_records.dart';
 import '../games/water_sort/water_sort_view.dart';
+import '../games/ludo/ludo_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -289,6 +290,40 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (options) => 'FIRST TO ${options.winningScore}',
     build: (session, options) =>
         RockPaperScissorsView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'ludo',
+    artworkAsset: gameLogoAssets['ludo'],
+    title: 'Ludo',
+    subtitle: 'Roll. Race. Capture. Bring everyone home.',
+    instructions:
+        'Choose two to four players. Roll a six to move a token out of its '
+        'box, then choose any highlighted token. Safe stars protect tokens '
+        'from capture. Rolling a six, entering the board, capturing, or reaching '
+        'the final goal grants another roll. Reach final home with an exact roll '
+        'and bring all four tokens home first.',
+    botInstructions:
+        'Choose two to four participants and assign any later seat as a bot. '
+        'Bots use the same fair dice and legal moves as humans. Easy chooses '
+        'randomly, Normal values immediate gains, and Hard also considers '
+        'safety and capture threats.',
+    icon: Icons.casino_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {
+      PlayerCount.two,
+      PlayerCount.three,
+      PlayerCount.four,
+    },
+    difficultyType: DifficultyType.bot,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Chooses randomly from every legal token.',
+      BotDifficulty.normal =>
+        'Prioritizes finishing, captures, entry, and home progress.',
+      BotDifficulty.hard =>
+        'Also evaluates safe squares, exposure, and opponent threats.',
+    },
+    matchLabel: (_) => 'BRING ALL 4 HOME',
+    build: (session, options) => LudoView(session: session, options: options),
   ),
   MiniGame(
     id: 'snakes-and-ladders',

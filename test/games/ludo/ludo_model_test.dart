@@ -76,7 +76,7 @@ void main() {
     test('a six with no legal token still grants a bonus roll', () {
       final model = _state(
         tokens: const [
-          [57, 57, 57, 56],
+          [56, 56, 56, 55],
           [-1, -1, -1, -1],
         ],
         dice: [6, 1],
@@ -93,10 +93,10 @@ void main() {
     test('maps relative player progress onto the shared track', () {
       final model = _state(
         tokens: const [
-          [0, 8, 51, 52],
-          [0, 8, 51, 57],
-          [0, 8, 51, -1],
-          [0, 8, 51, 52],
+          [0, 8, 50, 51],
+          [0, 8, 50, 56],
+          [0, 8, 50, -1],
+          [0, 8, 50, 51],
         ],
         dice: [1],
       );
@@ -190,22 +190,41 @@ void main() {
       expect(model.lastMove?.reachedFinalHome, isFalse);
     });
 
+    test('reaching the final goal grants another roll', () {
+      final model = _state(
+        tokens: const [
+          [55, 10, -1, -1],
+          [-1, -1, -1, -1],
+        ],
+        dice: [1],
+      );
+
+      model.rollDice();
+      model.moveToken(0, 0);
+
+      expect(model.progressFor(0, 0), LudoModel.finishProgress);
+      expect(model.lastMove?.reachedFinalHome, isTrue);
+      expect(model.lastMove?.bonusRoll, isTrue);
+      expect(model.currentPlayer, 0);
+      expect(model.phase, LudoTurnPhase.awaitingRoll);
+    });
+
     test('requires an exact roll to reach final home', () {
       final model = _state(
         tokens: const [
-          [56, 55, -1, 57],
+          [55, 54, -1, 56],
           [-1, -1, -1, -1],
         ],
-        dice: [2, 1, 1],
+        dice: [2, 1],
       );
 
       expect(model.rollDice().legalTokenIndexes, [1]);
       expect(model.moveToken(0, 0), LudoMoveResult.illegalMove);
       expect(model.moveToken(0, 1), LudoMoveResult.accepted);
-      expect(model.progressFor(0, 1), 57);
+      expect(model.progressFor(0, 1), 56);
+      expect(model.lastMove?.bonusRoll, isTrue);
 
-      // The next player takes a normal turn, then player 1 finishes exactly.
-      expect(model.rollDice().legalTokenIndexes, isEmpty);
+      // Reaching the goal keeps the turn, and the next token also needs exact 1.
       expect(model.currentPlayer, 0);
       expect(model.rollDice().legalTokenIndexes, [0]);
       expect(model.moveToken(0, 0), LudoMoveResult.accepted);
@@ -220,9 +239,9 @@ void main() {
           playerCount: 3,
           diceRoller: dice.roll,
           tokenProgress: const [
-            [57, 57, 57, 56],
-            [57, 57, 57, 55],
-            [57, 57, 57, 56],
+            [56, 56, 56, 55],
+            [56, 56, 56, 54],
+            [56, 56, 56, 55],
           ],
         );
 
@@ -285,7 +304,7 @@ void main() {
       expect(
         () => _state(
           tokens: const [
-            [58, -1, -1, -1],
+            [57, -1, -1, -1],
             [-1, -1, -1, -1],
           ],
           dice: const [1],
@@ -314,6 +333,40 @@ void main() {
       expect(model.lastMove, isNull);
       expect(model.standings, isEmpty);
       expect(model.tokenProgress.expand((tokens) => tokens), everyElement(-1));
+    });
+
+    test('restores a pending rolled value and its exact legal choices', () {
+      final model = LudoModel.fromState(
+        playerCount: 2,
+        diceRoller: () => 2,
+        tokenProgress: const [
+          [-1, 54, 55, 56],
+          [-1, -1, -1, -1],
+        ],
+        pendingRoll: 2,
+      );
+
+      expect(model.phase, LudoTurnPhase.awaitingMove);
+      expect(model.pendingRoll, 2);
+      expect(model.legalTokenIndexes, [1]);
+      expect(model.lastRoll?.value, 2);
+      expect(model.moveToken(0, 1), LudoMoveResult.accepted);
+      expect(model.progressFor(0, 1), 56);
+    });
+
+    test('rejects a restored roll without any legal token', () {
+      expect(
+        () => LudoModel.fromState(
+          playerCount: 2,
+          diceRoller: () => 1,
+          tokenProgress: const [
+            [-1, -1, -1, -1],
+            [-1, -1, -1, -1],
+          ],
+          pendingRoll: 3,
+        ),
+        throwsArgumentError,
+      );
     });
   });
 }

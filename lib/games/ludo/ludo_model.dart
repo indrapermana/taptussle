@@ -79,8 +79,9 @@ class LudoMove {
 /// Pure rules and turn state for a two-to-four-player Ludo match.
 ///
 /// Each token uses progress relative to its owner: -1 is the starting box,
-/// 0-51 are the shared track, 52-56 are the private home path, and 57 is the
-/// final home position. This keeps movement independent from board rendering.
+/// 0-50 are the shared route, 51-55 are the private home path, and 56 is the
+/// final home position. The board still has 52 shared squares; each player
+/// enters their home path before returning to their own start square.
 class LudoModel {
   LudoModel({
     required this.playerCount,
@@ -104,6 +105,7 @@ class LudoModel {
     this.startingPlayer = 0,
     int? currentPlayer,
     List<int> standings = const [],
+    int? pendingRoll,
   }) : _diceRoller = diceRoller,
        _tokenProgress = [for (final tokens in tokenProgress) List.of(tokens)],
        _standings = List.of(standings) {
@@ -162,13 +164,33 @@ class LudoModel {
         );
       }
       _currentPlayer = requestedPlayer;
+      if (pendingRoll != null) {
+        if (pendingRoll < 1 ||
+            pendingRoll > 6 ||
+            _legalTokensFor(_currentPlayer, pendingRoll).isEmpty) {
+          throw ArgumentError.value(
+            pendingRoll,
+            'pendingRoll',
+            'Must be a valid rolled value with at least one legal move',
+          );
+        }
+        _pendingRoll = pendingRoll;
+        _phase = LudoTurnPhase.awaitingMove;
+        _lastRoll = LudoRoll(
+          playerIndex: _currentPlayer,
+          value: pendingRoll,
+          legalTokenIndexes: _legalTokensFor(_currentPlayer, pendingRoll),
+          bonusRoll: false,
+          nextPlayerIndex: null,
+        );
+      }
     }
   }
 
   static const int tokensPerPlayer = 4;
   static const int trackLength = 52;
-  static const int homePathStart = 52;
-  static const int finishProgress = 57;
+  static const int homePathStart = 51;
+  static const int finishProgress = 56;
   static const int boxProgress = -1;
 
   static const List<int> startTrackIndexes = [0, 13, 26, 39];
@@ -218,7 +240,7 @@ class LudoModel {
   /// Returns the shared-track index, or null for box/home-path/final tokens.
   int? trackIndexFor(int playerIndex, int tokenIndex) {
     final progress = progressFor(playerIndex, tokenIndex);
-    if (progress < 0 || progress >= trackLength) return null;
+    if (progress < 0 || progress >= homePathStart) return null;
     return (startTrackIndexes[playerIndex] + progress) % trackLength;
   }
 
@@ -322,7 +344,10 @@ class LudoModel {
 
     _pendingRoll = null;
     final earnedBonus =
-        roll == 6 || start == boxProgress || captured.isNotEmpty;
+        roll == 6 ||
+        start == boxProgress ||
+        captured.isNotEmpty ||
+        end == finishProgress;
     int? nextPlayer;
     if (_standings.length >= playerCount - 1) {
       for (var player = 0; player < playerCount; player++) {

@@ -49,7 +49,7 @@ void main() {
     test('Normal prioritizes exact final home', () {
       final model = _rolledModel(
         tokens: const [
-          [56, 40, -1, -1],
+          [55, 40, -1, -1],
           [-1, -1, -1, -1],
         ],
         roll: 1,
@@ -90,7 +90,7 @@ void main() {
       for (final difficulty in BotDifficulty.values) {
         final model = _rolledModel(
           tokens: const [
-            [56, 55, 54, -1],
+            [55, 54, 53, -1],
             [-1, -1, -1, -1],
           ],
           roll: 2,
