@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/app/tap_tussle_theme.dart';
+import 'package:tap_tussle/core/haptic_service.dart';
+import 'package:tap_tussle/core/sound_service.dart';
 import 'package:tap_tussle/games/nuts_and_bolts/nuts_and_bolts_controller.dart';
 import 'package:tap_tussle/games/nuts_and_bolts/nuts_and_bolts_levels.dart';
 import 'package:tap_tussle/games/nuts_and_bolts/nuts_and_bolts_view.dart';
+
+class _RecordingSoundPlayer implements SoundPlayer {
+  final played = <SoundEffect>[];
+
+  @override
+  Future<void> play(SoundEffect effect) async => played.add(effect);
+
+  @override
+  void setVolume(double value) {}
+}
+
+class _RecordingHapticPlayer implements HapticPlayer {
+  var lightImpacts = 0;
+  var mediumImpacts = 0;
+
+  @override
+  Future<void> preview() async => lightImpacts++;
+
+  @override
+  Future<void> paddleHit() async => mediumImpacts++;
+
+  @override
+  void setEnabled(bool value) {}
+}
 
 void main() {
   testWidgets('renders responsive accessible bolts with color symbols', (
@@ -114,6 +140,60 @@ void main() {
       scrollable: find.byType(Scrollable),
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hints, moves, and completion use shared effects', (
+    tester,
+  ) async {
+    final sounds = _RecordingSoundPlayer();
+    final haptics = _RecordingHapticPlayer();
+    SoundEffects.configure(sounds);
+    HapticEffects.configure(haptics);
+    final level = NutsAndBoltsLevel(
+      id: 'effects-01',
+      difficulty: NutsAndBoltsDifficulty.easy,
+      number: 1,
+      capacity: 2,
+      helperBoltCount: 1,
+      bolts: const [
+        [0, 0],
+        [1],
+        [1],
+      ],
+      minimumSolutionMoves: 1,
+      branching: const NutsAndBoltsBranchingMetadata(
+        initialLegalMoves: 2,
+        mixedColorBoundaries: 0,
+        exploredStates: 2,
+      ),
+    );
+    final controller = NutsAndBoltsController(
+      level: level,
+      animationDuration: Duration.zero,
+    );
+    addTearDown(controller.dispose);
+    await _pumpBoard(tester, controller, const Size(430, 760));
+
+    await tester.tap(find.byKey(const ValueKey('nuts-bolts-hint')));
+    await tester.pump();
+    final hint = controller.hintMove!;
+    await tester.tap(find.byKey(ValueKey('nuts-bolts-bolt-${hint.source}')));
+    await tester.tap(
+      find.byKey(ValueKey('nuts-bolts-bolt-${hint.destination}')),
+    );
+    await tester.pump();
+
+    expect(
+      sounds.played,
+      containsAll([
+        SoundEffect.collect,
+        SoundEffect.uiTap,
+        SoundEffect.metalSlide,
+        SoundEffect.puzzleComplete,
+      ]),
+    );
+    expect(haptics.lightImpacts, 1);
+    expect(haptics.mediumImpacts, 1);
   });
 }
 

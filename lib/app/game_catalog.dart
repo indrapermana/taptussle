@@ -18,10 +18,37 @@ import '../games/slither_snakes/slither_records.dart';
 import '../games/slither_snakes/slither_snakes_view.dart';
 import '../games/water_sort/water_sort_records.dart';
 import '../games/water_sort/water_sort_view.dart';
+import '../games/nuts_and_bolts/nuts_and_bolts_records.dart';
+import '../games/nuts_and_bolts/nuts_and_bolts_view.dart';
 import '../games/ludo/ludo_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
+  MiniGame(
+    id: 'nuts-and-bolts',
+    artworkAsset: gameLogoAssets['nuts-and-bolts'],
+    title: 'Nuts & Bolts',
+    subtitle: 'Move the top nut. Sort every color.',
+    instructions:
+        'Tap a bolt to select its top nut, then tap a glowing destination. '
+        'A nut may move to an empty bolt or onto the same color when space is '
+        'available. Sort each color into a full bolt. Undo, restart, and '
+        'optional hints are available, and each difficulty has 60 levels.',
+    icon: Icons.hardware_rounded,
+    supportedModes: const {PlayMode.solo},
+    supportedPlayerCounts: const {PlayerCount.one},
+    difficultyType: DifficultyType.puzzle,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => '3–5 colors and two helper bolts.',
+      BotDifficulty.normal => '5–8 colors with longer solutions.',
+      BotDifficulty.hard => '8–12 colors and only one helper bolt.',
+    },
+    recordDefinition: nutsAndBoltsRecordDefinition,
+    matchLabel: (options) =>
+        '${options.difficulty.label.toUpperCase()} • LEVELS 1–60',
+    build: (session, options) =>
+        NutsAndBoltsView(session: session, options: options),
+  ),
   MiniGame(
     id: 'slither-style-snakes',
     artworkAsset: gameLogoAssets['slither-style-snakes'],

@@ -46,7 +46,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M16 | Slither-style Snakes | M15 | Done | M16.1-M16.5 complete; automated coverage and physical-device verification confirmed |
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
-| M19 | Nuts and Bolts | M18 | In progress | M19.1-M19.4 complete with resumable levels, personal bests, and record windows; 31 focused tests and all 442 host tests pass |
+| M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
@@ -944,8 +944,17 @@ completed levels, and per-level best moves/time. Completed sessions publish leve
 moves, and time metrics for Daily Best, Weekly Best, and Overall Best ranking, with
 bounded offline history.
 
-- [ ] M19.5 Integrate solo filtering, favourites, effects, lifecycle, tests, and
+- [x] M19.5 Integrate solo filtering, favourites, effects, lifecycle, tests, and
   physical-device validation across compact and tablet layouts.
+
+M19.5 adds Nuts and Bolts to the solo catalog and shared difficulty setup with its
+supplied artwork, favourites-first ordering, records, results, and next-level
+replay. Automated coverage verifies compact and tablet layouts, effects, lifecycle
+save/restore, completion, records, rematch progression, and persisted favourites.
+All 33 focused Nuts and Bolts tests and all 445 host tests pass, with clean static
+analysis. The focused native journey also built, installed, launched, solved Level
+1, recorded the result, and advanced to Level 2 on a physical iPhone. The user
+subsequently confirmed the completed game works on a physical device.
 
 ## M20 — Solitaire
 

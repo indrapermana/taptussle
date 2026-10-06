@@ -15,9 +15,10 @@ void main() {
           game.id != 'sudoku' &&
           game.id != 'slither-style-snakes' &&
           game.id != 'water-sort-puzzle' &&
+          game.id != 'nuts-and-bolts' &&
           game.id != 'ludo',
     );
-    expect(gameCatalog, hasLength(14));
+    expect(gameCatalog, hasLength(15));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
@@ -93,6 +94,25 @@ void main() {
     final game = gameCatalog.singleWhere(
       (game) => game.id == 'water-sort-puzzle',
     );
+
+    expect(game.supportedPlayerCounts, {PlayerCount.one});
+    expect(game.supportedModes, {PlayMode.solo});
+    expect(game.difficultyType, DifficultyType.puzzle);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.id), [
+      'level',
+      'moves',
+      'time',
+    ]);
+    expect(game.recordDefinition!.metrics.map((metric) => metric.sortOrder), [
+      RecordSortOrder.higherIsBetter,
+      RecordSortOrder.lowerIsBetter,
+      RecordSortOrder.lowerIsBetter,
+    ]);
+    expect(game.difficultyDescription!(BotDifficulty.hard), contains('one'));
+  });
+
+  test('Nuts & Bolts is a solo puzzle with level-first records', () {
+    final game = gameCatalog.singleWhere((game) => game.id == 'nuts-and-bolts');
 
     expect(game.supportedPlayerCounts, {PlayerCount.one});
     expect(game.supportedModes, {PlayMode.solo});
