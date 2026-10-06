@@ -48,7 +48,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
-| M21 | Cangkulan | M20 | In progress | M21.1-M21.2 immutable production rules, restoration, and results complete; 18 focused and all 509 host tests pass |
+| M21 | Cangkulan | M20 | In progress | M21.1-M21.3 rules, restoration, results, and privacy-aware pass-device interface complete; 26 focused and all 517 host tests pass |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
@@ -1063,8 +1063,19 @@ invalid trick winners, duplicate or nonstandard cards, inconsistent cangkul draw
 and unfinished empty hands. A completed match exposes the winner, every remaining
 hand size, completed-trick count, and remaining draw-pile size. All 18 focused
 Cangkulan tests and all 509 host tests pass with clean static analysis.
-- [ ] M21.3 Build a privacy-aware same-device card UI with pass-device/hidden-hand
+- [x] M21.3 Build a privacy-aware same-device card UI with pass-device/hidden-hand
   transitions so another participant cannot see a player's cards.
+
+M21.3 adds a controller-owned concealed/reveal flow that requires an explicit
+pass-device confirmation before every turn. Hidden hands are not built into the
+widget tree during handoff, accepted plays and cangkul actions conceal the next
+player immediately, and pause/resume returns to the concealed state. The
+responsive two-to-four-player interface shows only public hand counts, draw-pile
+count, trick cards, and privacy-safe action summaries until the active player
+reveals their hand. It distinguishes legal follow-suit cards from disabled cards,
+provides an explicit cangkul action when required, and includes card, trick, and
+draw-pile semantics for accessibility. All 26 focused Cangkulan tests and all 517
+host tests pass with clean static analysis.
 - [ ] M21.4 Add required bots for any supported 2–4-player mixture containing at
   least one local human. Use human-like delays and Easy, Normal, and Hard card
   selection policies without reading hidden hands or future draw-pile order.
