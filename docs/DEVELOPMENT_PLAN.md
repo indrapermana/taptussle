@@ -48,7 +48,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
-| M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
+| M21 | Cangkulan | M20 | In progress | M21.1 immutable rules and deterministic examples complete; 14 focused and all 505 host tests pass |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
@@ -1040,9 +1040,18 @@ and a player cannot follow the required suit, that player is skipped for the
 current trick. Cangkulan appears in both the **2 Players** and **Up to 4 Players**
 catalog tabs.
 
-- [ ] M21.1 Turn the confirmed 2–4-player, seven-card deal, clockwise, follow-suit,
+- [x] M21.1 Turn the confirmed 2–4-player, seven-card deal, clockwise, follow-suit,
   repeated-draw, exhausted-pile skip, Ace-high trick winner, next-leader, and
   immediate empty-hand win examples into pure Dart rule tests.
+
+M21.1 adds an immutable pure Dart rules model so every confirmed example can run
+without Flutter rendering. It defines the standard 52-card deck, Ace-high ranks,
+deterministic two-to-four-player seven-card deals, clockwise trick ownership,
+follow-suit legal cards, repeated cangkul draws, exhausted-pile skips, trick
+resolution, next-leader progression, and immediate empty-hand wins. Rejected
+actions preserve the prior model, exposed collections are immutable, and duplicate
+active cards or malformed deals are rejected. All 14 focused Cangkulan tests and
+all 505 host tests pass with clean static analysis.
 - [ ] M21.2 Implement deterministic deck/deal injection, hands, pile state, legal
   actions, turn progression, round completion, and match results in a pure model.
 - [ ] M21.3 Build a privacy-aware same-device card UI with pass-device/hidden-hand
