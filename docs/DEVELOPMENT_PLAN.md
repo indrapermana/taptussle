@@ -47,7 +47,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
-| M20 | Solitaire | M19 | Not started | Offline Klondike card game with saved progress and records |
+| M20 | Solitaire | M19 | In progress | M20.1 complete with an immutable Klondike model; 18 focused and all 463 host tests pass |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
@@ -962,9 +962,20 @@ Confirmed variant: Klondike. Easy and Normal use draw-one; Hard uses draw-three.
 All difficulties allow unlimited stock recycling. The milestone must keep saved
 games and records separate by difficulty because draw count changes the game rules.
 
-- [ ] M20.1 Implement deck creation/shuffle injection, tableau, stock/waste,
+- [x] M20.1 Implement deck creation/shuffle injection, tableau, stock/waste,
   foundations, draw-one/draw-three stock behavior, legal moves, flips, completion,
   move count, and scoring in pure Dart.
+
+M20.1 provides a rendering-independent immutable Klondike model with a standard
+52-card deck, injectable shuffling, the seven-pile deal, draw-one and draw-three
+stock passes, and unlimited order-preserving waste recycling. It enforces
+descending alternating-color tableau runs, King-only empty-pile moves, Ace-to-King
+suited foundations, multi-card transfers, and automatic exposure flips. Accepted
+actions increment the move count. Scoring awards 5 points for a waste-to-tableau
+move, 10 for a foundation move, and 5 for exposing a hidden tableau card; moving a
+foundation card back costs 15 points, with the total bounded at zero. All state
+collections are immutable, malformed deals and duplicate cards are rejected, and
+18 focused deterministic rule tests and all 463 host tests pass.
 - [ ] M20.2 Add undo and a deterministic hint engine; test multi-card moves, kings,
   aces, unlimited stock recycling, invalid moves, win detection, and no-move states.
 - [ ] M20.3 Build a responsive Flutter card table with drag/tap alternatives,
