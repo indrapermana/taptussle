@@ -46,6 +46,15 @@ enum SolitaireMoveStatus {
   illegalDestination,
 }
 
+enum SolitaireHintType {
+  drawOrRecycle,
+  wasteToTableau,
+  wasteToFoundation,
+  tableauToTableau,
+  tableauToFoundation,
+  foundationToTableau,
+}
+
 typedef SolitaireDeckShuffler = void Function(List<SolitaireCard> deck);
 
 class SolitaireCard {
@@ -87,6 +96,34 @@ class SolitaireTableauCard {
 
   @override
   int get hashCode => Object.hash(card, isFaceUp);
+}
+
+class SolitaireHint {
+  const SolitaireHint({
+    required this.type,
+    this.source,
+    this.cardIndex,
+    this.destination,
+    this.suit,
+  });
+
+  final SolitaireHintType type;
+  final int? source;
+  final int? cardIndex;
+  final int? destination;
+  final SolitaireSuit? suit;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SolitaireHint &&
+      type == other.type &&
+      source == other.source &&
+      cardIndex == other.cardIndex &&
+      destination == other.destination &&
+      suit == other.suit;
+
+  @override
+  int get hashCode => Object.hash(type, source, cardIndex, destination, suit);
 }
 
 class SolitaireMoveResult {
@@ -146,6 +183,7 @@ class SolitaireModel {
       foundations: const {},
       moveCount: 0,
       score: 0,
+      history: const [],
     );
   }
 
@@ -177,6 +215,7 @@ class SolitaireModel {
       foundations: foundations,
       moveCount: moveCount,
       score: score,
+      history: const [],
     );
   }
 
@@ -188,6 +227,7 @@ class SolitaireModel {
     required Map<SolitaireSuit, List<SolitaireCard>> foundations,
     required this.moveCount,
     required this.score,
+    required List<_SolitaireSnapshot> history,
   }) : _stock = List.unmodifiable(stock),
        _waste = List.unmodifiable(waste),
        _tableau = List.unmodifiable(
@@ -198,7 +238,8 @@ class SolitaireModel {
            suit: List<SolitaireCard>.unmodifiable(
              foundations[suit] ?? const [],
            ),
-       });
+       }),
+       _history = List.unmodifiable(history);
 
   static const int tableauPileCount = 7;
   static const int scoreWasteToTableau = 5;
@@ -213,12 +254,14 @@ class SolitaireModel {
   final Map<SolitaireSuit, List<SolitaireCard>> _foundations;
   final int moveCount;
   final int score;
+  final List<_SolitaireSnapshot> _history;
 
   UnmodifiableListView<SolitaireCard> get stock => UnmodifiableListView(_stock);
   UnmodifiableListView<SolitaireCard> get waste => UnmodifiableListView(_waste);
   List<List<SolitaireTableauCard>> get tableau => _tableau;
   Map<SolitaireSuit, List<SolitaireCard>> get foundations => _foundations;
   SolitaireCard? get wasteTop => _waste.lastOrNull;
+  bool get canUndo => _history.isNotEmpty;
   bool get isComplete =>
       _foundations.values.fold<int>(0, (sum, pile) => sum + pile.length) == 52;
 
@@ -226,6 +269,98 @@ class SolitaireModel {
     for (final suit in SolitaireSuit.values)
       for (final rank in SolitaireRank.values) SolitaireCard(suit, rank),
   ]);
+
+  /// Returns one stable useful action, or null when no legal action exists.
+  /// Foundation progress ranks first, followed by exposing a hidden tableau
+  /// card, other tableau building, stock cycling, and foundation rollback.
+  SolitaireHint? get hint {
+    for (var source = 0; source < tableauPileCount; source++) {
+      final pile = _tableau[source];
+      if (pile.isNotEmpty &&
+          pile.last.isFaceUp &&
+          _canPlaceOnFoundation(pile.last.card)) {
+        return SolitaireHint(
+          type: SolitaireHintType.tableauToFoundation,
+          source: source,
+        );
+      }
+    }
+    if (wasteTop case final card? when _canPlaceOnFoundation(card)) {
+      return const SolitaireHint(type: SolitaireHintType.wasteToFoundation);
+    }
+
+    final revealingMove = _firstTableauHint(requiresHiddenCard: true);
+    if (revealingMove != null) return revealingMove;
+
+    if (wasteTop case final card?) {
+      for (var destination = 0; destination < tableauPileCount; destination++) {
+        if (_canPlaceOnTableau(card, _tableau[destination])) {
+          return SolitaireHint(
+            type: SolitaireHintType.wasteToTableau,
+            destination: destination,
+          );
+        }
+      }
+    }
+
+    final tableauMove = _firstTableauHint(requiresHiddenCard: false);
+    if (tableauMove != null) return tableauMove;
+
+    if (_stock.isNotEmpty || _waste.isNotEmpty) {
+      return const SolitaireHint(type: SolitaireHintType.drawOrRecycle);
+    }
+
+    for (final suit in SolitaireSuit.values) {
+      final foundation = _foundations[suit]!;
+      if (foundation.isEmpty) continue;
+      for (var destination = 0; destination < tableauPileCount; destination++) {
+        if (_canPlaceOnTableau(foundation.last, _tableau[destination])) {
+          return SolitaireHint(
+            type: SolitaireHintType.foundationToTableau,
+            destination: destination,
+            suit: suit,
+          );
+        }
+      }
+    }
+    return null;
+  }
+
+  SolitaireMoveResult applyHint(SolitaireHint suggested) =>
+      switch (suggested.type) {
+        SolitaireHintType.drawOrRecycle => drawOrRecycle(),
+        SolitaireHintType.wasteToTableau => moveWasteToTableau(
+          suggested.destination ?? -1,
+        ),
+        SolitaireHintType.wasteToFoundation => moveWasteToFoundation(),
+        SolitaireHintType.tableauToTableau => moveTableauToTableau(
+          source: suggested.source ?? -1,
+          cardIndex: suggested.cardIndex ?? -1,
+          destination: suggested.destination ?? -1,
+        ),
+        SolitaireHintType.tableauToFoundation => moveTableauToFoundation(
+          suggested.source ?? -1,
+        ),
+        SolitaireHintType.foundationToTableau => moveFoundationToTableau(
+          suggested.suit ?? SolitaireSuit.clubs,
+          suggested.destination ?? -1,
+        ),
+      };
+
+  SolitaireModel undo() {
+    if (!canUndo) return this;
+    final previous = _history.last;
+    return SolitaireModel._(
+      drawMode: drawMode,
+      stock: previous.stock,
+      waste: previous.waste,
+      tableau: previous.tableau,
+      foundations: previous.foundations,
+      moveCount: previous.moveCount,
+      score: previous.score,
+      history: _history.take(_history.length - 1).toList(),
+    );
+  }
 
   SolitaireMoveResult drawOrRecycle() {
     if (isComplete) return _rejected(SolitaireMoveStatus.matchFinished);
@@ -439,6 +574,17 @@ class SolitaireModel {
       foundations: foundations ?? _foundations,
       moveCount: moveCount + 1,
       score: max(0, score + scoreDelta),
+      history: [
+        ..._history,
+        _SolitaireSnapshot(
+          stock: _stock,
+          waste: _waste,
+          tableau: _tableau,
+          foundations: _foundations,
+          moveCount: moveCount,
+          score: score,
+        ),
+      ],
     ),
     movedCards: List.unmodifiable(movedCards),
     flippedCard: flippedCard,
@@ -455,6 +601,47 @@ class SolitaireModel {
     for (final suit in SolitaireSuit.values)
       suit: List<SolitaireCard>.of(_foundations[suit]!),
   };
+
+  SolitaireHint? _firstTableauHint({required bool requiresHiddenCard}) {
+    for (var source = 0; source < tableauPileCount; source++) {
+      final sourcePile = _tableau[source];
+      final firstFaceUp = sourcePile.indexWhere((entry) => entry.isFaceUp);
+      if (firstFaceUp < 0) continue;
+      final revealsHidden = firstFaceUp > 0;
+      if (requiresHiddenCard != revealsHidden) continue;
+      for (
+        var cardIndex = firstFaceUp;
+        cardIndex < sourcePile.length;
+        cardIndex++
+      ) {
+        final moving = sourcePile.sublist(cardIndex);
+        if (!_isValidFaceUpRun(moving)) continue;
+        for (
+          var destination = 0;
+          destination < tableauPileCount;
+          destination++
+        ) {
+          if (destination == source) continue;
+          if (_canPlaceOnTableau(moving.first.card, _tableau[destination])) {
+            // Moving an exposed King between empty piles makes no progress.
+            if (!revealsHidden &&
+                moving.first.card.rank == SolitaireRank.king &&
+                sourcePile.length == moving.length &&
+                _tableau[destination].isEmpty) {
+              continue;
+            }
+            return SolitaireHint(
+              type: SolitaireHintType.tableauToTableau,
+              source: source,
+              cardIndex: cardIndex,
+              destination: destination,
+            );
+          }
+        }
+      }
+    }
+    return null;
+  }
 
   static bool _isTableauIndex(int index) =>
       index >= 0 && index < tableauPileCount;
@@ -502,4 +689,22 @@ class SolitaireModel {
       }
     }
   }
+}
+
+class _SolitaireSnapshot {
+  const _SolitaireSnapshot({
+    required this.stock,
+    required this.waste,
+    required this.tableau,
+    required this.foundations,
+    required this.moveCount,
+    required this.score,
+  });
+
+  final List<SolitaireCard> stock;
+  final List<SolitaireCard> waste;
+  final List<List<SolitaireTableauCard>> tableau;
+  final Map<SolitaireSuit, List<SolitaireCard>> foundations;
+  final int moveCount;
+  final int score;
 }

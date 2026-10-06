@@ -47,7 +47,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
-| M20 | Solitaire | M19 | In progress | M20.1 complete with an immutable Klondike model; 18 focused and all 463 host tests pass |
+| M20 | Solitaire | M19 | In progress | M20.1-M20.2 complete with immutable rules, exact undo, and deterministic hints; 29 focused and all 474 host tests pass |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
@@ -976,8 +976,17 @@ move, 10 for a foundation move, and 5 for exposing a hidden tableau card; moving
 foundation card back costs 15 points, with the total bounded at zero. All state
 collections are immutable, malformed deals and duplicate cards are rejected, and
 18 focused deterministic rule tests and all 463 host tests pass.
-- [ ] M20.2 Add undo and a deterministic hint engine; test multi-card moves, kings,
+- [x] M20.2 Add undo and a deterministic hint engine; test multi-card moves, kings,
   aces, unlimited stock recycling, invalid moves, win detection, and no-move states.
+
+M20.2 records an immutable snapshot before every accepted action so undo restores
+the exact stock and waste order, tableau faces and sequences, foundations, score,
+move count, and pre-win state. Rejected actions do not create history. The typed,
+non-mutating hint engine uses stable pile and suit ordering and prioritizes safe
+foundation progress, hidden-card exposure, waste and tableau building, stock
+cycling, and finally a legal foundation rollback. It returns no hint for a true
+no-move position and avoids pointless King transfers between empty piles. The 29
+focused Solitaire tests and all 474 host tests pass with clean static analysis.
 - [ ] M20.3 Build a responsive Flutter card table with drag/tap alternatives,
   readable suits/ranks, animations, pause-safe timer, and accessibility semantics.
 - [ ] M20.4 Persist the active deal and track wins, fastest completion, and fewest
