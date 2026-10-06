@@ -67,6 +67,8 @@ class CangkulanBoard extends StatelessWidget {
                   lastAction: controller.lastAction,
                   playerLabels: playerLabels,
                   onReveal: controller.revealHand,
+                  isBotTurn: controller.isBotTurn,
+                  isBotThinking: controller.isBotThinking,
                 )
               : _TurnPanel(
                   key: const ValueKey('cangkulan-turn'),
@@ -85,6 +87,8 @@ class _HandoffPanel extends StatelessWidget {
     required this.lastAction,
     required this.playerLabels,
     required this.onReveal,
+    required this.isBotTurn,
+    required this.isBotThinking,
     super.key,
   });
 
@@ -92,6 +96,8 @@ class _HandoffPanel extends StatelessWidget {
   final CangkulanTurnAction? lastAction;
   final List<String> playerLabels;
   final VoidCallback onReveal;
+  final bool isBotTurn;
+  final bool isBotThinking;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -105,14 +111,19 @@ class _HandoffPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.visibility_off_rounded,
+              Icon(
+                isBotTurn
+                    ? Icons.smart_toy_rounded
+                    : Icons.visibility_off_rounded,
                 color: TapTussleColors.gold,
                 size: 48,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'HAND HIDDEN',
+              Text(
+                isBotTurn ? 'BOT IS THINKING' : 'HAND HIDDEN',
+                key: isBotTurn
+                    ? const ValueKey('cangkulan-bot-thinking')
+                    : null,
                 style: TextStyle(
                   fontFamily: 'Lilita One',
                   fontSize: 29,
@@ -130,7 +141,9 @@ class _HandoffPanel extends StatelessWidget {
               ],
               const SizedBox(height: 20),
               Text(
-                'Pass the device to $playerLabel. Keep the screen hidden until they are ready.',
+                isBotTurn
+                    ? '$playerLabel is choosing a legal move from its own hand.'
+                    : 'Pass the device to $playerLabel. Keep the screen hidden until they are ready.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: TapTussleColors.mutedText,
@@ -138,15 +151,23 @@ class _HandoffPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  key: const ValueKey('cangkulan-reveal-hand'),
-                  onPressed: onReveal,
-                  icon: const Icon(Icons.visibility_rounded),
-                  label: Text("I'M ${playerLabel.toUpperCase()}"),
+              if (isBotTurn)
+                Semantics(
+                  label: 'Bot thinking',
+                  child: isBotThinking
+                      ? const CircularProgressIndicator()
+                      : const Icon(Icons.smart_toy_rounded),
+                )
+              else
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    key: const ValueKey('cangkulan-reveal-hand'),
+                    onPressed: onReveal,
+                    icon: const Icon(Icons.visibility_rounded),
+                    label: Text("I'M ${playerLabel.toUpperCase()}"),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

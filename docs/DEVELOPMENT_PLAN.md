@@ -48,7 +48,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
-| M21 | Cangkulan | M20 | In progress | M21.1-M21.3 rules, restoration, results, and privacy-aware pass-device interface complete; 26 focused and all 517 host tests pass |
+| M21 | Cangkulan | M20 | In progress | M21.1-M21.4 rules, privacy-aware interface, and delayed mixed-seat bots complete; 35 focused and all 526 host tests pass |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
@@ -1076,9 +1076,20 @@ reveals their hand. It distinguishes legal follow-suit cards from disabled cards
 provides an explicit cangkul action when required, and includes card, trick, and
 draw-pile semantics for accessibility. All 26 focused Cangkulan tests and all 517
 host tests pass with clean static analysis.
-- [ ] M21.4 Add required bots for any supported 2–4-player mixture containing at
+- [x] M21.4 Add required bots for any supported 2–4-player mixture containing at
   least one local human. Use human-like delays and Easy, Normal, and Hard card
   selection policies without reading hidden hands or future draw-pile order.
+
+M21.4 supports a bot in any seat of a two-to-four-participant match and chains
+consecutive bot turns until control returns to a human. Each bot receives only
+its own hand, legal actions, public trick cards, participant hand counts, and the
+draw-pile count; opponent cards and future draw order are absent from the policy
+API. Easy chooses randomly, Normal attempts to win with its strongest legal card
+and otherwise sheds its lowest, while Hard spends the cheapest winning card and
+leads low from its longest suit. Forced cangkul remains identical for every
+difficulty. Difficulty-specific human-like delays expose a bot-thinking state,
+and pending turns cancel safely across pause, rematch, and disposal. All 35
+focused Cangkulan tests and all 526 host tests pass with clean static analysis.
 - [ ] M21.5 Integrate 2–4 participant setup, restoration, results, rematch, effects,
   favourites, filters, lifecycle tests, and physical-device validation.
 

@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import 'cangkulan_bot.dart';
 import 'cangkulan_model.dart';
 
 enum CangkulanViewPhase { handoff, turn }
@@ -19,6 +22,7 @@ class CangkulanController extends ChangeNotifier {
     required this.session,
     CangkulanModel? initialModel,
     Random? random,
+    this.botThinkDelay,
   }) : _random = random ?? Random(),
        _providedInitialModel = initialModel,
        model =
@@ -36,11 +40,13 @@ class CangkulanController extends ChangeNotifier {
     session.addListener(_syncSession);
     _observedRound = session.round;
     _observedSessionPhase = session.phase;
+    _scheduleBotTurn();
   }
 
   final MatchSession session;
   final Random _random;
   final CangkulanModel? _providedInitialModel;
+  final Duration? botThinkDelay;
   CangkulanModel model;
 
   CangkulanViewPhase _phase = CangkulanViewPhase.handoff;
@@ -51,17 +57,24 @@ class CangkulanController extends ChangeNotifier {
   MatchPhase _observedSessionPhase = MatchPhase.ready;
   bool _hasStarted = false;
   bool _disposed = false;
+  Timer? _botTimer;
 
   int get activePlayer => model.currentPlayer;
+  MatchParticipant get activeParticipant =>
+      session.options.participants[activePlayer];
+  bool get isBotTurn => !model.isFinished && activeParticipant.isBot;
+  bool get isBotThinking => _botTimer?.isActive ?? false;
   bool get isHandVisible =>
       !_disposed &&
       session.phase == MatchPhase.playing &&
       _phase == CangkulanViewPhase.turn &&
+      !isBotTurn &&
       !model.isFinished;
   bool get canRevealHand =>
       !_disposed &&
       session.phase == MatchPhase.playing &&
       _phase == CangkulanViewPhase.handoff &&
+      !isBotTurn &&
       !model.isFinished;
   List<CangkulanCard> get visibleHand =>
       isHandVisible ? model.hands[activePlayer] : const [];
@@ -105,13 +118,56 @@ class CangkulanController extends ChangeNotifier {
       return CangkulanInteractionResult.matchFinished;
     }
     notifyListeners();
+    _scheduleBotTurn();
     return CangkulanInteractionResult.accepted;
+  }
+
+  void _scheduleBotTurn() {
+    if (_disposed ||
+        session.phase != MatchPhase.playing ||
+        !isBotTurn ||
+        _botTimer != null) {
+      return;
+    }
+    _phase = CangkulanViewPhase.handoff;
+    _botTimer = Timer(botThinkDelay ?? _naturalThinkDelay(), _performBotTurn);
+    notifyListeners();
+  }
+
+  Duration _naturalThinkDelay() {
+    final (minimum, variation) = switch (activeParticipant.botDifficulty!) {
+      BotDifficulty.easy => (900, 550),
+      BotDifficulty.normal => (700, 450),
+      BotDifficulty.hard => (550, 350),
+    };
+    return Duration(milliseconds: minimum + _random.nextInt(variation));
+  }
+
+  void _performBotTurn() {
+    _botTimer = null;
+    if (_disposed || session.phase != MatchPhase.playing || !isBotTurn) return;
+    final player = activePlayer;
+    final bot = CangkulanBot(
+      difficulty: activeParticipant.botDifficulty!,
+      random: _random,
+    );
+    final action = bot.chooseAction(
+      CangkulanBotObservation.fromModel(model, player),
+    );
+    if (action == null) return;
+    _apply(action);
+  }
+
+  void _cancelBotTurn() {
+    _botTimer?.cancel();
+    _botTimer = null;
   }
 
   void _syncSession() {
     if (_disposed) return;
     final roundChanged = session.round != _observedRound;
     if (roundChanged && session.round > 0) {
+      _cancelBotTurn();
       if (_hasStarted) {
         model = _newGame();
       } else {
@@ -124,11 +180,15 @@ class CangkulanController extends ChangeNotifier {
 
     final phaseChanged = session.phase != _observedSessionPhase;
     if (phaseChanged && session.phase != MatchPhase.playing) {
+      _cancelBotTurn();
       _phase = CangkulanViewPhase.handoff;
     }
     _observedRound = session.round;
     _observedSessionPhase = session.phase;
-    if (roundChanged || phaseChanged) notifyListeners();
+    if (roundChanged || phaseChanged) {
+      notifyListeners();
+      if (session.phase == MatchPhase.playing) _scheduleBotTurn();
+    }
   }
 
   CangkulanModel _newGame() {
@@ -144,6 +204,7 @@ class CangkulanController extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     session.removeListener(_syncSession);
+    _cancelBotTurn();
     super.dispose();
   }
 }

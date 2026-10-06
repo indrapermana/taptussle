@@ -98,10 +98,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('cangkulan-cangkul')), findsOneWidget);
-    expect(
-      find.bySemanticsLabel(RegExp(r'Draw pile, 2 cards')),
-      findsWidgets,
-    );
+    expect(find.bySemanticsLabel(RegExp(r'Draw pile, 2 cards')), findsWidgets);
     await tester.tap(find.byKey(const ValueKey('cangkulan-cangkul')));
     await tester.pumpAndSettle();
 
@@ -131,6 +128,36 @@ void main() {
     await _pumpBoard(tester, fixture.controller, const Size(1024, 768));
     expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('bot turn stays concealed and shows thinking feedback', (
+    tester,
+  ) async {
+    final options = MatchOptions.bot(difficulty: BotDifficulty.normal);
+    final session = MatchSession(options: options)..start();
+    final controller = CangkulanController(
+      session: session,
+      botThinkDelay: const Duration(seconds: 2),
+      initialModel: CangkulanModel.fromState(
+        hands: [
+          [_heart(7), _club(2)],
+          [_heart(8), _club(3)],
+        ],
+        currentPlayer: 1,
+      ),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+    await _pumpBoard(tester, controller, const Size(390, 700));
+
+    expect(
+      find.byKey(const ValueKey('cangkulan-bot-thinking')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('cangkulan-reveal-hand')), findsNothing);
+    expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsNothing);
+    expect(find.bySemanticsLabel('Bot thinking'), findsOneWidget);
+    session.pause();
   });
 }
 
