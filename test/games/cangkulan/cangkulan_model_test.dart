@@ -49,6 +49,32 @@ void main() {
   });
 
   group('play and trick progression', () {
+    test('legal actions expose only executable cards or cangkul', () {
+      var model = _state(
+        [
+          [_heart(7), _club(2)],
+          [_club(4), _club(5)],
+        ],
+        drawPile: [_heart(9)],
+      );
+
+      expect(model.legalActions, [
+        CangkulanLegalAction.play(_heart(7)),
+        CangkulanLegalAction.play(_club(2)),
+      ]);
+      model = model
+          .performAction(0, CangkulanLegalAction.play(_heart(7)))
+          .model;
+      expect(model.legalActions, const [CangkulanLegalAction.cangkul()]);
+
+      final result = model.performAction(
+        1,
+        const CangkulanLegalAction.cangkul(),
+      );
+      expect(result.accepted, isTrue);
+      expect(result.action!.playedCard, _heart(9));
+    });
+
     test('leader may play any card and followers must follow suit', () {
       final heartSeven = _card(CangkulanSuit.hearts, CangkulanRank.seven);
       final heartKing = _card(CangkulanSuit.hearts, CangkulanRank.king);
@@ -238,6 +264,119 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('snapshot restores exact turn state and retained trick history', () {
+    var model = _state(
+      [
+        [_heart(10), _club(2), _diamond(2)],
+        [_club(4), _club(5), _diamond(3)],
+        [_heart(8), _spade(4), _diamond(4)],
+      ],
+      drawPile: [_spade(2), _heart(12), _spade(3)],
+    );
+    model = model.playCard(0, _heart(10)).model;
+    model = model.cangkul(1).model;
+    model = model.playCard(2, _heart(8)).model;
+    expect(model.completedTricks, hasLength(1));
+    model = model.playCard(1, _club(4)).model;
+    model = model.cangkul(2).model;
+
+    final restored = CangkulanModel.restore(model.snapshot);
+
+    expect(restored.hands, model.hands);
+    expect(restored.drawPile, model.drawPile);
+    expect(restored.currentPlayer, model.currentPlayer);
+    expect(restored.trickLeader, model.trickLeader);
+    expect(restored.requiredSuit, model.requiredSuit);
+    expect(restored.currentTrickTurns, hasLength(2));
+    expect(restored.currentTrickTurns[1].skipped, isTrue);
+    expect(restored.completedTricks, hasLength(1));
+    expect(restored.lastCompletedTrick!.winner, 1);
+    expect(restored.lastCompletedTrick!.turns[1].drawnCards, [
+      _spade(2),
+      _heart(12),
+    ]);
+    expect(() => restored.completedTricks.clear(), throwsUnsupportedError);
+    expect(
+      () => restored.currentTrickTurns.first.drawnCards.clear(),
+      throwsUnsupportedError,
+    );
+  });
+
+  test('match result reports winner and final production state', () {
+    final model = _state(
+      [
+        [_heart(7)],
+        [_heart(8), _club(3)],
+        [_heart(9), _club(4), _spade(2)],
+      ],
+      drawPile: [_diamond(2)],
+    );
+
+    expect(model.matchResult, isNull);
+    final finished = model
+        .performAction(0, CangkulanLegalAction.play(_heart(7)))
+        .model;
+    final result = finished.matchResult!;
+
+    expect(result.winner, 0);
+    expect(result.remainingCards, [0, 2, 3]);
+    expect(result.completedTricks, 0);
+    expect(result.remainingDrawCards, 1);
+    expect(finished.legalActions, isEmpty);
+    expect(() => result.remainingCards.add(4), throwsUnsupportedError);
+  });
+
+  test(
+    'restoration rejects broken order, history winner, and empty-hand state',
+    () {
+      expect(
+        () => CangkulanModel.fromState(
+          hands: [
+            [_heart(7)],
+            [_club(2)],
+            [_spade(2)],
+          ],
+          currentPlayer: 2,
+          trickLeader: 0,
+          currentTrickTurns: [
+            CangkulanTrickTurn(player: 0, playedCard: _heart(10)),
+            CangkulanTrickTurn(player: 2, skipped: true),
+          ],
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => CangkulanModel.fromState(
+          hands: [
+            <CangkulanCard>[],
+            [_club(2)],
+          ],
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => CangkulanModel.fromState(
+          hands: [
+            [_heart(7)],
+            [_club(2)],
+          ],
+          completedTricks: [
+            CangkulanCompletedTrick(
+              leader: 0,
+              requiredSuit: CangkulanSuit.hearts,
+              turns: [
+                CangkulanTrickTurn(player: 0, playedCard: _heart(10)),
+                CangkulanTrickTurn(player: 1, playedCard: _heart(8)),
+              ],
+              winner: 1,
+            ),
+          ],
+        ),
+        throwsArgumentError,
+      );
+    },
+  );
 }
 
 CangkulanModel _state(

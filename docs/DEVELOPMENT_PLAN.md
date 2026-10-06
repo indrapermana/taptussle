@@ -48,7 +48,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
-| M21 | Cangkulan | M20 | In progress | M21.1 immutable rules and deterministic examples complete; 14 focused and all 505 host tests pass |
+| M21 | Cangkulan | M20 | In progress | M21.1-M21.2 immutable production rules, restoration, and results complete; 18 focused and all 509 host tests pass |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
@@ -1052,8 +1052,17 @@ resolution, next-leader progression, and immediate empty-hand wins. Rejected
 actions preserve the prior model, exposed collections are immutable, and duplicate
 active cards or malformed deals are rejected. All 14 focused Cangkulan tests and
 all 505 host tests pass with clean static analysis.
-- [ ] M21.2 Implement deterministic deck/deal injection, hands, pile state, legal
+- [x] M21.2 Implement deterministic deck/deal injection, hands, pile state, legal
   actions, turn progression, round completion, and match results in a pure model.
+
+M21.2 completes the production-facing pure model with typed executable legal
+actions, detailed per-turn cangkul draw metadata, retained completed-trick history,
+and immutable snapshots that restore the exact hands, pile, active trick, leader,
+turn, history, and finished state. Restoration rejects broken clockwise order,
+invalid trick winners, duplicate or nonstandard cards, inconsistent cangkul draws,
+and unfinished empty hands. A completed match exposes the winner, every remaining
+hand size, completed-trick count, and remaining draw-pile size. All 18 focused
+Cangkulan tests and all 509 host tests pass with clean static analysis.
 - [ ] M21.3 Build a privacy-aware same-device card UI with pass-device/hidden-hand
   transitions so another participant cannot see a player's cards.
 - [ ] M21.4 Add required bots for any supported 2–4-player mixture containing at
