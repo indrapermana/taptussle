@@ -47,7 +47,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M17 | Water Sort Puzzle | M16 | Done | M17.1-M17.5 complete; all 361 host tests passed and user confirmed physical-device verification |
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
-| M20 | Solitaire | M19 | In progress | M20.1-M20.2 complete with immutable rules, exact undo, and deterministic hints; 29 focused and all 474 host tests pass |
+| M20 | Solitaire | M19 | In progress | M20.1-M20.3 complete with immutable rules and a responsive accessible card table; 38 focused and all 483 host tests pass |
 | M21 | Cangkulan | M20 | Not started | Confirmed 2–4-player Indonesian follow-suit game with required mixed human/bot support |
 | M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
@@ -987,8 +987,18 @@ foundation progress, hidden-card exposure, waste and tableau building, stock
 cycling, and finally a legal foundation rollback. It returns no hint for a true
 no-move position and avoids pointless King transfers between empty piles. The 29
 focused Solitaire tests and all 474 host tests pass with clean static analysis.
-- [ ] M20.3 Build a responsive Flutter card table with drag/tap alternatives,
+- [x] M20.3 Build a responsive Flutter card table with drag/tap alternatives,
   readable suits/ranks, animations, pause-safe timer, and accessibility semantics.
+
+M20.3 adds a responsive seven-column card table for compact phones and tablets,
+with readable rank/suit cards, face-down backs, adaptive tableau overlap, selected
+and hinted states, and animated interaction feedback. Every move supports tap
+selection and destination input, while touch users can long-press and drag waste,
+tableau runs, and foundation cards. The controller locks input during movement,
+tracks elapsed time, freezes and hides the table while paused, and stops its clock
+on completion. Card, stock, foundation, and tableau semantics expose names, counts,
+face-down totals, selection, and available actions. All 38 focused Solitaire tests
+and all 483 host tests pass with clean static analysis.
 - [ ] M20.4 Persist the active deal and track wins, fastest completion, and fewest
   moves for daily, weekly, and overall views.
 - [ ] M20.5 Integrate effects, favourites, solo filter, lifecycle, restoration,
