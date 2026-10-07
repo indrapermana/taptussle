@@ -49,7 +49,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
 | M21 | Cangkulan | M20 | Done | M21.1-M21.5 complete; 44 focused/all 536 host tests pass and the user confirmed physical-device functionality |
-| M22 | Chess | M21 | In progress | M22.1 pure immutable rule model complete; 15 focused and all 551 host tests pass |
+| M22 | Chess | M21 | In progress | M22.1-M22.2 complete; 29 focused and all 565 host tests pass |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
@@ -1124,9 +1124,17 @@ exposing the moving king, implements both castling sides, en passant and all fou
 promotion choices, detects checkmate, stalemate, insufficient material,
 threefold repetition and the fifty-move rule, and records SAN-style move history.
 Fifteen focused model tests and all 551 host tests pass; `flutter analyze` is clean.
-- [ ] M22.2 Add exhaustive focused tests for special moves, illegal self-check,
-  checkmate/stalemate positions, draw state, undo/copy integrity, and perft-style
+- [x] M22.2 Add exhaustive focused tests for special moves, illegal self-check,
+  checkmate/stalemate positions, draw state, state-copy integrity, and perft-style
   move-generation counts for selected depths.
+
+M22.2 verifies standard opening perft through depth three (`20`, `400`, `8902`),
+Kiwipete through depth two (`48`, `2039`), and a recognized endgame position
+through depth three (`14`, `191`, `2812`). Coverage also protects pinned en
+passant, permanent castling-right loss, rook captures, promotion captures, SAN
+disambiguation, checkmate draw-rule precedence, bishop-only material, repetition
+identity, restoration parity, immutable collections, and prior-state integrity.
+All 29 focused Chess tests and all 565 host tests pass; `flutter analyze` is clean.
 - [ ] M22.3 Build an accessible Flutter board with orientation, selection, legal
   targets, last move, check, captured pieces, promotion choice, history, and result.
 - [ ] M22.4 Add friend mode and delayed Easy, Normal, and Hard bots using bounded
