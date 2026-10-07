@@ -7,6 +7,7 @@ import '../../core/match_options.dart';
 import '../../core/match_session.dart';
 import 'cangkulan_bot.dart';
 import 'cangkulan_model.dart';
+import 'cangkulan_progress_repository.dart';
 
 enum CangkulanViewPhase { handoff, turn }
 
@@ -23,6 +24,7 @@ class CangkulanController extends ChangeNotifier {
     CangkulanModel? initialModel,
     Random? random,
     this.botThinkDelay,
+    this.repository,
   }) : _random = random ?? Random(),
        _providedInitialModel = initialModel,
        model =
@@ -47,6 +49,7 @@ class CangkulanController extends ChangeNotifier {
   final Random _random;
   final CangkulanModel? _providedInitialModel;
   final Duration? botThinkDelay;
+  final CangkulanProgressRepository? repository;
   CangkulanModel model;
 
   CangkulanViewPhase _phase = CangkulanViewPhase.handoff;
@@ -108,15 +111,41 @@ class CangkulanController extends ChangeNotifier {
     _lastAction = result.action;
     _phase = CangkulanViewPhase.handoff;
     if (model.isFinished) {
-      final winner = model.matchResult!.winner;
+      final storage = repository;
+      if (storage != null) unawaited(storage.clear(session.options));
+      final result = model.matchResult!;
+      final winner = result.winner;
+      final standings = List.generate(model.participantCount, (index) => index)
+        ..sort((left, right) {
+          if (left == winner) return -1;
+          if (right == winner) return 1;
+          final cards = result.remainingCards[left].compareTo(
+            result.remainingCards[right],
+          );
+          return cards != 0 ? cards : left.compareTo(right);
+        });
+      final details = standings.indexed
+          .map((entry) {
+            final cards = result.remainingCards[entry.$2];
+            final suffix = cards == 0
+                ? 'empty'
+                : '$cards card${cards == 1 ? '' : 's'}';
+            return '${entry.$1 + 1}. ${session.options.playerLabel(entry.$2)} ($suffix)';
+          })
+          .join('  •  ');
       session.reportNonPointResult(
         winner: winner,
-        details:
-            '${session.options.playerLabel(winner)} emptied their hand first.',
+        scores: [
+          for (var player = 0; player < model.participantCount; player++)
+            player == winner ? 1 : 0,
+        ],
+        standings: standings,
+        details: '$details  •  Another match?',
       );
       notifyListeners();
       return CangkulanInteractionResult.matchFinished;
     }
+    _saveProgress();
     notifyListeners();
     _scheduleBotTurn();
     return CangkulanInteractionResult.accepted;
@@ -169,6 +198,8 @@ class CangkulanController extends ChangeNotifier {
     if (roundChanged && session.round > 0) {
       _cancelBotTurn();
       if (_hasStarted) {
+        final storage = repository;
+        if (storage != null) unawaited(storage.clear(session.options));
         model = _newGame();
       } else {
         model = _providedInitialModel ?? _newGame();
@@ -182,6 +213,7 @@ class CangkulanController extends ChangeNotifier {
     if (phaseChanged && session.phase != MatchPhase.playing) {
       _cancelBotTurn();
       _phase = CangkulanViewPhase.handoff;
+      _saveProgress();
     }
     _observedRound = session.round;
     _observedSessionPhase = session.phase;
@@ -197,6 +229,11 @@ class CangkulanController extends ChangeNotifier {
       participantCount: session.options.participants.length,
       deck: deck,
     );
+  }
+
+  void _saveProgress() {
+    final storage = repository;
+    if (storage != null) unawaited(storage.save(session.options, model));
   }
 
   @override

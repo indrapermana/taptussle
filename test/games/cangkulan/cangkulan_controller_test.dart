@@ -114,7 +114,9 @@ void main() {
     expect(session.phase, MatchPhase.finished);
     expect(session.outcome, MatchOutcome.winner);
     expect(session.winner, 0);
-    expect(session.resultDetails, 'Player 1 emptied their hand first.');
+    expect(session.resultDetails, contains('1. Player 1 (empty)'));
+    expect(session.standings, [0, 1]);
+    expect(session.scores, [1, 0]);
 
     session.start();
     expect(controller.model.isFinished, isFalse);

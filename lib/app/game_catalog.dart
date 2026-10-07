@@ -23,6 +23,7 @@ import '../games/nuts_and_bolts/nuts_and_bolts_view.dart';
 import '../games/solitaire/solitaire_records.dart';
 import '../games/solitaire/solitaire_view.dart';
 import '../games/ludo/ludo_view.dart';
+import '../games/cangkulan/cangkulan_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -436,6 +437,41 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (_) => 'AMERICAN CHECKERS',
     build: (session, options) =>
         CheckersView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'cangkulan',
+    artworkAsset: gameLogoAssets['cangkulan'],
+    title: 'Cangkulan',
+    subtitle: 'Follow suit. Dig for cards. Empty your hand.',
+    instructions:
+        'Choose two to four players. Play any card to lead a trick, then every '
+        'other player must follow that suit. If you cannot follow suit, Cangkul '
+        'from the draw pile until you find that suit; if the pile runs out, '
+        'your turn is skipped. The highest card of the led suit wins and leads '
+        'next. Pass the device while hands are hidden. Empty your hand first to win.',
+    botInstructions:
+        'Choose two to four participants and assign any later seat as a bot. '
+        'Bots see only their own cards and public table information. Easy plays '
+        'randomly, Normal tries to win tricks, and Hard preserves strong cards '
+        'while shedding long suits efficiently.',
+    icon: Icons.style_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {
+      PlayerCount.two,
+      PlayerCount.three,
+      PlayerCount.four,
+    },
+    difficultyType: DifficultyType.bot,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Chooses randomly from every legal card.',
+      BotDifficulty.normal =>
+        'Tries to win with its strongest card and otherwise sheds low cards.',
+      BotDifficulty.hard =>
+        'Wins efficiently and leads low cards from its longest suit.',
+    },
+    matchLabel: (_) => 'EMPTY YOUR HAND',
+    build: (session, options) =>
+        CangkulanView(session: session, options: options),
   ),
   MiniGame(
     id: 'mancala',

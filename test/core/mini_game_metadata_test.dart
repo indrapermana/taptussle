@@ -17,9 +17,10 @@ void main() {
           game.id != 'water-sort-puzzle' &&
           game.id != 'nuts-and-bolts' &&
           game.id != 'solitaire' &&
-          game.id != 'ludo',
+          game.id != 'ludo' &&
+          game.id != 'cangkulan',
     );
-    expect(gameCatalog, hasLength(16));
+    expect(gameCatalog, hasLength(17));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});
@@ -29,6 +30,20 @@ void main() {
       expect(game.difficultyType, DifficultyType.bot);
       expect(game.recordDefinition, isNull);
     }
+  });
+
+  test('Cangkulan supports mixed flexible multiplayer setup', () {
+    final game = gameCatalog.singleWhere((game) => game.id == 'cangkulan');
+
+    expect(game.supportedPlayerCounts, {
+      PlayerCount.two,
+      PlayerCount.three,
+      PlayerCount.four,
+    });
+    expect(game.supportedModes, {PlayMode.friend, PlayMode.bot});
+    expect(game.difficultyType, DifficultyType.bot);
+    expect(game.recordDefinition, isNull);
+    expect(game.matchLabel!(MatchOptions.friend()), 'EMPTY YOUR HAND');
   });
 
   test('Snakes & Ladders supports fair flexible multiplayer setup', () {

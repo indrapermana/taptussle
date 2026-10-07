@@ -1,46 +1,120 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/tap_tussle_theme.dart';
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'cangkulan_controller.dart';
 import 'cangkulan_model.dart';
+import 'cangkulan_progress_repository.dart';
 
 class CangkulanView extends StatefulWidget {
   const CangkulanView({
     required this.session,
     required this.options,
     this.controller,
+    this.repository,
+    this.botThinkDelay,
     super.key,
   });
 
   final MatchSession session;
   final MatchOptions options;
   final CangkulanController? controller;
+  final CangkulanProgressRepository? repository;
+  final Duration? botThinkDelay;
 
   @override
   State<CangkulanView> createState() => _CangkulanViewState();
 }
 
 class _CangkulanViewState extends State<CangkulanView> {
-  late final CangkulanController controller =
-      widget.controller ?? CangkulanController(session: widget.session);
+  CangkulanController? controller;
   late final bool _ownsController = widget.controller == null;
+  CangkulanTurnAction? _observedAction;
+  var _observedRound = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final supplied = widget.controller;
+    if (supplied != null) {
+      _attach(supplied);
+    } else if (widget.repository case final repository?) {
+      _createController(repository);
+    } else {
+      _loadController();
+    }
+  }
+
+  Future<void> _loadController() async {
+    final repository = CangkulanProgressRepository(
+      await SharedPreferences.getInstance(),
+    );
+    if (!mounted) return;
+    setState(() => _createController(repository));
+  }
+
+  void _createController(CangkulanProgressRepository repository) {
+    _attach(
+      CangkulanController(
+        session: widget.session,
+        initialModel: repository.load(widget.options),
+        repository: repository,
+        botThinkDelay: widget.botThinkDelay,
+      ),
+    );
+  }
+
+  void _attach(CangkulanController next) {
+    controller = next..addListener(_playEffects);
+    _observedAction = next.lastAction;
+    _observedRound = widget.session.round;
+    SoundEffects.play(SoundEffect.cardShuffle);
+  }
+
+  void _playEffects() {
+    final active = controller!;
+    if (_observedRound != widget.session.round) {
+      _observedRound = widget.session.round;
+      SoundEffects.play(SoundEffect.cardShuffle);
+    }
+    final action = active.lastAction;
+    if (identical(action, _observedAction) || action == null) return;
+    _observedAction = action;
+    SoundEffects.play(
+      action.drawnCards.isNotEmpty
+          ? SoundEffect.cardDraw
+          : SoundEffect.cardPlace,
+    );
+    HapticEffects.preview();
+  }
 
   @override
   void dispose() {
-    if (_ownsController) controller.dispose();
+    controller?.removeListener(_playEffects);
+    if (_ownsController) controller?.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => CangkulanBoard(
-    controller: controller,
-    playerLabels: [
-      for (var index = 0; index < widget.options.participants.length; index++)
-        widget.options.playerLabel(index),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final active = controller;
+    if (active == null) {
+      return const Center(
+        child: CircularProgressIndicator(key: ValueKey('cangkulan-loading')),
+      );
+    }
+    return CangkulanBoard(
+      controller: active,
+      playerLabels: [
+        for (var index = 0; index < widget.options.participants.length; index++)
+          widget.options.playerLabel(index),
+      ],
+    );
+  }
 }
 
 class CangkulanBoard extends StatelessWidget {
