@@ -48,8 +48,8 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M18 | Ludo | M17 | Done | M18.1-M18.5 complete with 50 focused Ludo tests and all 411 host tests passing; user confirmed the final rules and physical-device verification |
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
-| M21 | Cangkulan | M20 | In progress | M21.1-M21.4 complete; M21.5 implementation and 44 focused/all 536 host tests pass, with physical-device confirmation pending |
-| M22 | Chess | M21 | Not started | Complete two-player rules with friend and bounded bot modes |
+| M21 | Cangkulan | M20 | Done | M21.1-M21.5 complete; 44 focused/all 536 host tests pass and the user confirmed physical-device functionality |
+| M22 | Chess | M21 | In progress | M22.1 pure immutable rule model complete; 15 focused and all 551 host tests pass |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
@@ -1090,7 +1090,7 @@ leads low from its longest suit. Forced cangkul remains identical for every
 difficulty. Difficulty-specific human-like delays expose a bot-thinking state,
 and pending turns cancel safely across pause, rematch, and disposal. All 35
 focused Cangkulan tests and all 526 host tests pass with clean static analysis.
-- [ ] M21.5 Integrate 2–4 participant setup, restoration, results, rematch, effects,
+- [x] M21.5 Integrate 2–4 participant setup, restoration, results, rematch, effects,
   favourites, filters, lifecycle tests, and physical-device validation.
 
 M21.5 implementation is complete. Cangkulan is available in the **2 Players**
@@ -1107,16 +1107,23 @@ favourites, effects, results, and rematch are covered by 44 focused Cangkulan
 tests; all 536 host tests and static analysis pass. The connected wireless iPad
 was detected, but Flutter's iOS debug transport rejected the integration run and
 recommended an unavailable `--publish-port` test option, so manual physical-device
-confirmation remains before this checkbox and M21 can be marked complete.
+confirmation was completed by the user on 2026-10-07, closing M21.
 
 ## M22 — Chess
 
 Use standard over-the-board rules without clocks, an online engine, or a network
 service in the first version.
 
-- [ ] M22.1 Implement board state, legal movement, check filtering, checkmate,
+- [x] M22.1 Implement board state, legal movement, check filtering, checkmate,
   stalemate, castling, en passant, promotion, insufficient material, repetition,
   and fifty-move draw state in a pure Dart model with notation-ready move history.
+
+M22.1 adds an immutable, restoration-ready chess model using standard initial
+placement and `a1`-to-`h8` square notation. It generates legal moves without
+exposing the moving king, implements both castling sides, en passant and all four
+promotion choices, detects checkmate, stalemate, insufficient material,
+threefold repetition and the fifty-move rule, and records SAN-style move history.
+Fifteen focused model tests and all 551 host tests pass; `flutter analyze` is clean.
 - [ ] M22.2 Add exhaustive focused tests for special moves, illegal self-check,
   checkmate/stalemate positions, draw state, undo/copy integrity, and perft-style
   move-generation counts for selected depths.
