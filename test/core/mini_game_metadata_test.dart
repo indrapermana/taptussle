@@ -20,7 +20,7 @@ void main() {
           game.id != 'ludo' &&
           game.id != 'cangkulan',
     );
-    expect(gameCatalog, hasLength(17));
+    expect(gameCatalog, hasLength(18));
 
     for (final game in existingGames) {
       expect(game.supportedPlayerCounts, {PlayerCount.two});

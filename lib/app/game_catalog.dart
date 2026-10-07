@@ -24,6 +24,7 @@ import '../games/solitaire/solitaire_records.dart';
 import '../games/solitaire/solitaire_view.dart';
 import '../games/ludo/ludo_view.dart';
 import '../games/cangkulan/cangkulan_view.dart';
+import '../games/chess/chess_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
 final gameCatalog = List<MiniGame>.unmodifiable([
@@ -502,5 +503,35 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (_) => 'MOST STONES',
     build: (session, options) =>
         MancalaView(session: session, options: options),
+  ),
+  MiniGame(
+    id: 'chess',
+    artworkAsset: gameLogoAssets['chess'],
+    title: 'Chess',
+    subtitle: 'Plan ahead. Protect your king. Checkmate.',
+    instructions:
+        'Move one piece at a time using standard Chess rules. Select a piece '
+        'to see every legal destination. Keep your king out of check and trap '
+        'the opposing king in checkmate to win. Castling, en passant, pawn '
+        'promotion, stalemate, repetition, insufficient material, and the '
+        'fifty-move draw rule are supported. Chess clocks are not used.',
+    botInstructions:
+        'You control White and move first. Select a piece to see every legal '
+        'destination, protect your king, and checkmate the bot. Easy moves '
+        'randomly; Normal and Hard search ahead within strict phone-friendly '
+        'time and node limits.',
+    icon: Icons.castle_rounded,
+    supportedModes: const {PlayMode.friend, PlayMode.bot},
+    supportedPlayerCounts: const {PlayerCount.two},
+    difficultyType: DifficultyType.bot,
+    difficultyDescription: (difficulty) => switch (difficulty) {
+      BotDifficulty.easy => 'Chooses randomly from every legal move.',
+      BotDifficulty.normal =>
+        'Searches two plies with occasional mistakes and a short time limit.',
+      BotDifficulty.hard =>
+        'Searches three plies without intentional mistakes under strict limits.',
+    },
+    matchLabel: (_) => 'CHECKMATE THE KING',
+    build: (session, options) => ChessView(session: session, options: options),
   ),
 ]);

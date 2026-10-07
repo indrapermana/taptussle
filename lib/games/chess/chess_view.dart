@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
+import '../../core/haptic_service.dart';
+import '../../core/sound_service.dart';
 import 'chess_controller.dart';
 import 'chess_model.dart';
 
@@ -27,6 +29,7 @@ class ChessView extends StatefulWidget {
 
 class _ChessViewState extends State<ChessView> {
   late final ChessController controller;
+  late ChessModel _observedModel;
   var orientation = ChessOrientation.white;
 
   @override
@@ -35,11 +38,32 @@ class _ChessViewState extends State<ChessView> {
     controller = ChessController(
       model: widget.initialModel,
       session: widget.session,
-    );
+    )..addListener(_playEffects);
+    _observedModel = controller.model;
+  }
+
+  void _playEffects() {
+    final current = controller.model;
+    if (identical(current, _observedModel)) return;
+    final previousHistoryLength = _observedModel.history.length;
+    _observedModel = current;
+    if (current.history.length <= previousHistoryLength) return;
+    final record = current.history.last;
+    if (record.move.promotion != null) {
+      SoundEffects.play(SoundEffect.levelUp);
+      HapticEffects.paddleHit();
+    } else if (record.capturedPiece != null) {
+      SoundEffects.play(SoundEffect.boardCapture);
+      HapticEffects.paddleHit();
+    } else {
+      SoundEffects.play(SoundEffect.pieceMove);
+      HapticEffects.preview();
+    }
   }
 
   @override
   void dispose() {
+    controller.removeListener(_playEffects);
     controller.dispose();
     super.dispose();
   }
@@ -59,6 +83,7 @@ class _ChessViewState extends State<ChessView> {
         playerLabels: labels,
         enabled: controller.acceptsInput,
         statusOverride: controller.isBotThinking ? 'BOT IS THINKING…' : null,
+        controller: controller,
         onSquareTap: controller.tapSquare,
         onPromotionSelected: controller.choosePromotion,
         onPromotionCancelled: controller.cancelPromotion,
@@ -86,6 +111,7 @@ class ChessBoard extends StatelessWidget {
     this.onPromotionSelected,
     this.onPromotionCancelled,
     this.onFlipBoard,
+    this.controller,
     super.key,
   }) : assert(playerLabels.length == 2);
 
@@ -100,6 +126,7 @@ class ChessBoard extends StatelessWidget {
   final ValueChanged<ChessPieceType>? onPromotionSelected;
   final VoidCallback? onPromotionCancelled;
   final VoidCallback? onFlipBoard;
+  final ChessController? controller;
 
   static const _red = Color(0xFFFF644D);
   static const _blue = Color(0xFF35C8FF);

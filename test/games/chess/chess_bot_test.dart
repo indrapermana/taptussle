@@ -115,6 +115,19 @@ void main() {
       expect(model.legalMoves, contains(bot.chooseMove(model)));
       expect(bot.searchedNodes, lessThan(bot.nodeBudget));
     });
+
+    test('Hard opening search stays inside the host response guard', () {
+      final model = ChessModel().play(_move('e2', 'e4')).model;
+      final bot = ChessBot(difficulty: BotDifficulty.hard, random: Random(9));
+      final stopwatch = Stopwatch()..start();
+
+      final move = bot.chooseMove(model);
+      stopwatch.stop();
+
+      expect(model.legalMoves, contains(move));
+      expect(bot.searchedNodes, lessThanOrEqualTo(bot.nodeBudget));
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 3)));
+    });
   });
 }
 

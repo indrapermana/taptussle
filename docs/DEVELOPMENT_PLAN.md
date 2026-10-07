@@ -49,7 +49,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
 | M21 | Cangkulan | M20 | Done | M21.1-M21.5 complete; 44 focused/all 536 host tests pass and the user confirmed physical-device functionality |
-| M22 | Chess | M21 | In progress | M22.1-M22.4 complete; 50 focused and all 586 host tests pass |
+| M22 | Chess | M21 | Done | M22.1-M22.5 complete; 56 focused and all 592 host tests pass; user confirmed physical-device verification |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
@@ -1165,9 +1165,20 @@ resume safely, and reset for rematches. All 49 focused Chess tests and all 585 h
 tests, including wall-clock fallback coverage, and all 586 host tests pass with
 reduced-concurrency regression validation; `flutter analyze` is
 clean.
-- [ ] M22.5 Integrate pause/resume, rematch, effects, favourites, filters,
+- [x] M22.5 Integrate pause/resume, rematch, effects, favourites, filters,
   lifecycle, performance profiling, and device passes. Do not include chess clocks
   in the first version.
+
+M22.5 registers Chess as the eighteenth catalog game with friend and bot setup,
+two-player filtering, favourites ordering, branded artwork, instructions, and the
+shared checkmate/draw result flow. Quiet moves, captures, and promotions use the
+shared sound and haptic services. Integration coverage verifies difficulty setup,
+lifecycle pause/resume, completed-match publication, clean rematches, compact-phone
+and tablet layouts, and all shared effects. A bounded Hard opening search profile
+also verifies legal output, node-budget compliance, and completion inside the host
+response guard. All 56 focused Chess tests and all 592 host tests pass with reduced
+concurrency; `flutter analyze` is clean. The user confirmed successful
+physical-device verification on 2026-10-07, completing M22.
 
 ## M23 — Eighteen-game release validation and store preparation
 
