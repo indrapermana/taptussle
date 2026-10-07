@@ -117,7 +117,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('Time out'), findsOneWidget);
-      await tester.tap(find.text('Back to games'));
+      await tester.tap(find.byKey(const ValueKey('back-to-games')));
       await tester.pumpAndSettle();
       expect(find.text('Paddle Duel'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -155,7 +155,9 @@ void main() {
     await tester.pump();
     expect(session.phase, MatchPhase.finished);
     expect(find.text('Player 1 wins!'), findsOneWidget);
-    expect(find.text('2 PLAYERS'), findsOneWidget);
+    expect(find.byKey(const ValueKey('result-score-cards')), findsOneWidget);
+    expect(find.byKey(const ValueKey('result-score-card-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('result-score-card-1')), findsOneWidget);
   });
 
   testWidgets('small phone home and instructions do not overflow', (

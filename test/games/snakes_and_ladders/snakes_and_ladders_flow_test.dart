@@ -140,12 +140,18 @@ void main() {
       winner: 0,
       scores: const [64, 42, 31, 20],
       standings: const [0, 1, 2, 3],
-      details:
-          '1. Player 1  •  2. Bot 2  •  3. Player 3  •  4. Player 4  •  Another race?',
+      details: 'Player 1 reached square 64 first.',
     );
     await tester.pumpAndSettle();
     expect(find.text('Player 1 wins!'), findsOneWidget);
-    expect(find.textContaining('1. Player 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('result-standings')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('result-place-1')),
+        matching: find.text('Player 1'),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const ValueKey('play-again')));
     await tester.pump();

@@ -182,7 +182,7 @@ class CheckersController extends ChangeNotifier {
         winner: winner,
         scores: winner == 0 ? const [1, 0] : const [0, 1],
         details:
-            '${session.options.playerLabel(winner)} leaves the opponent with no legal move. • Another round?',
+            '${session.options.playerLabel(winner)} leaves the opponent with no legal move.',
       );
       return;
     }
@@ -197,7 +197,7 @@ class CheckersController extends ChangeNotifier {
     session.reportNonPointResult(
       winner: null,
       scores: const [0, 0],
-      details: '$reason • Another round?',
+      details: reason,
     );
   }
 

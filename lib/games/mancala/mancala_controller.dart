@@ -175,8 +175,8 @@ class MancalaController extends ChangeNotifier {
       winner: winner,
       scores: scores,
       details: winner == null
-          ? 'Both stores hold ${scores[0]} stones. • Another round?'
-          : '${session.options.playerLabel(winner)} collects the most stones. • Another round?',
+          ? 'Both stores hold ${scores[0]} stones.'
+          : '${session.options.playerLabel(winner)} collects the most stones.',
     );
   }
 

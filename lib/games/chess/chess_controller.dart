@@ -194,7 +194,7 @@ class ChessController extends ChangeNotifier {
         winner: participant,
         scores: participant == 0 ? const [1, 0] : const [0, 1],
         details:
-            '${currentSession.options.playerLabel(participant)} wins by checkmate. • Another round?',
+            '${currentSession.options.playerLabel(participant)} wins by checkmate.',
       );
       return;
     }
@@ -211,7 +211,7 @@ class ChessController extends ChangeNotifier {
     currentSession.reportNonPointResult(
       winner: null,
       scores: const [0, 0],
-      details: '$reason • Another round?',
+      details: reason,
     );
   }
 

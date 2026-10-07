@@ -152,10 +152,6 @@ class RockPaperScissorsController extends ChangeNotifier {
         outcome: MatchOutcome.winner,
         scores: model.scores,
         winner: winner,
-        details:
-            '${session.options.playerLabel(0)} ${model.scores[0]}  •  '
-            '${session.options.playerLabel(1)} ${model.scores[1]}  •  '
-            'Play again?',
       );
     }
   }

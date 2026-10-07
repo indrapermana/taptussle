@@ -140,7 +140,7 @@ class CangkulanController extends ChangeNotifier {
             player == winner ? 1 : 0,
         ],
         standings: standings,
-        details: '$details  •  Another match?',
+        details: details,
       );
       notifyListeners();
       return CangkulanInteractionResult.matchFinished;

@@ -70,12 +70,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Four wins!'), findsOneWidget);
+      expect(find.byKey(const ValueKey('result-standings')), findsOneWidget);
       expect(
-        find.text(
-          '1. Four  •  2. Two  •  3. One  •  4. Three  •  Another round?',
+        find.descendant(
+          of: find.byKey(const ValueKey('result-place-1')),
+          matching: find.text('Four'),
         ),
         findsOneWidget,
       );
+      expect(find.text('Another round?'), findsNothing);
 
       await tester.tap(find.text('Play again'));
       await tester.pump();
@@ -87,11 +90,14 @@ void main() {
 
       expect(find.text('Complete!'), findsOneWidget);
       expect(
-        find.text(
-          '1. One  •  2. Two  •  3. Three  •  4. Four  •  Another round?',
+        find.descendant(
+          of: find.byKey(const ValueKey('result-place-1')),
+          matching: find.text('One'),
         ),
         findsOneWidget,
       );
+      expect(find.byKey(const ValueKey('change-options')), findsOneWidget);
+      expect(find.text('Games'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

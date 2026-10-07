@@ -192,13 +192,14 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: Column(
                   children: [
-                    _ScoreHud(
-                      options: widget.options,
-                      scores: session.scores,
-                      matchLabel:
-                          widget.game.matchLabel?.call(widget.options) ??
-                          '${widget.options.participants.length} ${widget.options.participants.length == 1 ? 'PLAYER' : 'PLAYERS'}',
-                    ),
+                    if (session.phase != MatchPhase.finished)
+                      _ScoreHud(
+                        options: widget.options,
+                        scores: session.scores,
+                        matchLabel:
+                            widget.game.matchLabel?.call(widget.options) ??
+                            '${widget.options.participants.length} ${widget.options.participants.length == 1 ? 'PLAYER' : 'PLAYERS'}',
+                      ),
                     Expanded(
                       child: Stack(
                         fit: StackFit.expand,
@@ -438,7 +439,7 @@ class _MatchOverlay extends StatelessWidget {
   String get details => switch (phase) {
     MatchPhase.ready => game.instructionsFor(options.mode),
     MatchPhase.paused => 'Catch your breath. Your match is right here.',
-    MatchPhase.finished => resultDetails ?? _defaultResultDetails,
+    MatchPhase.finished => resultDetails ?? '',
     MatchPhase.playing => '',
   };
 
@@ -454,19 +455,6 @@ class _MatchOverlay extends StatelessWidget {
     MatchPhase.finished => 'play-again',
     MatchPhase.playing => 'match-action',
   };
-
-  String get _defaultResultDetails {
-    if (standings.isNotEmpty) {
-      final places = standings.indexed.map(
-        (entry) => '${entry.$1 + 1}. ${options.playerLabel(entry.$2)}',
-      );
-      return '${places.join('  •  ')}  •  Another round?';
-    }
-    final scoreLine = options.participants.indexed
-        .map((entry) => '${entry.$2.displayName} ${scores[entry.$1]}')
-        .join('  •  ');
-    return '$scoreLine  •  Another round?';
-  }
 
   IconData get _resultIcon => switch (outcome) {
     MatchOutcome.draw => Icons.handshake_rounded,
@@ -519,27 +507,43 @@ class _MatchOverlay extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Lilita One',
-                    color: accent,
-                    fontSize: 34,
-                    height: 1.05,
-                    letterSpacing: .3,
+                Semantics(
+                  header: true,
+                  liveRegion: phase == MatchPhase.finished,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Lilita One',
+                      color: accent,
+                      fontSize: 34,
+                      height: 1.05,
+                      letterSpacing: .3,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 13),
-                Text(
-                  details,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: TapTussleColors.mutedText,
-                    height: 1.5,
-                    fontSize: 15,
+                if (phase == MatchPhase.finished) ...[
+                  const SizedBox(height: 16),
+                  _FinishedResultSummary(
+                    options: options,
+                    scores: scores,
+                    winner: winner,
+                    outcome: outcome!,
+                    standings: standings,
                   ),
-                ),
+                ],
+                if (details.isNotEmpty) ...[
+                  const SizedBox(height: 13),
+                  Text(
+                    details,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: TapTussleColors.mutedText,
+                      height: 1.5,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
                 if (phase == MatchPhase.finished &&
                     game.recordDefinition != null &&
                     recordMetrics != null) ...[
@@ -590,26 +594,46 @@ class _MatchOverlay extends StatelessWidget {
                     label: Text(primaryLabel),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        key: const ValueKey('change-options'),
-                        onPressed: onChangeOptions,
-                        child: const Text('Change options'),
-                      ),
+                if (phase == MatchPhase.finished) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('change-options'),
+                      onPressed: onChangeOptions,
+                      icon: const Icon(Icons.tune_rounded),
+                      label: const Text('Change options'),
                     ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: TextButton(
-                        key: const ValueKey('back-to-games'),
-                        onPressed: onBackToGames,
-                        child: const Text('Back to games'),
+                  ),
+                  const SizedBox(height: 2),
+                  TextButton.icon(
+                    key: const ValueKey('back-to-games'),
+                    onPressed: onBackToGames,
+                    icon: const Icon(Icons.home_rounded),
+                    label: const Text('Games'),
+                  ),
+                ] else ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          key: const ValueKey('change-options'),
+                          onPressed: onChangeOptions,
+                          child: const Text('Change options'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: TextButton(
+                          key: const ValueKey('back-to-games'),
+                          onPressed: onBackToGames,
+                          child: const Text('Back to games'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -618,6 +642,271 @@ class _MatchOverlay extends StatelessWidget {
     ),
   );
 }
+
+class _FinishedResultSummary extends StatelessWidget {
+  const _FinishedResultSummary({
+    required this.options,
+    required this.scores,
+    required this.winner,
+    required this.outcome,
+    required this.standings,
+  });
+
+  final MatchOptions options;
+  final List<int> scores;
+  final int? winner;
+  final MatchOutcome outcome;
+  final List<int> standings;
+
+  @override
+  Widget build(BuildContext context) {
+    if (options.participants.length <= 2) {
+      return Row(
+        key: const ValueKey('result-score-cards'),
+        children: [
+          for (final entry in options.participants.indexed) ...[
+            if (entry.$1 > 0) const SizedBox(width: 10),
+            Expanded(
+              child: _ResultPlayerCard(
+                index: entry.$1,
+                participant: entry.$2,
+                score: entry.$1 < scores.length ? scores[entry.$1] : 0,
+                isWinner: winner == entry.$1,
+                isDraw: outcome == MatchOutcome.draw,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    final order = standings.isNotEmpty
+        ? List<int>.of(standings)
+        : List<int>.generate(options.participants.length, (index) => index);
+    if (standings.isEmpty) {
+      order.sort((left, right) {
+        final scoreComparison = scores[right].compareTo(scores[left]);
+        return scoreComparison != 0 ? scoreComparison : left.compareTo(right);
+      });
+    }
+    return Semantics(
+      container: true,
+      label: standings.isNotEmpty ? 'Final standings' : 'Final scores',
+      child: Container(
+        key: const ValueKey('result-standings'),
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: TapTussleColors.midnight.withValues(alpha: .5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: TapTussleColors.panelBorder),
+        ),
+        child: Column(
+          children: [
+            Text(
+              standings.isNotEmpty ? 'FINAL STANDINGS' : 'FINAL SCORES',
+              style: const TextStyle(
+                color: TapTussleColors.mutedText,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 7),
+            for (final entry in order.indexed) ...[
+              _StandingRow(
+                place: entry.$1 + 1,
+                participant: options.participants[entry.$2],
+                score: entry.$2 < scores.length ? scores[entry.$2] : 0,
+                isWinner: winner == entry.$2,
+              ),
+              if (entry.$1 < order.length - 1) const SizedBox(height: 6),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultPlayerCard extends StatelessWidget {
+  const _ResultPlayerCard({
+    required this.index,
+    required this.participant,
+    required this.score,
+    required this.isWinner,
+    required this.isDraw,
+  });
+
+  final int index;
+  final MatchParticipant participant;
+  final int score;
+  final bool isWinner;
+  final bool isDraw;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _participantResultColor(participant.color);
+    return Semantics(
+      container: true,
+      label:
+          '${participant.displayName}, score $score${isWinner
+              ? ', winner'
+              : isDraw
+              ? ', draw'
+              : ''}',
+      excludeSemantics: true,
+      child: Container(
+        key: ValueKey('result-score-card-$index'),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isWinner ? .2 : .1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color, width: isWinner ? 2.5 : 1),
+          boxShadow: isWinner
+              ? [BoxShadow(color: color.withValues(alpha: .22), blurRadius: 16)]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isWinner
+                  ? Icons.emoji_events_rounded
+                  : _resultTokenIcon(participant.token),
+              color: color,
+              size: 27,
+            ),
+            const SizedBox(height: 5),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                participant.displayName,
+                maxLines: 1,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              '$score',
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Lilita One',
+                fontSize: 32,
+                height: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StandingRow extends StatelessWidget {
+  const _StandingRow({
+    required this.place,
+    required this.participant,
+    required this.score,
+    required this.isWinner,
+  });
+
+  final int place;
+  final MatchParticipant participant;
+  final int score;
+  final bool isWinner;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _participantResultColor(participant.color);
+    return Semantics(
+      container: true,
+      label: 'Place $place, ${participant.displayName}, score $score',
+      excludeSemantics: true,
+      child: Container(
+        key: ValueKey('result-place-$place'),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isWinner
+              ? color.withValues(alpha: .16)
+              : Colors.white.withValues(alpha: .04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isWinner ? color : Colors.white12,
+            width: isWinner ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _placeColor(place).withValues(alpha: .18),
+                border: Border.all(color: _placeColor(place)),
+              ),
+              child: Text(
+                '$place',
+                style: TextStyle(
+                  color: _placeColor(place),
+                  fontFamily: 'Lilita One',
+                  fontSize: 17,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Icon(_resultTokenIcon(participant.token), color: color, size: 21),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                participant.displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: color, fontWeight: FontWeight.w800),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$score',
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Lilita One',
+                fontSize: 23,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Color _participantResultColor(ParticipantColor color) => switch (color) {
+  ParticipantColor.mint => const Color(0xFF9DF5CF),
+  ParticipantColor.coral => const Color(0xFFFF968A),
+  ParticipantColor.gold => TapTussleColors.gold,
+  ParticipantColor.violet => const Color(0xFFB388FF),
+};
+
+Color _placeColor(int place) => switch (place) {
+  1 => TapTussleColors.gold,
+  2 => const Color(0xFFDCE8F5),
+  3 => const Color(0xFFD9955E),
+  _ => TapTussleColors.mutedText,
+};
+
+IconData _resultTokenIcon(ParticipantToken token) => switch (token) {
+  ParticipantToken.circle => Icons.circle_rounded,
+  ParticipantToken.diamond => Icons.diamond_rounded,
+  ParticipantToken.triangle => Icons.change_history_rounded,
+  ParticipantToken.star => Icons.star_rounded,
+};
 
 class _RecordResultPanel extends StatelessWidget {
   const _RecordResultPanel({

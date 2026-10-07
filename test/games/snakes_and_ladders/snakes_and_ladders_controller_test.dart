@@ -136,10 +136,7 @@ void main() {
     expect(session.winner, 0);
     expect(session.scores, [64, 50, 40, 30]);
     expect(session.standings, [0, 1, 2, 3]);
-    expect(
-      session.resultDetails,
-      '1. One  •  2. Two  •  3. Three  •  4. Four  •  Another race?',
-    );
+    expect(session.resultDetails, 'One reached square 64 first.');
 
     session.start();
     expect(controller.displayPositions, [0, 0, 0, 0]);

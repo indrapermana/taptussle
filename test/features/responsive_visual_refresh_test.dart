@@ -141,11 +141,14 @@ void main() {
     await tester.pump();
     session.reportNonPointResult(
       winner: null,
-      details: 'Both rivals held their ground. Another round?',
+      details: 'Both rivals held their ground.',
     );
     await tester.pumpAndSettle();
     expect(find.text('Draw!'), findsOneWidget);
+    expect(find.byKey(const ValueKey('result-score-cards')), findsOneWidget);
     expect(find.text('Play again'), findsOneWidget);
+    expect(find.byKey(const ValueKey('change-options')), findsOneWidget);
+    expect(find.text('Games'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

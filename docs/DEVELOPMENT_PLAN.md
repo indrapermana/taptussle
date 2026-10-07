@@ -1266,6 +1266,14 @@ installed, and launched successfully on the connected iPhone named Indra
   lifecycle, and rematch tests pass.
 - [ ] Paddle Duel: confirm the revised paddle visibility, artwork, hit effects,
   and scorer announcement on physical iPhone and Android devices.
+- [x] Shared results: replace sentence-style scores with visual score cards for
+  one or two participants and ordered standings for three or four participants;
+  preserve game-specific completion details and record summaries; emphasize Play
+  Again, retain Change options and Games navigation, announce the result to screen
+  readers, and cover winner, draw, completion, compact-phone, and enlarged-text
+  layouts with widget tests.
+- [ ] Shared results: confirm score cards, standings, result announcements, and
+  all three actions on physical iPhone and Android devices.
 
 ## M23 — Eighteen-game release validation and store preparation
 

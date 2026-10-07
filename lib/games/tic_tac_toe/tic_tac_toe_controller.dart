@@ -134,8 +134,8 @@ class TicTacToeController extends ChangeNotifier {
       winner: winner,
       scores: scores,
       details: winner == null
-          ? 'The board is full with no winning line. • Another round?'
-          : '${session.options.playerLabel(winner)} completed three in a row. • Another round?',
+          ? 'The board is full with no winning line.'
+          : '${session.options.playerLabel(winner)} completed three in a row.',
     );
   }
 

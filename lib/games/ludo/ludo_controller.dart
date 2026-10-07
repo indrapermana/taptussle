@@ -331,7 +331,7 @@ class LudoController extends ChangeNotifier {
               .length,
       ],
       standings: standings,
-      details: '$details  •  Another match?',
+      details: details,
     );
   }
 

@@ -174,10 +174,8 @@ class MemoryMatchController extends ChangeNotifier {
     final elapsedMilliseconds = elapsed.inMilliseconds;
     final details = model.playerCount == 1
         ? 'Completed in ${model.moveCount} moves • '
-              '${_formatElapsed(elapsedMilliseconds)} • Play again?'
-        : '${session.options.playerLabel(0)} ${model.scores[0]}  •  '
-              '${session.options.playerLabel(1)} ${model.scores[1]}  •  '
-              'Play again?';
+              '${_formatElapsed(elapsedMilliseconds)}'
+        : null;
     if (model.playerCount == 1) {
       session.reportCompletion(
         scores: model.scores,

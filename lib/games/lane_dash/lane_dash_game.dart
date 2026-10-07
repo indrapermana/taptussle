@@ -68,8 +68,8 @@ class LaneDashGame extends Game {
         winner: null,
         scores: progress,
         details: result == LaneDashResult.draw
-            ? 'Both runners reached ${LaneDashModel.finishDistance.round()} m together. • Another round?'
-            : 'The race ended level at ${model.distance[0].round()} m. • Another round?',
+            ? 'Both runners reached ${LaneDashModel.finishDistance.round()} m together.'
+            : 'The race ended level at ${model.distance[0].round()} m.',
       );
     } else if (result == LaneDashResult.playerOne ||
         result == LaneDashResult.playerTwo) {
@@ -82,7 +82,7 @@ class LaneDashGame extends Game {
             '${session.options.playerLabel(winner)} reached '
             '${model.distance[winner].round()} m first; '
             '${session.options.playerLabel(loser)} reached '
-            '${model.distance[loser].round()} m. • Another round?',
+            '${model.distance[loser].round()} m.',
       );
     } else if (progress[0] != _reportedProgress[0] ||
         progress[1] != _reportedProgress[1]) {

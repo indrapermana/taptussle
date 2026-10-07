@@ -106,7 +106,7 @@ void main() {
     expect(session.winner, 0);
     expect(session.scores, [6, 0]);
     expect(session.recordMetrics, isNull);
-    expect(session.resultDetails, contains('Player 1 6'));
+    expect(session.resultDetails, isNull);
   });
 
   test('bot match completion preserves shared scores and result labels', () {
@@ -128,8 +128,7 @@ void main() {
     expect(session.outcome, MatchOutcome.winner);
     expect(session.winner, 0);
     expect(session.scores, [6, 0]);
-    expect(session.resultDetails, contains('You 6'));
-    expect(session.resultDetails, contains('Bot 0'));
+    expect(session.resultDetails, isNull);
   });
 
   testWidgets('solo and friend modes choose difficulty and build that grid', (
