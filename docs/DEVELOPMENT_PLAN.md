@@ -1240,8 +1240,32 @@ and 4 participants at 320x568 with 150% text, a four-player tablet layout,
 screen-reader labels, keyboard editing, solo setup, mixed human/bot setup, and
 representative multiplayer launches. All 32 focused setup and flow tests pass;
 `flutter analyze` and `git diff --check` are clean.
-- [ ] GS5 Run static analysis and the complete regression suite, then complete
+- [x] GS5 Run static analysis and the complete regression suite, then complete
   physical iPhone and Android review before freezing setup UX for M23.
+
+GS5 automated validation is complete on 2026-10-07: `flutter analyze` reports
+no issues and all 596 Flutter tests pass, including the complete Water Sort,
+Nuts & Bolts, and Sudoku catalog checks. The current debug build also signed,
+installed, and launched successfully on the connected iPhone named Indra
+(iOS 26.6.2). The user subsequently confirmed physical-device verification:
+
+- [x] On iPhone, verify the Game Setup and Difficulty screens, then configure
+  and start 2-, 3-, and 4-participant matches with human and bot seats.
+- [x] On Android, repeat the same setup paths on a compact phone.
+- [x] On both platforms, edit a player name, change color and token, choose each
+  bot difficulty, scroll to Start Match, and confirm Back returns safely.
+- [x] On both platforms, enable enlarged system text and confirm labels remain
+  readable, controls remain tappable, and no content clips or overflows.
+
+## Pre-M23 mini-game review
+
+- [x] Paddle Duel: integrate the supplied red/blue paddle, ball, trail, hit, and
+  scoring artwork; raise paddle lanes away from fingers and system edges; show a
+  two-second accessible scorer announcement; and extend the post-score serve
+  delay to 2.5 seconds. Static analysis and all 31 focused Paddle Duel, setup,
+  lifecycle, and rematch tests pass.
+- [ ] Paddle Duel: confirm the revised paddle visibility, artwork, hit effects,
+  and scorer announcement on physical iPhone and Android devices.
 
 ## M23 — Eighteen-game release validation and store preparation
 

@@ -8,6 +8,7 @@ import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/mini_game.dart';
 import 'package:tap_tussle/features/match/match_screen.dart';
 import 'package:tap_tussle/games/paddle_duel/paddle_duel_presentation.dart';
+import 'package:tap_tussle/games/paddle_duel/paddle_duel_model.dart';
 
 void main() {
   testWidgets(
@@ -77,7 +78,29 @@ void main() {
       await tester.tap(find.text('Resume match'));
       await tester.pump();
       // Score through the simulation to exercise the Flame -> shell bridge.
-      for (var i = 0; i < 5; i++) {
+      game.model
+        ..serveRemaining = 0
+        ..ballX = 20
+        ..ballY = -6
+        ..velocityY = -400;
+      game.update(.02);
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('paddle-score-announcement')),
+        findsOneWidget,
+      );
+      expect(find.text('PLAYER 1'), findsOneWidget);
+      expect(find.text('SCORES!'), findsOneWidget);
+      expect(
+        game.model.serveRemaining,
+        closeTo(PaddleDuelModel.scoredServeDelay, .03),
+      );
+      await tester.pump(const Duration(seconds: 2));
+      expect(
+        find.byKey(const ValueKey('paddle-score-announcement')),
+        findsNothing,
+      );
+      for (var i = 0; i < 4; i++) {
         game.model
           ..serveRemaining = 0
           ..ballX = 20

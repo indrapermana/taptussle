@@ -68,6 +68,7 @@ flutter:
     - assets/branding/splash_screen.png
     - assets/fonts/fredoka/OFL.txt
     - assets/game_logos/catalog/
+    - assets/games/paddle_duel/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

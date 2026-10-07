@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flame/game.dart';
 import 'package:flutter/painting.dart';
@@ -20,10 +21,14 @@ class PaddleDuelGame extends Game {
 
   final PaddleDuelBot? bot;
   bool _stopped = false;
+  PaddleDuelArtwork? artwork;
+  double _hitEffectRemaining = 0;
+  Offset _hitEffectCenter = Offset.zero;
 
   void resetMatch() {
     model.reset();
     bot?.reset();
+    _hitEffectRemaining = 0;
   }
 
   void stopMatch() {
@@ -48,6 +53,7 @@ class PaddleDuelGame extends Game {
       return;
     }
     var remaining = math.min(dt, .1);
+    _hitEffectRemaining = math.max(0, _hitEffectRemaining - remaining);
     while (remaining > .000001) {
       final step = math.min(remaining, 1 / 120);
       final oldScores = List<int>.of(model.scores);
@@ -56,6 +62,8 @@ class PaddleDuelGame extends Game {
       model.update(step);
       remaining -= step;
       if (oldPaddleHits != model.paddleHitCount) {
+        _hitEffectRemaining = .14;
+        _hitEffectCenter = Offset(model.ballX, model.ballY);
         SoundEffects.play(SoundEffect.impactSoft);
         HapticEffects.paddleHit();
       }
@@ -134,30 +142,72 @@ class PaddleDuelGame extends Game {
       coral,
     );
     canvas.restore();
+    final sprites = artwork;
     for (var player = 0; player < 2; player++) {
-      final rect = Rect.fromCenter(
-        center: Offset(
-          model.paddles[player],
-          player == 0 ? PaddleDuelModel.bottomY : PaddleDuelModel.topY,
-        ),
-        width: PaddleDuelModel.paddleWidth,
-        height: PaddleDuelModel.paddleHeight,
+      final center = Offset(
+        model.paddles[player],
+        player == 0 ? PaddleDuelModel.bottomY : PaddleDuelModel.topY,
       );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(6)),
-        Paint()..color = player == 0 ? mint : coral,
-      );
+      final paddle = player == 0 ? sprites?.bluePaddle : sprites?.redPaddle;
+      if (paddle == null) {
+        final rect = Rect.fromCenter(
+          center: center,
+          width: PaddleDuelModel.paddleWidth,
+          height: PaddleDuelModel.paddleHeight,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+          Paint()..color = player == 0 ? mint : coral,
+        );
+      } else {
+        _drawRotatedSprite(
+          canvas,
+          paddle,
+          center: center,
+          width: 104,
+          height: 34,
+        );
+      }
     }
-    canvas.drawCircle(
-      Offset(model.ballX, model.ballY),
-      PaddleDuelModel.radius + 5,
-      Paint()..color = const Color(0x18FFFFFF),
-    );
-    canvas.drawCircle(
-      Offset(model.ballX, model.ballY),
-      PaddleDuelModel.radius,
-      Paint()..color = const Color(0xFFFFFFFF),
-    );
+    final ballCenter = Offset(model.ballX, model.ballY);
+    if (sprites == null) {
+      canvas.drawCircle(
+        ballCenter,
+        PaddleDuelModel.radius + 5,
+        Paint()..color = const Color(0x18FFFFFF),
+      );
+      canvas.drawCircle(
+        ballCenter,
+        PaddleDuelModel.radius,
+        Paint()..color = const Color(0xFFFFFFFF),
+      );
+    } else {
+      if (model.serveRemaining <= 0) {
+        final angle = math.atan2(model.velocityY, model.velocityX);
+        _drawRotatedSprite(
+          canvas,
+          sprites.ballTrail,
+          center: ballCenter - Offset.fromDirection(angle, 13),
+          width: 43,
+          height: 20,
+          angle: angle + math.pi / 4,
+          opacity: .38,
+        );
+      }
+      _drawSprite(
+        canvas,
+        sprites.ball,
+        Rect.fromCenter(center: ballCenter, width: 31, height: 31),
+      );
+      if (_hitEffectRemaining > 0) {
+        _drawSprite(
+          canvas,
+          sprites.hitBurst,
+          Rect.fromCenter(center: _hitEffectCenter, width: 54, height: 54),
+          opacity: (_hitEffectRemaining / .14).clamp(0, 1),
+        );
+      }
+    }
     if (model.serveRemaining > 0 && session.phase == MatchPhase.playing) {
       _label(
         canvas,
@@ -166,6 +216,43 @@ class PaddleDuelGame extends Game {
         const Color(0xCCFFFFFF),
       );
     }
+    canvas.restore();
+  }
+
+  void _drawSprite(
+    Canvas canvas,
+    ui.Image image,
+    Rect destination, {
+    double opacity = 1,
+  }) {
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      destination,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..color = Color.fromRGBO(255, 255, 255, opacity),
+    );
+  }
+
+  void _drawRotatedSprite(
+    Canvas canvas,
+    ui.Image image, {
+    required Offset center,
+    required double width,
+    required double height,
+    double angle = math.pi / 2,
+    double opacity = 1,
+  }) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+    _drawSprite(
+      canvas,
+      image,
+      Rect.fromCenter(center: Offset.zero, width: height, height: width),
+      opacity: opacity,
+    );
     canvas.restore();
   }
 
@@ -187,5 +274,29 @@ class PaddleDuelGame extends Game {
       center - Offset(painter.width / 2, painter.height / 2),
     );
     painter.dispose();
+  }
+}
+
+class PaddleDuelArtwork {
+  const PaddleDuelArtwork({
+    required this.redPaddle,
+    required this.bluePaddle,
+    required this.ball,
+    required this.hitBurst,
+    required this.ballTrail,
+  });
+
+  final ui.Image redPaddle;
+  final ui.Image bluePaddle;
+  final ui.Image ball;
+  final ui.Image hitBurst;
+  final ui.Image ballTrail;
+
+  void dispose() {
+    redPaddle.dispose();
+    bluePaddle.dispose();
+    ball.dispose();
+    hitBurst.dispose();
+    ballTrail.dispose();
   }
 }

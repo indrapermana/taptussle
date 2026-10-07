@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/app_settings.dart';
 import '../../core/match_session.dart';
@@ -53,6 +54,8 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
   Duration? _firstPublishedFrame;
   int _publishedFrames = 0;
   int _captureGeneration = 0;
+  int _artworkRevision = 0;
+  PaddleDuelArtwork? _artwork;
 
   @override
   void initState() {
@@ -62,6 +65,60 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
     // debug build, Flutter's normal binding starts the presentation ticker.
     if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
       _ticker.start();
+    }
+    _loadArtwork();
+  }
+
+  Future<void> _loadArtwork() async {
+    try {
+      final images = await Future.wait([
+        _decodeAsset('assets/games/paddle_duel/paddle_red.png', 256),
+        _decodeAsset('assets/games/paddle_duel/paddle_blue.png', 256),
+        _decodeAsset('assets/games/paddle_duel/ball.png', 192),
+        _decodeAsset('assets/games/paddle_duel/hit_burst.png', 192),
+        _decodeAsset('assets/games/paddle_duel/ball_trail.png', 256),
+      ]);
+      final artwork = PaddleDuelArtwork(
+        redPaddle: images[0],
+        bluePaddle: images[1],
+        ball: images[2],
+        hitBurst: images[3],
+        ballTrail: images[4],
+      );
+      if (!mounted) {
+        artwork.dispose();
+        return;
+      }
+      _artwork = artwork;
+      widget.game.artwork = artwork;
+      _captureGeneration++;
+      _previousRender = null;
+      setState(() => _artworkRevision++);
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'Paddle Duel artwork',
+        ),
+      );
+    }
+  }
+
+  Future<ui.Image> _decodeAsset(String path, int targetWidth) async {
+    final data = await rootBundle.load(path);
+    final bytes = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
+    final codec = await ui.instantiateImageCodec(
+      bytes,
+      targetWidth: targetWidth,
+    );
+    try {
+      return (await codec.getNextFrame()).image;
+    } finally {
+      codec.dispose();
     }
   }
 
@@ -145,6 +202,8 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
   void dispose() {
     _ticker.dispose();
     _frame?.dispose();
+    widget.game.artwork = null;
+    _artwork?.dispose();
     super.dispose();
   }
 
@@ -161,7 +220,11 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
         _previousRender = null;
       }
       return CustomPaint(
-        painter: _PaddleDuelFramePainter(image: _frame, game: widget.game),
+        painter: _PaddleDuelFramePainter(
+          image: _frame,
+          game: widget.game,
+          artworkRevision: _artworkRevision,
+        ),
         child: const SizedBox.expand(),
       );
     },
@@ -169,9 +232,14 @@ class _PaddleDuelPresentationState extends State<PaddleDuelPresentation>
 }
 
 class _PaddleDuelFramePainter extends CustomPainter {
-  const _PaddleDuelFramePainter({required this.image, required this.game});
+  const _PaddleDuelFramePainter({
+    required this.image,
+    required this.game,
+    required this.artworkRevision,
+  });
   final ui.Image? image;
   final PaddleDuelGame game;
+  final int artworkRevision;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -191,5 +259,7 @@ class _PaddleDuelFramePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PaddleDuelFramePainter oldDelegate) =>
-      oldDelegate.image != image || oldDelegate.game != game;
+      oldDelegate.image != image ||
+      oldDelegate.game != game ||
+      oldDelegate.artworkRevision != artworkRevision;
 }

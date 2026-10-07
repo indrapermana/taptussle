@@ -9,9 +9,11 @@ class PaddleDuelModel {
   static const height = 600.0;
   static const paddleWidth = 84.0;
   static const paddleHeight = 12.0;
-  static const topY = 42.0;
+  static const topY = 72.0;
   static const bottomY = height - topY;
   static const radius = 7.0;
+  static const initialServeDelay = 1.5;
+  static const scoredServeDelay = 2.5;
   final int winningScore;
   final paddles = [width / 2, width / 2];
   final scores = [0, 0];
@@ -37,12 +39,12 @@ class PaddleDuelModel {
     paddles[player] = x.clamp(paddleWidth / 2, width - paddleWidth / 2);
   }
 
-  void _serve() {
+  void _serve({double delay = initialServeDelay}) {
     ballX = width / 2;
     ballY = height / 2;
     velocityX = 115 * ((scores[0] + scores[1]).isEven ? 1 : -1);
     velocityY = 245.0 * _serveDirection;
-    serveRemaining = 1.5;
+    serveRemaining = delay;
   }
 
   void update(double dt) {
@@ -121,6 +123,6 @@ class PaddleDuelModel {
     }
     // Serve toward the player who conceded the point.
     _serveDirection = player == 0 ? -1 : 1;
-    _serve();
+    _serve(delay: scoredServeDelay);
   }
 }

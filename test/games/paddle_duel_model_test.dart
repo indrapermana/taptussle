@@ -36,7 +36,7 @@ void main() {
     model
       ..serveRemaining = 0
       ..ballX = 180
-      ..ballY = 540
+      ..ballY = 510
       ..velocityX = 0
       ..velocityY = 500;
     model.update(.1);
@@ -44,7 +44,7 @@ void main() {
     expect(model.scores, [0, 0]);
     expect(model.paddleHitCount, 1);
     model
-      ..ballY = 60
+      ..ballY = 100
       ..velocityY = -500;
     model.update(.1);
     expect(model.velocityY, greaterThan(0));
@@ -56,7 +56,7 @@ void main() {
     model
       ..serveRemaining = 0
       ..ballX = 210
-      ..ballY = 540
+      ..ballY = 510
       ..velocityX = 0
       ..velocityY = 300;
     model.update(.04);
@@ -73,7 +73,7 @@ void main() {
       ..velocityY = 400;
     model.update(.1);
     expect(model.scores, [0, 1]);
-    expect(model.serveRemaining, 1.5);
+    expect(model.serveRemaining, PaddleDuelModel.scoredServeDelay);
     expect(model.ballY, 300);
     model.update(.1);
     expect(model.scores, [0, 1]);
@@ -99,6 +99,11 @@ void main() {
     expect(model.winner, isNull);
     expect(model.paddles, [180, 180]);
     expect(model.serveRemaining, 1.5);
+  });
+
+  test('paddle lanes leave room above fingers and system edges', () {
+    expect(PaddleDuelModel.topY, 72);
+    expect(PaddleDuelModel.bottomY, 528);
   });
 
   test('long stalls are bounded and invalid deltas ignored', () {
