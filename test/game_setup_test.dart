@@ -52,8 +52,8 @@ void main() {
         await tester.tap(paddleDuelCard);
         await tester.pumpAndSettle();
         expect(find.text('How to play'), findsOneWidget);
-        expect(find.text('Play vs Friend'), findsOneWidget);
-        await tester.tap(find.text('Play vs Bot'));
+        expect(find.text('Play Together'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
         await tester.pumpAndSettle();
         expect(find.text('Bot difficulty'), findsOneWidget);
         await setDifficulty(tester, difficulty);
@@ -156,7 +156,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('game-card-Beta')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Add to favourites'));
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -171,7 +171,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('game-card-Beta')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Remove favourite'));
+    await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -307,8 +307,8 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Remove favourite'), findsOneWidget);
-    await tester.tap(find.text('Play vs Bot'));
+    expect(find.byTooltip('Remove from favourites'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
     await tester.pumpAndSettle();
     expect(tester.widget<Slider>(find.byType(Slider)).value, 2);
     expect(find.text('Play Hard'), findsOneWidget);

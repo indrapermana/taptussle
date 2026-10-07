@@ -25,6 +25,7 @@ class GameSetupScreen extends StatefulWidget {
 
 class _GameSetupScreenState extends State<GameSetupScreen> {
   bool saving = false;
+  bool instructionsExpanded = false;
 
   Future<void> _save(Future<void> Function() action) async {
     setState(() => saving = true);
@@ -107,7 +108,33 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
         (count) => count.value > 2,
       );
       return Scaffold(
-        appBar: AppBar(title: Text(widget.game.title)),
+        appBar: AppBar(
+          title: Text(widget.game.title),
+          actions: [
+            IconButton(
+              key: const ValueKey('favourite-toggle'),
+              tooltip: favourite
+                  ? 'Remove from favourites'
+                  : 'Add to favourites',
+              onPressed: saving
+                  ? null
+                  : () {
+                      SoundEffects.play(SoundEffect.uiTap);
+                      _save(
+                        () => widget.settings.setFavourite(
+                          widget.game.id,
+                          !favourite,
+                        ),
+                      );
+                    },
+              icon: Icon(
+                favourite ? Icons.star_rounded : Icons.star_border_rounded,
+                color: favourite ? TapTussleColors.gold : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
         body: TapTussleBackdrop(
           child: SafeArea(
             child: Center(
@@ -129,6 +156,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                           const SizedBox(height: 13),
                           Text(
                             widget.game.instructions,
+                            maxLines: instructionsExpanded ? null : 4,
+                            overflow: instructionsExpanded
+                                ? TextOverflow.visible
+                                : TextOverflow.ellipsis,
                             style: const TextStyle(
                               height: 1.55,
                               color: TapTussleColors.mutedText,
@@ -144,67 +175,33 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                    ),
-                    if (widget.game.recordDefinition != null &&
-                        widget.game.supportsPlayerCount(PlayerCount.one)) ...[
-                      const SizedBox(height: 16),
-                      GameRecordBestsPanel(
-                        game: widget.game,
-                        settings: widget.settings,
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    OutlinedButton(
-                      key: const ValueKey('favourite-toggle'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: favourite
-                            ? TapTussleColors.gold
-                            : TapTussleColors.text,
-                        side: BorderSide(
-                          color: favourite
-                              ? TapTussleColors.gold
-                              : TapTussleColors.panelBorder,
-                        ),
-                        backgroundColor: TapTussleColors.panel,
-                      ),
-                      onPressed: saving
-                          ? null
-                          : () {
-                              SoundEffects.play(SoundEffect.uiTap);
-                              _save(
-                                () => widget.settings.setFavourite(
-                                  widget.game.id,
-                                  !favourite,
-                                ),
-                              );
-                            },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            favourite
-                                ? Icons.star_rounded
-                                : Icons.star_border_rounded,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              favourite
-                                  ? 'Remove favourite'
-                                  : 'Add to favourites',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          if (widget.game.instructions.length > 180) ...[
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              key: const ValueKey('toggle-instructions'),
+                              onPressed: () => setState(
+                                () => instructionsExpanded =
+                                    !instructionsExpanded,
+                              ),
+                              icon: Icon(
+                                instructionsExpanded
+                                    ? Icons.expand_less_rounded
+                                    : Icons.expand_more_rounded,
+                              ),
+                              label: Text(
+                                instructionsExpanded
+                                    ? 'Show less'
+                                    : 'Show more',
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 22),
                     const _SectionHeading(
                       icon: Icons.sports_esports_rounded,
-                      title: 'Choose participants',
+                      title: 'How do you want to play?',
                       color: TapTussleColors.gold,
                     ),
                     const SizedBox(height: 12),
@@ -213,7 +210,6 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                         key: const ValueKey('play-solo'),
                         icon: Icons.person_rounded,
                         title: 'Play Solo',
-                        subtitle: 'Start a one-player game',
                         accent: TapTussleColors.electricBlue,
                         onPressed: saving
                             ? null
@@ -229,8 +225,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       _ModeButton(
                         key: const ValueKey('configure-participants'),
                         icon: Icons.groups_rounded,
-                        title: 'Set Up Players',
-                        subtitle: 'Choose player count and configure each seat',
+                        title: 'Set Up 2–4 Players',
                         accent: TapTussleColors.gold,
                         onPressed: saving
                             ? null
@@ -251,8 +246,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       _ModeButton(
                         key: const ValueKey('play-vs-friend'),
                         icon: Icons.people_alt_rounded,
-                        title: 'Play vs Friend',
-                        subtitle: 'Two rivals sharing one phone',
+                        title: 'Play Together',
                         accent: TapTussleColors.rivalRed,
                         onPressed: saving
                             ? null
@@ -268,8 +262,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                       _ModeButton(
                         key: const ValueKey('play-vs-bot'),
                         icon: Icons.smart_toy_rounded,
-                        title: 'Play vs Bot',
-                        subtitle: 'Challenge a local AI rival',
+                        title: 'Play with Bot',
                         accent: TapTussleColors.electricBlue,
                         onPressed: saving
                             ? null
@@ -284,6 +277,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                                   ),
                                 );
                               },
+                      ),
+                    ],
+                    if (widget.game.recordDefinition != null &&
+                        widget.game.supportsPlayerCount(PlayerCount.one)) ...[
+                      const SizedBox(height: 22),
+                      GameRecordBestsPanel(
+                        game: widget.game,
+                        settings: widget.settings,
                       ),
                     ],
                   ],
@@ -572,14 +573,12 @@ class _ModeButton extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.accent,
     required this.onPressed,
   });
 
   final IconData icon;
   final String title;
-  final String subtitle;
   final Color accent;
   final VoidCallback? onPressed;
 
@@ -619,14 +618,6 @@ class _ModeButton extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 19,
                       letterSpacing: .2,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: TapTussleColors.mutedText,
-                      fontSize: 13,
                     ),
                   ),
                 ],

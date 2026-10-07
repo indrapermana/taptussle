@@ -40,7 +40,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('How to play'), findsOneWidget);
       expect(find.text('FIRST TO 5'), findsOneWidget);
-      await tester.tap(find.text('Play vs Friend'));
+      await tester.tap(find.byKey(const ValueKey('play-vs-friend')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
       final game = tester

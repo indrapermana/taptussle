@@ -103,7 +103,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('favourite-toggle')));
     await tester.pumpAndSettle();
     expect(settings.isFavourite('rock-paper-scissors'), isTrue);
-    expect(find.text('Remove favourite'), findsOneWidget);
+    expect(find.byTooltip('Remove from favourites'), findsOneWidget);
 
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();

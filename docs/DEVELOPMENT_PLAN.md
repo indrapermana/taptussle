@@ -1180,6 +1180,38 @@ response guard. All 56 focused Chess tests and all 592 host tests pass with redu
 concurrency; `flutter analyze` is clean. The user confirmed successful
 physical-device verification on 2026-10-07, completing M22.
 
+## Pre-M23 Game Setup UX review
+
+Complete this focused child-friendly setup refresh before starting M23. Preserve
+all game rules, supported modes, saved preferences, records, favourites, and
+match navigation while reducing reading and form-like interaction.
+
+- [x] GS1 Simplify the main Game Setup AppBar and content order. Move favourite
+  control to the AppBar, keep compact expandable How to Play content first, place
+  large icon-led play choices immediately after it, and move solo records below
+  the primary choices.
+
+GS1 moves the favourite control into the AppBar, retains How to Play as the first
+content with a four-line expandable preview for long instructions, and changes
+the primary prompt to “How do you want to play?”. Icon-led actions now use the
+short labels Play Solo, Play Together, Play with Bot, and Set Up 2–4 Players,
+without secondary explanatory copy. Solo record panels appear after these primary
+actions. Existing keys, supported-mode routing, saved preferences, favourites,
+and match navigation remain intact. Focused setup, participant, favourite,
+navigation, and compact-layout tests pass; `flutter analyze` and
+`git diff --check` are clean.
+- [ ] GS2 Simplify bot, challenge, and puzzle difficulty presentation while
+  retaining the confirmed three-position slider, game-specific descriptions,
+  saved difficulty, and a single prominent Play action.
+- [ ] GS3 Redesign two-to-four-player setup with large player-count controls,
+  compact participant cards, visual human/bot choices, optional name editing,
+  visual color/token selection, and visual bot-difficulty choices.
+- [ ] GS4 Update accessibility and responsive coverage for compact phones,
+  tablets, enlarged text, screen readers, keyboard/text editing, and every
+  supported solo, friend, bot, and mixed-participant path.
+- [ ] GS5 Run static analysis and the complete regression suite, then complete
+  physical iPhone and Android review before freezing setup UX for M23.
+
 ## M23 — Eighteen-game release validation and store preparation
 
 - [ ] M23.1 Run analysis and the complete automated suite. Release requires the

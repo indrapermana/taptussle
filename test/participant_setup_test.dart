@@ -49,11 +49,11 @@ void main() {
     );
 
     await tester.pumpWidget(_app(game, settings));
-    expect(find.text('Set Up Players'), findsOneWidget);
-    expect(find.text('Play vs Friend'), findsNothing);
-    expect(find.text('Play vs Bot'), findsNothing);
+    expect(find.text('Set Up 2–4 Players'), findsOneWidget);
+    expect(find.text('Play Together'), findsNothing);
+    expect(find.text('Play with Bot'), findsNothing);
 
-    await tester.tap(find.text('Set Up Players'));
+    await tester.tap(find.byKey(const ValueKey('configure-participants')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('participant-count-2')), findsOneWidget);
     expect(find.byKey(const ValueKey('participant-count-3')), findsOneWidget);
@@ -140,9 +140,9 @@ void main() {
 
     await tester.pumpWidget(_app(game, settings));
     expect(find.text('Play Solo'), findsOneWidget);
-    expect(find.text('Set Up Players'), findsNothing);
-    expect(find.text('Play vs Friend'), findsNothing);
-    expect(find.text('Play vs Bot'), findsNothing);
+    expect(find.text('Set Up 2–4 Players'), findsNothing);
+    expect(find.text('Play Together'), findsNothing);
+    expect(find.text('Play with Bot'), findsNothing);
 
     await tester.tap(find.text('Play Solo'));
     await tester.pumpAndSettle();
