@@ -118,7 +118,7 @@ void main() {
     expect(find.text('Difficulty'), findsNothing);
 
     final start = find.byKey(const ValueKey('start-configured-match'));
-    await tester.ensureVisible(start);
+    await tester.scrollUntilVisible(start, 500);
     await tester.tap(start);
     await tester.pumpAndSettle();
 

@@ -69,31 +69,54 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final secondName = find.byKey(const ValueKey('participant-name-1'));
-    await tester.ensureVisible(secondName);
-    await tester.enterText(secondName, 'Rival Bot');
-    final difficulty = find.byKey(
-      const ValueKey('participant-difficulty-1-normal'),
+    final editSecondName = find.byKey(
+      const ValueKey('participant-edit-name-1'),
     );
-    await tester.ensureVisible(difficulty);
-    await tester.tap(difficulty);
+    await tester.ensureVisible(editSecondName);
+    await tester.tap(editSecondName);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Hard').last);
+    await tester.enterText(
+      find.byKey(const ValueKey('participant-name-1')),
+      'Rival Bot',
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    final hardDifficulty = find.byKey(
+      const ValueKey('participant-difficulty-1-hard'),
+    );
+    await tester.ensureVisible(hardDifficulty);
+    await tester.tap(hardDifficulty);
     await tester.pumpAndSettle();
 
-    final firstColor = tester.widget<DropdownButton<ParticipantColor>>(
-      find.descendant(
-        of: find.byKey(const ValueKey('participant-color-0-mint')),
-        matching: find.byType(DropdownButton<ParticipantColor>),
-      ),
+    expect(
+      find.byKey(const ValueKey('participant-color-option-0-mint')),
+      findsOneWidget,
     );
-    expect(firstColor.items!.map((item) => item.value), [
-      ParticipantColor.mint,
-      ParticipantColor.violet,
-    ]);
+    expect(
+      find.byKey(const ValueKey('participant-color-option-0-violet')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('participant-color-option-0-coral')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('participant-color-option-0-gold')),
+      findsNothing,
+    );
+    final violet = find.byKey(
+      const ValueKey('participant-color-option-0-violet'),
+    );
+    await tester.fling(find.byType(ListView), const Offset(0, 2000), 5000);
+    await tester.pumpAndSettle();
+    await tester.tap(violet);
+    await tester.pumpAndSettle();
+    final star = find.byKey(const ValueKey('participant-token-option-0-star'));
+    await tester.tap(star);
+    await tester.pumpAndSettle();
 
     final start = find.byKey(const ValueKey('start-configured-match'));
-    await tester.ensureVisible(start);
+    await tester.scrollUntilVisible(start, 500);
     await tester.tap(start);
     await tester.pumpAndSettle();
 
@@ -108,6 +131,8 @@ void main() {
     );
     expect(startedOptions!.participants[1].kind, ParticipantKind.bot);
     expect(startedOptions!.participants[1].botDifficulty, BotDifficulty.hard);
+    expect(startedOptions!.participants.first.color, ParticipantColor.violet);
+    expect(startedOptions!.participants.first.token, ParticipantToken.star);
     expect(
       startedOptions!.participants
           .map((participant) => participant.color)

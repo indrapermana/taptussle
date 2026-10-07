@@ -119,7 +119,7 @@ void main() {
     );
 
     final start = find.byKey(const ValueKey('start-configured-match'));
-    await tester.ensureVisible(start);
+    await tester.scrollUntilVisible(start, 500);
     await tester.pumpAndSettle();
     await tester.tap(start);
     await _pumpUntilFound(tester, find.byType(LudoBoard));

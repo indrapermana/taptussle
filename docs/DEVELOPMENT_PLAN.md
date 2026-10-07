@@ -1213,9 +1213,19 @@ game defines them. A single `PLAY` action saves and launches the selected solo,
 friend, or bot mode exactly as before. Focused coverage verifies all difficulty
 game flows, saved Hard restoration, compact enlarged-text layout, slider input,
 and direct label input; `flutter analyze` and `git diff --check` are clean.
-- [ ] GS3 Redesign two-to-four-player setup with large player-count controls,
+- [x] GS3 Redesign two-to-four-player setup with large player-count controls,
   compact participant cards, visual human/bot choices, optional name editing,
   visual color/token selection, and visual bot-difficulty choices.
+
+GS3 replaces the small player-count chips with large icon-led count controls and
+turns each participant into a scannable visual card. Human/bot selection remains
+explicit, names use an optional edit dialog, colors and tokens are direct visual
+choices, and bot difficulty uses three visible Easy/Normal/Hard buttons. Existing
+seat order, unique color/token enforcement, saved setup values, game support,
+and match routing remain intact. Focused participant coverage verifies name,
+kind, color, token, and difficulty selection, while Ludo, Snakes & Ladders, and
+Cangkulan flow tests verify two-to-four-player launch behavior; `flutter analyze`
+and `git diff --check` are clean.
 - [ ] GS4 Update accessibility and responsive coverage for compact phones,
   tablets, enlarged text, screen readers, keyboard/text editing, and every
   supported solo, friend, bot, and mixed-participant path.
