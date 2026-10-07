@@ -1,9 +1,9 @@
 # Mini-game logos
 
-- Provided by the Tap Tussle project owner on 2026-09-26.
+- Text-free artwork provided by the Tap Tussle project owner on 2026-10-07.
 - Intended for the Tap Tussle mini-game catalog.
-- `catalog/` contains 280 px 1× delivery assets. Its `2.0x/` directory preserves
-  the supplied 561 px originals as Flutter resolution-aware variants. The
+- `catalog/` contains 512 px 1× delivery assets. Its `2.0x/` directory preserves
+  the supplied 1024 px originals as Flutter resolution-aware variants. The
   catalog directory is bundled in the application.
 
 | Game | Asset |
