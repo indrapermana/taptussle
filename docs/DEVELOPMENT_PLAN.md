@@ -1226,9 +1226,20 @@ and match routing remain intact. Focused participant coverage verifies name,
 kind, color, token, and difficulty selection, while Ludo, Snakes & Ladders, and
 Cangkulan flow tests verify two-to-four-player launch behavior; `flutter analyze`
 and `git diff --check` are clean.
-- [ ] GS4 Update accessibility and responsive coverage for compact phones,
+- [x] GS4 Update accessibility and responsive coverage for compact phones,
   tablets, enlarged text, screen readers, keyboard/text editing, and every
   supported solo, friend, bot, and mixed-participant path.
+
+GS4 gives compact setup screens narrower responsive gutters and participant
+panel padding while retaining the centered 680-pixel tablet width. Fixed player
+labels and Human/Bot controls now adapt to enlarged text without overflow, and
+difficulty labels retain text scaling. Player counts, participant groups, fixed
+player types, colors, tokens, bot difficulties, and name-edit actions expose
+clear semantics; keyboard Done submits edited names. Coverage exercises 2, 3,
+and 4 participants at 320x568 with 150% text, a four-player tablet layout,
+screen-reader labels, keyboard editing, solo setup, mixed human/bot setup, and
+representative multiplayer launches. All 32 focused setup and flow tests pass;
+`flutter analyze` and `git diff --check` are clean.
 - [ ] GS5 Run static analysis and the complete regression suite, then complete
   physical iPhone and Android review before freezing setup UX for M23.
 

@@ -170,78 +170,93 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
     appBar: AppBar(title: const Text('Set up players')),
     body: TapTussleBackdrop(
       child: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 680),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-              children: [
-                ArcadePanel(
-                  accent: TapTussleColors.gold,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _SetupHeading(
-                        icon: Icons.groups_rounded,
-                        title: 'How many players?',
-                        color: TapTussleColors.gold,
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 400;
+            final horizontalPadding = compact ? 12.0 : 20.0;
+            final panelPadding = compact ? 16.0 : 20.0;
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    16,
+                    horizontalPadding,
+                    28,
+                  ),
+                  children: [
+                    ArcadePanel(
+                      accent: TapTussleColors.gold,
+                      padding: EdgeInsets.all(panelPadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          for (final count in _allowedCounts)
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
+                          const _SetupHeading(
+                            icon: Icons.groups_rounded,
+                            title: 'How many players?',
+                            color: TapTussleColors.gold,
+                          ),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              for (final count in _allowedCounts)
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    child: _PlayerCountButton(
+                                      count: count,
+                                      selected: _playerCount == count,
+                                      onPressed: _saving
+                                          ? null
+                                          : () => _selectCount(count),
+                                    ),
+                                  ),
                                 ),
-                                child: _PlayerCountButton(
-                                  count: count,
-                                  selected: _playerCount == count,
-                                  onPressed: _saving
-                                      ? null
-                                      : () => _selectCount(count),
-                                ),
-                              ),
-                            ),
+                            ],
+                          ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    for (final entry in _participants.indexed) ...[
+                      _ParticipantCard(
+                        index: entry.$1,
+                        draft: entry.$2,
+                        canChooseKind:
+                            entry.$1 > 0 && _supportsFriend && _supportsBot,
+                        fixedBot:
+                            entry.$1 > 0 && !_supportsFriend && _supportsBot,
+                        showBotDifficulty:
+                            widget.game.difficultyType == DifficultyType.bot,
+                        availableColors: _availableColors(entry.$1).toList(),
+                        availableTokens: _availableTokens(entry.$1).toList(),
+                        enabled: !_saving,
+                        padding: EdgeInsets.all(panelPadding),
+                        onKindChanged: (kind) => _changeKind(entry.$1, kind),
+                        onChanged: () => setState(() {}),
+                      ),
+                      const SizedBox(height: 12),
                     ],
-                  ),
+                    const SizedBox(height: 8),
+                    FilledButton.icon(
+                      key: const ValueKey('start-configured-match'),
+                      onPressed: _canPlay && !_saving
+                          ? () {
+                              SoundEffects.play(SoundEffect.uiConfirm);
+                              _play();
+                            }
+                          : null,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: const Text('Start match'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                for (final entry in _participants.indexed) ...[
-                  _ParticipantCard(
-                    index: entry.$1,
-                    draft: entry.$2,
-                    canChooseKind:
-                        entry.$1 > 0 && _supportsFriend && _supportsBot,
-                    fixedBot: entry.$1 > 0 && !_supportsFriend && _supportsBot,
-                    showBotDifficulty:
-                        widget.game.difficultyType == DifficultyType.bot,
-                    availableColors: _availableColors(entry.$1).toList(),
-                    availableTokens: _availableTokens(entry.$1).toList(),
-                    enabled: !_saving,
-                    onKindChanged: (kind) => _changeKind(entry.$1, kind),
-                    onChanged: () => setState(() {}),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                const SizedBox(height: 8),
-                FilledButton.icon(
-                  key: const ValueKey('start-configured-match'),
-                  onPressed: _canPlay && !_saving
-                      ? () {
-                          SoundEffects.play(SoundEffect.uiConfirm);
-                          _play();
-                        }
-                      : null,
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Start match'),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     ),
@@ -308,6 +323,7 @@ class _ParticipantCard extends StatelessWidget {
     required this.availableColors,
     required this.availableTokens,
     required this.enabled,
+    required this.padding,
     required this.onKindChanged,
     required this.onChanged,
   });
@@ -320,6 +336,7 @@ class _ParticipantCard extends StatelessWidget {
   final List<ParticipantColor> availableColors;
   final List<ParticipantToken> availableTokens;
   final bool enabled;
+  final EdgeInsetsGeometry padding;
   final ValueChanged<ParticipantKind> onKindChanged;
   final VoidCallback onChanged;
 
@@ -364,147 +381,160 @@ class _ParticipantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = _participantColor(draft.color);
-    return ArcadePanel(
-      accent: accent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SetupHeading(
-            icon: draft.kind == ParticipantKind.bot
-                ? Icons.smart_toy_rounded
-                : Icons.person_rounded,
-            title: index == 0 ? 'You' : 'Player ${index + 1}',
-            color: accent,
-          ),
-          const SizedBox(height: 12),
-          if (canChooseKind)
-            SegmentedButton<ParticipantKind>(
-              key: ValueKey('participant-kind-$index'),
-              segments: const [
-                ButtonSegment(
-                  value: ParticipantKind.human,
-                  icon: Icon(Icons.person_rounded),
-                  label: Text('Human'),
-                ),
-                ButtonSegment(
-                  value: ParticipantKind.bot,
-                  icon: Icon(Icons.smart_toy_rounded),
-                  label: Text('Bot'),
-                ),
-              ],
-              selected: {draft.kind},
-              onSelectionChanged: enabled
-                  ? (selection) => onKindChanged(selection.single)
-                  : null,
-            )
-          else
-            _LockedKindLabel(
-              isBot: fixedBot || draft.kind == ParticipantKind.bot,
+    final participantLabel = index == 0 ? 'You' : 'Player ${index + 1}';
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      label: '$participantLabel setup',
+      child: ArcadePanel(
+        accent: accent,
+        padding: padding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SetupHeading(
+              icon: draft.kind == ParticipantKind.bot
+                  ? Icons.smart_toy_rounded
+                  : Icons.person_rounded,
+              title: participantLabel,
+              color: accent,
             ),
-          const SizedBox(height: 10),
-          Material(
-            color: TapTussleColors.midnight.withValues(alpha: .45),
-            borderRadius: BorderRadius.circular(14),
-            child: ListTile(
-              dense: true,
-              leading: Icon(
-                draft.kind == ParticipantKind.bot
-                    ? Icons.smart_toy_rounded
-                    : Icons.face_rounded,
-                color: accent,
+            const SizedBox(height: 12),
+            if (canChooseKind)
+              SegmentedButton<ParticipantKind>(
+                key: ValueKey('participant-kind-$index'),
+                expandedInsets: EdgeInsets.zero,
+                segments: const [
+                  ButtonSegment(
+                    value: ParticipantKind.human,
+                    icon: Icon(Icons.person_rounded),
+                    label: Text('Human'),
+                  ),
+                  ButtonSegment(
+                    value: ParticipantKind.bot,
+                    icon: Icon(Icons.smart_toy_rounded),
+                    label: Text('Bot'),
+                  ),
+                ],
+                selected: {draft.kind},
+                onSelectionChanged: enabled
+                    ? (selection) => onKindChanged(selection.single)
+                    : null,
+              )
+            else
+              _LockedKindLabel(
+                isBot: fixedBot || draft.kind == ParticipantKind.bot,
               ),
-              title: Text(
-                draft.name.text,
-                key: ValueKey('participant-name-label-$index'),
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              trailing: IconButton(
-                key: ValueKey('participant-edit-name-$index'),
-                tooltip: 'Edit ${draft.name.text}',
-                onPressed: enabled ? () => _editName(context) : null,
-                icon: const Icon(Icons.edit_rounded),
+            const SizedBox(height: 10),
+            Material(
+              color: TapTussleColors.midnight.withValues(alpha: .45),
+              borderRadius: BorderRadius.circular(14),
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  draft.kind == ParticipantKind.bot
+                      ? Icons.smart_toy_rounded
+                      : Icons.face_rounded,
+                  color: accent,
+                ),
+                title: Text(
+                  draft.name.text,
+                  key: ValueKey('participant-name-label-$index'),
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                trailing: Semantics(
+                  button: true,
+                  excludeSemantics: true,
+                  label: 'Edit name for ${draft.name.text}',
+                  child: IconButton(
+                    key: ValueKey('participant-edit-name-$index'),
+                    tooltip: 'Edit name for ${draft.name.text}',
+                    onPressed: enabled ? () => _editName(context) : null,
+                    icon: const Icon(Icons.edit_rounded),
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 14),
-          const Text('COLOR', style: _choiceLabelStyle),
-          const SizedBox(height: 7),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: availableColors
-                .map(
-                  (color) => _ColorChoice(
-                    key: ValueKey(
-                      'participant-color-option-$index-${color.name}',
-                    ),
-                    color: color,
-                    selected: draft.color == color,
-                    onPressed: enabled
-                        ? () {
-                            draft.color = color;
-                            onChanged();
-                          }
-                        : null,
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 14),
-          const Text('TOKEN', style: _choiceLabelStyle),
-          const SizedBox(height: 7),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: availableTokens
-                .map(
-                  (token) => _TokenChoice(
-                    key: ValueKey(
-                      'participant-token-option-$index-${token.name}',
-                    ),
-                    token: token,
-                    selected: draft.token == token,
-                    color: accent,
-                    onPressed: enabled
-                        ? () {
-                            draft.token = token;
-                            onChanged();
-                          }
-                        : null,
-                  ),
-                )
-                .toList(),
-          ),
-          if (draft.kind == ParticipantKind.bot && showBotDifficulty) ...[
             const SizedBox(height: 14),
-            const Text('BOT DIFFICULTY', style: _choiceLabelStyle),
+            const Text('COLOR', style: _choiceLabelStyle),
             const SizedBox(height: 7),
-            Row(
-              children: BotDifficulty.values
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: availableColors
                   .map(
-                    (difficulty) => Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        child: _BotDifficultyChoice(
-                          key: ValueKey(
-                            'participant-difficulty-$index-${difficulty.name}',
-                          ),
-                          difficulty: difficulty,
-                          selected: draft.difficulty == difficulty,
-                          onPressed: enabled
-                              ? () {
-                                  draft.difficulty = difficulty;
-                                  onChanged();
-                                }
-                              : null,
-                        ),
+                    (color) => _ColorChoice(
+                      key: ValueKey(
+                        'participant-color-option-$index-${color.name}',
                       ),
+                      color: color,
+                      selected: draft.color == color,
+                      onPressed: enabled
+                          ? () {
+                              draft.color = color;
+                              onChanged();
+                            }
+                          : null,
                     ),
                   )
                   .toList(),
             ),
+            const SizedBox(height: 14),
+            const Text('TOKEN', style: _choiceLabelStyle),
+            const SizedBox(height: 7),
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: availableTokens
+                  .map(
+                    (token) => _TokenChoice(
+                      key: ValueKey(
+                        'participant-token-option-$index-${token.name}',
+                      ),
+                      token: token,
+                      selected: draft.token == token,
+                      color: accent,
+                      onPressed: enabled
+                          ? () {
+                              draft.token = token;
+                              onChanged();
+                            }
+                          : null,
+                    ),
+                  )
+                  .toList(),
+            ),
+            if (draft.kind == ParticipantKind.bot && showBotDifficulty) ...[
+              const SizedBox(height: 14),
+              const Text('BOT DIFFICULTY', style: _choiceLabelStyle),
+              const SizedBox(height: 7),
+              Row(
+                children: BotDifficulty.values
+                    .map(
+                      (difficulty) => Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: _BotDifficultyChoice(
+                            key: ValueKey(
+                              'participant-difficulty-$index-${difficulty.name}',
+                            ),
+                            difficulty: difficulty,
+                            selected: draft.difficulty == difficulty,
+                            onPressed: enabled
+                                ? () {
+                                    draft.difficulty = difficulty;
+                                    onChanged();
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -530,6 +560,7 @@ class _PlayerCountButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
+    excludeSemantics: true,
     button: true,
     selected: selected,
     label: '${count.value} players',
@@ -586,6 +617,7 @@ class _ColorChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
+    excludeSemantics: true,
     button: true,
     selected: selected,
     label: '${_colorLabel(color)} color',
@@ -637,6 +669,7 @@ class _TokenChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
+    excludeSemantics: true,
     button: true,
     selected: selected,
     label: '${_tokenLabel(token)} token',
@@ -685,6 +718,7 @@ class _BotDifficultyChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
+    excludeSemantics: true,
     button: true,
     selected: selected,
     label: '${difficulty.label} bot',
@@ -705,16 +739,14 @@ class _BotDifficultyChoice extends StatelessWidget {
               width: selected ? 2 : 1,
             ),
           ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              difficulty.label.toUpperCase(),
-              style: TextStyle(
-                color: selected ? color : TapTussleColors.mutedText,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: .5,
-              ),
+          child: Text(
+            difficulty.label.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: selected ? color : TapTussleColors.mutedText,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: .5,
             ),
           ),
         ),
@@ -729,22 +761,28 @@ class _LockedKindLabel extends StatelessWidget {
   final bool isBot;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Icon(
-        isBot ? Icons.smart_toy_rounded : Icons.person_rounded,
-        color: TapTussleColors.mutedText,
-      ),
-      const SizedBox(width: 8),
-      Text(
-        isBot ? 'BOT' : 'LOCAL HUMAN',
-        style: const TextStyle(
+  Widget build(BuildContext context) => Semantics(
+    label: isBot ? 'Bot player' : 'Local human player',
+    excludeSemantics: true,
+    child: Row(
+      children: [
+        Icon(
+          isBot ? Icons.smart_toy_rounded : Icons.person_rounded,
           color: TapTussleColors.mutedText,
-          fontWeight: FontWeight.w800,
-          letterSpacing: .8,
         ),
-      ),
-    ],
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            isBot ? 'BOT' : 'LOCAL HUMAN',
+            style: const TextStyle(
+              color: TapTussleColors.mutedText,
+              fontWeight: FontWeight.w800,
+              letterSpacing: .8,
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -760,22 +798,25 @@ class _SetupHeading extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Icon(icon, color: color),
-      const SizedBox(width: 9),
-      Expanded(
-        child: Text(
-          title.toUpperCase(),
-          style: TextStyle(
-            fontFamily: 'Lilita One',
-            color: color,
-            fontSize: 20,
-            letterSpacing: .7,
+  Widget build(BuildContext context) => Semantics(
+    header: true,
+    child: Row(
+      children: [
+        ExcludeSemantics(child: Icon(icon, color: color)),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontFamily: 'Lilita One',
+              color: color,
+              fontSize: 20,
+              letterSpacing: .7,
+            ),
           ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 
