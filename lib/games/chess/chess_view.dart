@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/match_options.dart';
+import '../../core/match_session.dart';
 import 'chess_controller.dart';
 import 'chess_model.dart';
 
@@ -8,11 +10,15 @@ enum ChessOrientation { white, black }
 class ChessView extends StatefulWidget {
   const ChessView({
     this.initialModel,
+    this.session,
+    this.options,
     this.playerLabels = const ['Player 1', 'Player 2'],
     super.key,
   }) : assert(playerLabels.length == 2);
 
   final ChessModel? initialModel;
+  final MatchSession? session;
+  final MatchOptions? options;
   final List<String> playerLabels;
 
   @override
@@ -26,7 +32,10 @@ class _ChessViewState extends State<ChessView> {
   @override
   void initState() {
     super.initState();
-    controller = ChessController(model: widget.initialModel);
+    controller = ChessController(
+      model: widget.initialModel,
+      session: widget.session,
+    );
   }
 
   @override
@@ -36,24 +45,31 @@ class _ChessViewState extends State<ChessView> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: controller,
-    builder: (context, _) => ChessBoard(
-      model: controller.model,
-      selectedSquare: controller.selectedSquare,
-      pendingPromotionMoves: controller.pendingPromotionMoves,
-      orientation: orientation,
-      playerLabels: widget.playerLabels,
-      onSquareTap: controller.tapSquare,
-      onPromotionSelected: controller.choosePromotion,
-      onPromotionCancelled: controller.cancelPromotion,
-      onFlipBoard: () => setState(() {
-        orientation = orientation == ChessOrientation.white
-            ? ChessOrientation.black
-            : ChessOrientation.white;
-      }),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final labels = widget.options == null
+        ? widget.playerLabels
+        : [widget.options!.playerLabel(0), widget.options!.playerLabel(1)];
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => ChessBoard(
+        model: controller.model,
+        selectedSquare: controller.selectedSquare,
+        pendingPromotionMoves: controller.pendingPromotionMoves,
+        orientation: orientation,
+        playerLabels: labels,
+        enabled: controller.acceptsInput,
+        statusOverride: controller.isBotThinking ? 'BOT IS THINKING…' : null,
+        onSquareTap: controller.tapSquare,
+        onPromotionSelected: controller.choosePromotion,
+        onPromotionCancelled: controller.cancelPromotion,
+        onFlipBoard: () => setState(() {
+          orientation = orientation == ChessOrientation.white
+              ? ChessOrientation.black
+              : ChessOrientation.white;
+        }),
+      ),
+    );
+  }
 }
 
 /// Responsive, accessible presentation for a standard Chess position.

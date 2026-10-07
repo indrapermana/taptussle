@@ -49,7 +49,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
 | M21 | Cangkulan | M20 | Done | M21.1-M21.5 complete; 44 focused/all 536 host tests pass and the user confirmed physical-device functionality |
-| M22 | Chess | M21 | In progress | M22.1-M22.3 complete; 39 focused and all 575 host tests pass |
+| M22 | Chess | M21 | In progress | M22.1-M22.4 complete; 50 focused and all 586 host tests pass |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
@@ -1147,8 +1147,24 @@ SAN history, draw reasons, and checkmate results. Every square and promotion act
 has an explicit accessibility label and enabled state. Widget coverage verifies
 touch interaction plus compact phone and tablet layouts. All 39 focused Chess tests
 and all 575 host tests pass; `flutter analyze` is clean.
-- [ ] M22.4 Add friend mode and delayed Easy, Normal, and Hard bots using bounded
+- [x] M22.4 Add friend mode and delayed Easy, Normal, and Hard bots using bounded
   local search. Enforce time/node limits so Hard remains responsive on older phones.
+
+M22.4 connects the interaction controller to optional friend and bot match
+sessions. Friend moves alternate through the same verified legal-move API and
+publish checkmate or draw outcomes to the shared session. Bot turns show a visible
+human-like thinking delay, lock human input, and cancel safely on pause or disposal.
+Easy selects a random legal move; Normal uses two-ply bounded alpha-beta search
+with occasional mistakes, a 700-node ceiling, and a 400 ms time budget; Hard uses
+three-ply bounded alpha-beta search with no intentional mistakes, a 3,500-node
+ceiling, and a 900 ms time budget. Search
+orders captures, promotions, and central moves and evaluates material, activity,
+pawn progress, and check pressure. Tests prove all difficulties return legal moves
+without mutation, respect node limits, take free material, find immediate mate,
+resume safely, and reset for rematches. All 49 focused Chess tests and all 585 host
+tests, including wall-clock fallback coverage, and all 586 host tests pass with
+reduced-concurrency regression validation; `flutter analyze` is
+clean.
 - [ ] M22.5 Integrate pause/resume, rematch, effects, favourites, filters,
   lifecycle, performance profiling, and device passes. Do not include chess clocks
   in the first version.

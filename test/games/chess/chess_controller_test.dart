@@ -1,4 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tap_tussle/core/match_options.dart';
+import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/chess/chess_controller.dart';
 import 'package:tap_tussle/games/chess/chess_model.dart';
 
@@ -77,7 +81,108 @@ void main() {
       expect(controller.model.isCheckmate, isTrue);
       expect(controller.tapSquare(_sq('h8')), ChessTapResult.ignored);
     });
+
+    test(
+      'friend session accepts alternating turns and publishes checkmate',
+      () {
+        final session = MatchSession(options: MatchOptions.friend())..start();
+        final controller = ChessController(session: session);
+        addTearDown(controller.dispose);
+        addTearDown(session.dispose);
+
+        _tapMove(controller, 'f2', 'f3');
+        _tapMove(controller, 'e7', 'e5');
+        _tapMove(controller, 'g2', 'g4');
+        _tapMove(controller, 'd8', 'h4');
+
+        expect(session.phase, MatchPhase.finished);
+        expect(session.outcome, MatchOutcome.winner);
+        expect(session.winner, 1);
+        expect(session.scores, [0, 1]);
+        expect(session.resultDetails, contains('Player 2 wins by checkmate'));
+      },
+    );
+
+    testWidgets('bot waits visibly, blocks input, and makes one legal move', (
+      tester,
+    ) async {
+      final session = MatchSession(
+        options: MatchOptions.bot(difficulty: BotDifficulty.easy),
+      )..start();
+      final controller = ChessController(
+        session: session,
+        random: Random(4),
+        botThinkDelay: const Duration(milliseconds: 20),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+
+      _tapMove(controller, 'e2', 'e4');
+      expect(controller.isBotThinking, isTrue);
+      expect(controller.acceptsInput, isFalse);
+      expect(controller.tapSquare(_sq('e7')), ChessTapResult.ignored);
+
+      await tester.pump(const Duration(milliseconds: 19));
+      expect(controller.model.sideToMove, ChessColor.black);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(controller.model.sideToMove, ChessColor.white);
+      expect(controller.model.history, hasLength(2));
+    });
+
+    testWidgets('pause cancels bot work and resume starts a fresh delay', (
+      tester,
+    ) async {
+      final session = MatchSession(
+        options: MatchOptions.bot(difficulty: BotDifficulty.normal),
+      )..start();
+      final controller = ChessController(
+        session: session,
+        random: Random(5),
+        botThinkDelay: const Duration(milliseconds: 20),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+      _tapMove(controller, 'e2', 'e4');
+
+      session.pause();
+      expect(controller.isBotThinking, isFalse);
+      await tester.pump(const Duration(seconds: 1));
+      expect(controller.model.history, hasLength(1));
+
+      session.resume();
+      expect(controller.isBotThinking, isTrue);
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(controller.model.history, hasLength(2));
+    });
+
+    testWidgets('rematch resets the board and disposal cancels bot work', (
+      tester,
+    ) async {
+      final session = MatchSession(
+        options: MatchOptions.bot(difficulty: BotDifficulty.easy),
+      )..start();
+      final controller = ChessController(
+        session: session,
+        botThinkDelay: const Duration(milliseconds: 20),
+      );
+      _tapMove(controller, 'e2', 'e4');
+      expect(controller.isBotThinking, isTrue);
+
+      session.reportDraw(0, 0);
+      session.start();
+      expect(controller.model.history, isEmpty);
+      expect(controller.model.sideToMove, ChessColor.white);
+      controller.dispose();
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.takeException(), isNull);
+      session.dispose();
+    });
   });
+}
+
+void _tapMove(ChessController controller, String from, String to) {
+  expect(controller.tapSquare(_sq(from)), ChessTapResult.selected);
+  expect(controller.tapSquare(_sq(to)), ChessTapResult.moved);
 }
 
 int _sq(String value) => ChessModel.parseSquare(value);

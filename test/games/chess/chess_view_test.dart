@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tap_tussle/core/match_options.dart';
+import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/chess/chess_model.dart';
 import 'package:tap_tussle/games/chess/chess_view.dart';
 
@@ -133,6 +135,40 @@ void main() {
       expect(tester.takeException(), isNull, reason: 'Failed at $size');
     }
     await tester.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('bot thinking is visible and locks board interaction', (
+    tester,
+  ) async {
+    final options = MatchOptions.bot(difficulty: BotDifficulty.easy);
+    final session = MatchSession(options: options)..start();
+    final blackToMove = ChessModel()
+        .play(ChessMove(from: _sq('e2'), to: _sq('e4')))
+        .model;
+    addTearDown(session.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: Scaffold(
+          body: ChessView(
+            session: session,
+            options: options,
+            initialModel: blackToMove,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('BOT IS THINKING…'), findsOneWidget);
+    expect(
+      tester
+          .widget<Semantics>(find.bySemanticsLabel('e7, black pawn'))
+          .properties
+          .enabled,
+      isFalse,
+    );
+    await tester.pumpWidget(const SizedBox());
   });
 }
 
