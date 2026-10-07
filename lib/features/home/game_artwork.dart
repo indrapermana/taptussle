@@ -27,24 +27,13 @@ class GameArtwork extends StatelessWidget {
     ),
     child: assetPath == null
         ? _ArtworkFallback(gameId: gameId, icon: icon, accent: accent)
-        : Align(
-            alignment: Alignment.topCenter,
-            child: FractionallySizedBox(
-              widthFactor: 1,
-              heightFactor: .82,
-              child: Image.asset(
-                assetPath!,
-                key: ValueKey('game-artwork-$gameId'),
-                fit: BoxFit.contain,
-                alignment: Alignment.topCenter,
-                filterQuality: FilterQuality.medium,
-                errorBuilder: (_, _, _) => _ArtworkFallback(
-                  gameId: gameId,
-                  icon: icon,
-                  accent: accent,
-                ),
-              ),
-            ),
+        : Image.asset(
+            assetPath!,
+            key: ValueKey('game-artwork-$gameId'),
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, _, _) =>
+                _ArtworkFallback(gameId: gameId, icon: icon, accent: accent),
           ),
   );
 }

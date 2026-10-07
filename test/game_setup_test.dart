@@ -213,7 +213,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('game-card-Solo')), findsNothing);
     expect(find.byKey(const ValueKey('game-card-Two')), findsOneWidget);
-    expect(find.text('2–4P'), findsOneWidget);
+    expect(find.text('3–4 PLAYERS'), findsOneWidget);
     final flexible = tester.getRect(
       find.byKey(const ValueKey('game-card-Flexible')),
     );
@@ -224,7 +224,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('game-card-Solo')), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-Flexible')), findsNothing);
-    expect(find.text('1P'), findsOneWidget);
+    expect(find.text('1 PLAYER'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const ValueKey('player-filter-upToFourPlayers')),
@@ -269,7 +269,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('game-card-solitaire')), findsOneWidget);
-    expect(find.text('6 GAMES'), findsOneWidget);
     expect(find.byKey(const ValueKey('game-card-paddle-duel')), findsNothing);
   });
 

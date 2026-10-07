@@ -21,7 +21,7 @@ void main() {
       final settings = AppSettings(await SharedPreferences.getInstance());
       addTearDown(settings.dispose);
       await tester.pumpWidget(TapTussleApp(settings: settings));
-      expect(find.text('CHOOSE YOUR BATTLE'), findsOneWidget);
+      expect(find.text('2 PLAYERS'), findsOneWidget);
       expect(find.byIcon(Icons.settings_rounded), findsOneWidget);
       expect(find.text('Paddle Duel'), findsOneWidget);
       await tester.tap(find.byTooltip('Settings'));

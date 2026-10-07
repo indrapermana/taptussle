@@ -49,6 +49,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('Settings'), findsOneWidget);
+    expect(find.text('1 PLAYER'), findsOneWidget);
+    expect(find.text('2 PLAYERS'), findsOneWidget);
+    expect(find.text('3–4 PLAYERS'), findsOneWidget);
+    expect(find.text('TAP TUSSLE'), findsNothing);
+    expect(find.text('CHOOSE YOUR BATTLE'), findsNothing);
+    expect(find.text('BOT'), findsNothing);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('game-card-paddle-duel')),
       300,
