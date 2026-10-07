@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../app/tap_tussle_theme.dart';
 import '../../core/app_settings.dart';
-import '../../core/match_options.dart';
 import '../../core/mini_game.dart';
 import '../../core/sound_service.dart';
 import '../game_setup/game_setup_screen.dart';

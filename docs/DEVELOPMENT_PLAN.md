@@ -2099,6 +2099,17 @@ signature. Settings now also contains local Terms of Use and Privacy Policy
 pages describing the current offline/no-data-collection app.
 `flutter analyze`, 32 unit/widget tests, and an unsigned iOS build passed.
 
+2026-10-07 — Simplified the pre-M23 home screen for young players. Removed the
+placeholder TT branding, repeated app name, promotional rival banner, catalog
+heading, game count, and per-card player/bot badges. The home screen now opens
+directly with large icon-and-label filters for 1 Player, 2 Players, and 3–4
+Players plus the settings cog, followed immediately by a two-column square
+artwork grid. Existing persisted filtering, favourites-first ordering, settings,
+and game navigation remain unchanged. The 18 supplied text-free tiles now fill
+their cards while titles and favourite stars remain readable. Compact enlarged-
+text coverage, focused navigation tests, `flutter analyze`, and all 592 host
+tests pass; physical review remains part of the game-by-game pre-M23 pass.
+
 ## Technical references
 
 - [Flame game lifecycle](https://docs.flame-engine.org/latest/flame/game.html):
