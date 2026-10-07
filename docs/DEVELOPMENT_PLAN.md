@@ -49,7 +49,7 @@ after its acceptance checklist passes. Record a blocker and next action if block
 | M19 | Nuts and Bolts | M18 | Done | M19.1-M19.5 complete; 33 focused tests and all 445 host tests pass; user confirmed physical-device functionality |
 | M20 | Solitaire | M19 | Done | M20.1-M20.5 complete; 45 focused and all 491 host tests pass, and the user confirmed physical-device verification |
 | M21 | Cangkulan | M20 | Done | M21.1-M21.5 complete; 44 focused/all 536 host tests pass and the user confirmed physical-device functionality |
-| M22 | Chess | M21 | In progress | M22.1-M22.2 complete; 29 focused and all 565 host tests pass |
+| M22 | Chess | M21 | In progress | M22.1-M22.3 complete; 39 focused and all 575 host tests pass |
 | M23 | Eighteen-game release validation and store preparation | M10–M22 | Not started | Full device matrix, signing, release builds, store assets, version decision, and release evidence for the first public version |
 
 Milestone completion records functional implementation and the device evidence
@@ -1135,8 +1135,18 @@ passant, permanent castling-right loss, rook captures, promotion captures, SAN
 disambiguation, checkmate draw-rule precedence, bishop-only material, repetition
 identity, restoration parity, immutable collections, and prior-state integrity.
 All 29 focused Chess tests and all 565 host tests pass; `flutter analyze` is clean.
-- [ ] M22.3 Build an accessible Flutter board with orientation, selection, legal
+- [x] M22.3 Build an accessible Flutter board with orientation, selection, legal
   targets, last move, check, captured pieces, promotion choice, history, and result.
+
+M22.3 adds a responsive pure Flutter board and interaction controller. Players
+can select pieces, inspect legal moves and captures, make moves, explicitly choose
+promotion pieces, cancel promotion, and flip the board orientation without changing
+the position. The presentation highlights selection, legal targets, the last move
+and a checked king; it also shows player/color ownership, captured pieces, recent
+SAN history, draw reasons, and checkmate results. Every square and promotion action
+has an explicit accessibility label and enabled state. Widget coverage verifies
+touch interaction plus compact phone and tablet layouts. All 39 focused Chess tests
+and all 575 host tests pass; `flutter analyze` is clean.
 - [ ] M22.4 Add friend mode and delayed Easy, Normal, and Hard bots using bounded
   local search. Enforce time/node limits so Hard remains responsive on older phones.
 - [ ] M22.5 Integrate pause/resume, rematch, effects, favourites, filters,
