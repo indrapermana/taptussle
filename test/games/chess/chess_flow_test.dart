@@ -88,7 +88,7 @@ void main() {
     );
     await tester.tapAt(Offset(slider.right - 4, slider.center.dy));
     await tester.pumpAndSettle();
-    expect(find.text('Play Hard'), findsOneWidget);
+    expect(find.text('PLAY'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('start-bot-match')));
     await tester.pumpAndSettle();
 

@@ -38,8 +38,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('play-solo')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Game difficulty'), findsOneWidget);
-    expect(find.text('Choose your board'), findsOneWidget);
+    expect(find.byKey(const ValueKey('bot-difficulty-slider')), findsOneWidget);
     expect(
       find.text('Adds locked candidates and pair techniques.'),
       findsOneWidget,

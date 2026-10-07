@@ -109,7 +109,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
     await tester.pumpAndSettle();
-    expect(find.text('Bot difficulty'), findsOneWidget);
+    expect(find.byKey(const ValueKey('bot-difficulty-slider')), findsOneWidget);
 
     await tester.ensureVisible(find.byKey(const ValueKey('start-bot-match')));
     await tester.tap(find.byKey(const ValueKey('start-bot-match')));

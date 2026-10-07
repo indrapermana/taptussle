@@ -326,7 +326,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
 
   String get description {
     final customDescription = widget.game.difficultyDescription;
-    if (widget.mode != PlayMode.bot && customDescription != null) {
+    if (customDescription != null) {
       return customDescription(difficulty);
     }
     return widget.mode == PlayMode.bot
@@ -391,11 +391,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        widget.mode == PlayMode.bot ? 'Bot difficulty' : 'Game difficulty',
-      ),
-    ),
+    appBar: AppBar(title: Text(widget.game.title)),
     body: TapTussleBackdrop(
       child: SafeArea(
         child: Center(
@@ -404,16 +400,6 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
               children: [
-                _SectionHeading(
-                  icon: widget.mode == PlayMode.bot
-                      ? Icons.smart_toy_rounded
-                      : Icons.grid_view_rounded,
-                  title: widget.mode == PlayMode.bot
-                      ? 'How tough should the bot be?'
-                      : 'Choose your board',
-                  color: TapTussleColors.gold,
-                ),
-                const SizedBox(height: 18),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
@@ -496,42 +482,33 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
                                   ),
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'EASY',
-                                    style: _difficultyTickStyle,
+                        Row(
+                          children: BotDifficulty.values
+                              .map(
+                                (option) => Expanded(
+                                  child: _DifficultyChoice(
+                                    difficulty: option,
+                                    selected: difficulty == option,
+                                    color: switch (option) {
+                                      BotDifficulty.easy =>
+                                        TapTussleColors.electricBlue,
+                                      BotDifficulty.normal =>
+                                        TapTussleColors.gold,
+                                      BotDifficulty.hard =>
+                                        TapTussleColors.rivalRed,
+                                    },
+                                    onPressed: saving
+                                        ? null
+                                        : () {
+                                            SoundEffects.play(
+                                              SoundEffect.uiTap,
+                                            );
+                                            setState(() => difficulty = option);
+                                          },
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    'NORMAL',
-                                    style: _difficultyTickStyle,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    'HARD',
-                                    style: _difficultyTickStyle,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                              )
+                              .toList(),
                         ),
                       ],
                     ),
@@ -550,7 +527,7 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
                           _play();
                         },
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text('Play ${difficulty.label}'),
+                  label: const Text('PLAY'),
                 ),
               ],
             ),
@@ -559,12 +536,44 @@ class _BotDifficultyScreenState extends State<BotDifficultyScreen> {
       ),
     ),
   );
+}
 
-  static const _difficultyTickStyle = TextStyle(
-    color: TapTussleColors.mutedText,
-    fontSize: 10,
-    fontWeight: FontWeight.w800,
-    letterSpacing: .8,
+class _DifficultyChoice extends StatelessWidget {
+  const _DifficultyChoice({
+    required this.difficulty,
+    required this.selected,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final BotDifficulty difficulty;
+  final bool selected;
+  final Color color;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: selected,
+    label: '${difficulty.label} difficulty',
+    child: InkWell(
+      key: ValueKey('difficulty-choice-${difficulty.name}'),
+      borderRadius: BorderRadius.circular(12),
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+        child: Text(
+          difficulty.label.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: selected ? color : TapTussleColors.mutedText,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: .7,
+          ),
+        ),
+      ),
+    ),
   );
 }
 

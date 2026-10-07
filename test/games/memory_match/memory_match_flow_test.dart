@@ -150,9 +150,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('play-solo')));
     await tester.pumpAndSettle();
-    expect(find.text('Game difficulty'), findsOneWidget);
-    expect(find.text('Choose your board'), findsOneWidget);
-    await tester.tap(find.text('Play Normal'));
+    expect(find.byKey(const ValueKey('bot-difficulty-slider')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('start-bot-match')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(MemoryMatchView), findsOneWidget);
@@ -167,7 +166,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('play-vs-friend')));
     await tester.pumpAndSettle();
-    expect(find.text('Game difficulty'), findsOneWidget);
+    expect(find.byKey(const ValueKey('bot-difficulty-slider')), findsOneWidget);
   });
 
   testWidgets('bot setup selects a difficulty and starts a locked bot match', (
@@ -189,7 +188,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Bot difficulty'), findsOneWidget);
+    expect(find.byKey(const ValueKey('bot-difficulty-slider')), findsOneWidget);
     await tester.ensureVisible(find.byKey(const ValueKey('start-bot-match')));
     await tester.tap(find.byKey(const ValueKey('start-bot-match')));
     await tester.pumpAndSettle();

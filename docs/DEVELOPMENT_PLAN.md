@@ -1200,9 +1200,19 @@ actions. Existing keys, supported-mode routing, saved preferences, favourites,
 and match navigation remain intact. Focused setup, participant, favourite,
 navigation, and compact-layout tests pass; `flutter analyze` and
 `git diff --check` are clean.
-- [ ] GS2 Simplify bot, challenge, and puzzle difficulty presentation while
+- [x] GS2 Simplify bot, challenge, and puzzle difficulty presentation while
   retaining the confirmed three-position slider, game-specific descriptions,
   saved difficulty, and a single prominent Play action.
+
+GS2 uses the game title in the AppBar and one focused difficulty panel without
+a second question heading. The confirmed Easy/Normal/Hard slider remains, and
+each label is now a large tappable target that moves the same three-position
+control. The selected icon, color, difficulty name, and concise description
+remain visible, with game-specific descriptions taking precedence whenever a
+game defines them. A single `PLAY` action saves and launches the selected solo,
+friend, or bot mode exactly as before. Focused coverage verifies all difficulty
+game flows, saved Hard restoration, compact enlarged-text layout, slider input,
+and direct label input; `flutter analyze` and `git diff --check` are clean.
 - [ ] GS3 Redesign two-to-four-player setup with large player-count controls,
   compact participant cards, visual human/bot choices, optional name editing,
   visual color/token selection, and visual bot-difficulty choices.

@@ -56,7 +56,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('play-solo')));
       await tester.pumpAndSettle();
-      expect(find.text('Game difficulty'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('bot-difficulty-slider')),
+        findsOneWidget,
+      );
       expect(
         find.text('Draw one card and improve your time and moves.'),
         findsOneWidget,

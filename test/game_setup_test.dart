@@ -55,10 +55,13 @@ void main() {
         expect(find.text('Play Together'), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
         await tester.pumpAndSettle();
-        expect(find.text('Bot difficulty'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('bot-difficulty-slider')),
+          findsOneWidget,
+        );
         await setDifficulty(tester, difficulty);
-        expect(find.text('Play ${difficulty.label}'), findsOneWidget);
-        await tester.tap(find.text('Play ${difficulty.label}'));
+        expect(find.text('PLAY'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('start-bot-match')));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
 
@@ -128,6 +131,29 @@ void main() {
       },
     );
   }
+
+  testWidgets('difficulty labels move the retained three-position slider', (
+    tester,
+  ) async {
+    final settings = await settingsFor(tester);
+    await tester.pumpWidget(TapTussleApp(settings: settings));
+    final paddleDuelCard = find.byKey(const ValueKey('game-card-paddle-duel'));
+    await tester.ensureVisible(paddleDuelCard);
+    await tester.tap(paddleDuelCard);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('difficulty-choice-hard')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Slider>(find.byType(Slider)).value, 2);
+    expect(find.text('HARD'), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('difficulty-choice-easy')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Slider>(find.byType(Slider)).value, 0);
+    expect(find.text('PLAY'), findsOneWidget);
+  });
 
   testWidgets('game grid is two columns and favourite order remains stable', (
     tester,
@@ -311,7 +337,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('play-vs-bot')));
     await tester.pumpAndSettle();
     expect(tester.widget<Slider>(find.byType(Slider)).value, 2);
-    expect(find.text('Play Hard'), findsOneWidget);
+    expect(find.text('PLAY'), findsOneWidget);
     expect(find.byType(PaddleDuelPresentation), findsNothing);
   });
 
@@ -358,7 +384,10 @@ void main() {
     await setDifficulty(tester, BotDifficulty.hard);
     await tester.drag(find.byType(ListView).last, const Offset(0, -300));
     await tester.pumpAndSettle();
-    expect(find.text('Play Hard').hitTestable(), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('start-bot-match')).hitTestable(),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 }

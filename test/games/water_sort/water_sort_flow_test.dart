@@ -47,7 +47,10 @@ void main() {
       await tester.ensureVisible(find.byKey(const ValueKey('play-solo')));
       await tester.tap(find.byKey(const ValueKey('play-solo')));
       await tester.pumpAndSettle();
-      expect(find.text('Game difficulty'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('bot-difficulty-slider')),
+        findsOneWidget,
+      );
       expect(find.text('5–8 colors with longer solutions.'), findsOneWidget);
       await _setDifficulty(tester, BotDifficulty.easy);
       expect(find.text('3–5 colors and two helper tubes.'), findsOneWidget);
