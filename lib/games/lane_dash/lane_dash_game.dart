@@ -52,9 +52,6 @@ class LaneDashGame extends Game {
     'car_green',
     'car_yellow',
     'car_purple',
-    'road_straight',
-    'road_edge_left',
-    'road_edge_right',
     'boost_trail_blue',
     'boost_trail_red',
     'drift_dust',
@@ -250,6 +247,7 @@ class LaneDashGame extends Game {
       ..strokeWidth = 3;
     for (final top in [true, false]) {
       final panelTop = top ? 0.0 : 300.0;
+      final mirrored = top && session.options.mode == PlayMode.friend;
       canvas.save();
       canvas.clipRect(Rect.fromLTWH(0, panelTop, 360, 300));
       final player = top ? 1 : 0;
@@ -260,18 +258,25 @@ class LaneDashGame extends Game {
           math.cos(_collisionEffect[player] * 73) * 1.5 * strength,
         );
       }
-      _drawRoad(canvas, player: player, top: top, panelTop: panelTop);
-      final runnerY = top ? 66.0 : 534.0;
+      _drawRoad(canvas, player: player, mirrored: mirrored, panelTop: panelTop);
+      final runnerY = mirrored ? 66.0 : (top ? 234.0 : 534.0);
       for (final obstacle in model.obstaclesFor(player)) {
         final gap = model.obstacleGap(player, obstacle);
         if (gap < -80 || gap > 650) continue;
-        final y = top ? runnerY + gap * 1.15 : runnerY - gap * 1.15;
+        final y = mirrored ? runnerY + gap * 1.15 : runnerY - gap * 1.15;
         for (final lane in obstacle.blockedLanes) {
+          if (gap > 0 && gap < 155) {
+            _drawObstacleWarning(
+              canvas,
+              center: Offset(60 + 120.0 * lane, y),
+              strength: (1 - gap / 155).clamp(0.0, 1.0),
+            );
+          }
           _drawObstacle(
             canvas,
             obstacle.kind,
             Offset(60 + 120.0 * lane, y),
-            top: top,
+            mirrored: mirrored,
           );
         }
       }
@@ -285,7 +290,7 @@ class LaneDashGame extends Game {
         canvas,
         player: player,
         center: Offset(runnerX, runnerY),
-        top: top,
+        mirrored: mirrored,
         color: color,
       );
       _drawSwipeFeedback(
@@ -298,43 +303,24 @@ class LaneDashGame extends Game {
         canvas,
         player: player,
         center: Offset(runnerX, runnerY),
-        top: top,
+        mirrored: mirrored,
       );
       final hudY = top ? 16.0 : 322.0;
       final participant = session.options.playerLabel(player).toUpperCase();
-      final distance =
-          '${model.distance[player].round()} / ${LaneDashModel.finishDistance.round()} m';
-      if (top) {
+      if (mirrored) {
         _drawLabel(
           canvas,
           participant,
-          const Offset(62, 17),
+          const Offset(72, 18),
           color,
-          12,
-          centered: true,
-          rotation: math.pi,
-        );
-        _drawLabel(
-          canvas,
-          distance,
-          const Offset(274, 17),
-          const Color(0xFFFFFFFF),
-          12,
+          14,
           centered: true,
           rotation: math.pi,
         );
       } else {
-        _drawLabel(canvas, participant, Offset(12, hudY), color, 12);
-        _drawLabel(
-          canvas,
-          distance,
-          Offset(348, hudY),
-          const Color(0xFFFFFFFF),
-          12,
-          right: true,
-        );
+        _drawLabel(canvas, participant, Offset(12, hudY), color, 14);
       }
-      final bar = Rect.fromLTWH(12, top ? 279 : 305, 336, 8);
+      final bar = Rect.fromLTWH(18, top ? 278 : 304, 314, 12);
       canvas.drawRRect(
         RRect.fromRectAndRadius(bar, const Radius.circular(5)),
         Paint()..color = const Color(0x66101B28),
@@ -363,29 +349,44 @@ class LaneDashGame extends Game {
       );
       canvas.drawCircle(
         Offset(bar.left + bar.width * progressRatio, bar.center.dy),
-        5,
+        7,
         Paint()..color = const Color(0xFFFFFFFF),
       );
+      _drawFinishFlag(
+        canvas,
+        Offset(342, bar.center.dy),
+        rotation: mirrored ? math.pi : 0,
+      );
       if (model.slowdown[player] > 0) {
-        _drawSlowdownBadge(canvas, player: player, top: top);
-      }
-      if (top) {
-        _drawLabel(
+        _drawSlowdownBadge(
           canvas,
-          'HITS ${model.collisionCount[player]}',
-          const Offset(304, 284),
-          const Color(0xB3FFFFFF),
-          10,
-          centered: true,
-          rotation: math.pi,
+          player: player,
+          top: top,
+          mirrored: mirrored,
         );
-      } else {
-        _drawLabel(
+      }
+      _drawHitIndicator(
+        canvas,
+        count: model.collisionCount[player],
+        center: Offset(322, top ? 18 : 322),
+        rotation: mirrored ? math.pi : 0,
+      );
+      if (_collisionEffect[player] > 0) {
+        final pulse = (_collisionEffect[player] / .48).clamp(0.0, 1.0);
+        canvas.drawRect(
+          Rect.fromLTWH(2, panelTop + 2, 356, 296),
+          Paint()
+            ..color = const Color(0xFFFF3B30).withValues(alpha: pulse * .75)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 5,
+        );
+      }
+      if (model.countdown > 0 &&
+          (player == 0 || session.options.mode == PlayMode.friend)) {
+        _drawControlHint(
           canvas,
-          'HITS ${model.collisionCount[player]}',
-          const Offset(12, 322),
-          const Color(0xB3FFFFFF),
-          10,
+          center: Offset(runnerX, runnerY),
+          mirrored: mirrored,
         );
       }
       canvas.restore();
@@ -419,6 +420,7 @@ class LaneDashGame extends Game {
         ? const Color(0xFFFFD166)
         : const Color(0xFFEEF7FF);
     for (final top in [true, false]) {
+      final mirrored = top && session.options.mode == PlayMode.friend;
       final center = Offset(180, top ? 247 : 353);
       final plate = RRect.fromRectAndRadius(
         Rect.fromCenter(
@@ -440,11 +442,11 @@ class LaneDashGame extends Game {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2,
       );
-      final rotation = top ? math.pi : 0.0;
+      final rotation = mirrored ? math.pi : 0.0;
       _drawLabel(
         canvas,
         label,
-        center + Offset(0, detail == null ? 0 : (top ? 14 : -14)),
+        center + Offset(0, detail == null ? 0 : (mirrored ? 14 : -14)),
         accent.withValues(alpha: opacity),
         detail == null ? 34 : 23,
         centered: true,
@@ -454,7 +456,7 @@ class LaneDashGame extends Game {
         _drawLabel(
           canvas,
           detail,
-          center + Offset(0, top ? -17 : 17),
+          center + Offset(0, mirrored ? -17 : 17),
           const Color(0xFFFFFFFF).withValues(alpha: opacity),
           26,
           centered: true,
@@ -467,30 +469,38 @@ class LaneDashGame extends Game {
   void _drawRoad(
     Canvas canvas, {
     required int player,
-    required bool top,
+    required bool mirrored,
     required double panelTop,
   }) {
     canvas.drawRect(
       Rect.fromLTWH(0, panelTop, 360, 300),
-      Paint()..color = const Color(0xFF101B28),
+      Paint()..color = const Color(0xFF182536),
     );
-    const tileHeight = 240.0;
-    final offset = (model.distance[player] * 2.2) % tileHeight;
-    for (var tile = -1; tile <= 2; tile++) {
-      final y = top
-          ? panelTop + tile * tileHeight - offset
-          : panelTop + tile * tileHeight + offset;
-      final laneSprites = [
-        'road_edge_left',
-        'road_straight',
-        'road_edge_right',
-      ];
-      for (var lane = 0; lane < 3; lane++) {
-        _drawSpriteRect(
-          canvas,
-          laneSprites[lane],
-          Rect.fromLTWH(lane * 120.0, y, 120, tileHeight + 1),
-          opacity: .92,
+    canvas.drawRect(
+      Rect.fromLTWH(5, panelTop, 7, 300),
+      Paint()..color = const Color(0xFFFF5A52),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(348, panelTop, 7, 300),
+      Paint()..color = const Color(0xFFFF5A52),
+    );
+    const dashHeight = 34.0;
+    const dashGap = 28.0;
+    final period = dashHeight + dashGap;
+    final rawOffset = (model.distance[player] * 2.2) % period;
+    final offset = mirrored ? -rawOffset : rawOffset;
+    for (final x in [120.0, 240.0]) {
+      for (
+        var y = panelTop - period;
+        y < panelTop + 300 + period;
+        y += period
+      ) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(x - 3, y + offset, 6, dashHeight),
+            const Radius.circular(3),
+          ),
+          Paint()..color = const Color(0xB3EAF4FF),
         );
       }
     }
@@ -498,8 +508,8 @@ class LaneDashGame extends Game {
       Rect.fromLTWH(0, panelTop, 360, 300),
       Paint()
         ..shader = LinearGradient(
-          begin: top ? Alignment.topCenter : Alignment.bottomCenter,
-          end: top ? Alignment.bottomCenter : Alignment.topCenter,
+          begin: mirrored ? Alignment.topCenter : Alignment.bottomCenter,
+          end: mirrored ? Alignment.bottomCenter : Alignment.topCenter,
           colors: const [Color(0x8A07111F), Color(0x0007111F)],
         ).createShader(Rect.fromLTWH(0, panelTop, 360, 300)),
     );
@@ -509,11 +519,11 @@ class LaneDashGame extends Game {
     Canvas canvas, {
     required int player,
     required Offset center,
-    required bool top,
+    required bool mirrored,
     required Color color,
   }) {
-    final rotation = top ? math.pi : 0.0;
-    final direction = top ? -1.0 : 1.0;
+    final rotation = mirrored ? math.pi : 0.0;
+    final direction = mirrored ? -1.0 : 1.0;
     if (model.countdown <= 0) {
       _drawSprite(
         canvas,
@@ -592,12 +602,12 @@ class LaneDashGame extends Game {
     Canvas canvas, {
     required int player,
     required Offset center,
-    required bool top,
+    required bool mirrored,
   }) {
     final effect = _collisionEffect[player];
     if (effect > 0) {
       final opacity = (effect / .48).clamp(0, 1).toDouble();
-      final rotation = top ? math.pi : 0.0;
+      final rotation = mirrored ? math.pi : 0.0;
       _drawSprite(
         canvas,
         'hit_ring',
@@ -624,13 +634,13 @@ class LaneDashGame extends Game {
       );
     }
     if (model.slowdown[player] > 0) {
-      final direction = top ? -1.0 : 1.0;
+      final direction = mirrored ? -1.0 : 1.0;
       _drawSprite(
         canvas,
         'hit_smoke',
         center + Offset(0, 27 * direction),
         const Size(58, 49),
-        rotation: top ? math.pi : 0,
+        rotation: mirrored ? math.pi : 0,
         opacity: (model.slowdown[player] / .9).clamp(.18, .62).toDouble(),
       );
     }
@@ -640,8 +650,9 @@ class LaneDashGame extends Game {
     Canvas canvas, {
     required int player,
     required bool top,
+    required bool mirrored,
   }) {
-    final center = Offset(180, top ? 254 : 346);
+    final center = Offset(180, top ? (mirrored ? 254 : 52) : 346);
     final badge = Rect.fromCenter(center: center, width: 118, height: 27);
     canvas.drawRRect(
       RRect.fromRectAndRadius(badge, const Radius.circular(14)),
@@ -674,8 +685,121 @@ class LaneDashGame extends Game {
       const Color(0xFFFFFFFF),
       11,
       centered: true,
-      rotation: top ? math.pi : 0,
+      rotation: mirrored ? math.pi : 0,
     );
+  }
+
+  void _drawControlHint(
+    Canvas canvas, {
+    required Offset center,
+    required bool mirrored,
+  }) {
+    final pulse = .55 + .45 * math.sin(model.countdown * math.pi * 2).abs();
+    canvas.save();
+    canvas.translate(center.dx, center.dy + (mirrored ? -58 : 58));
+    if (mirrored) canvas.rotate(math.pi);
+    for (final direction in [-1.0, 1.0]) {
+      final x = 50 * direction;
+      final arrow = Path()
+        ..moveTo(x + 10 * direction, 0)
+        ..lineTo(x - 6 * direction, -11)
+        ..moveTo(x + 10 * direction, 0)
+        ..lineTo(x - 6 * direction, 11);
+      canvas.drawPath(
+        arrow,
+        Paint()
+          ..color = const Color(0xFFFFFFFF).withValues(alpha: pulse)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+    canvas.restore();
+  }
+
+  void _drawObstacleWarning(
+    Canvas canvas, {
+    required Offset center,
+    required double strength,
+  }) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center, width: 92, height: 98),
+        const Radius.circular(24),
+      ),
+      Paint()
+        ..color = const Color(0xFFFF3B30).withValues(alpha: strength * .22),
+    );
+  }
+
+  void _drawHitIndicator(
+    Canvas canvas, {
+    required int count,
+    required Offset center,
+    required double rotation,
+  }) {
+    if (count == 0) return;
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    if (rotation != 0) canvas.rotate(rotation);
+    canvas.drawCircle(
+      Offset.zero,
+      13,
+      Paint()..color = const Color(0xD9B4232E),
+    );
+    canvas.drawLine(
+      const Offset(-5, -5),
+      const Offset(5, 5),
+      Paint()
+        ..color = const Color(0xFFFFFFFF)
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawLine(
+      const Offset(5, -5),
+      const Offset(-5, 5),
+      Paint()
+        ..color = const Color(0xFFFFFFFF)
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+    if (count > 1) {
+      _drawLabel(
+        canvas,
+        '$count',
+        const Offset(18, 0),
+        const Color(0xFFFFFFFF),
+        13,
+        centered: true,
+      );
+    }
+    canvas.restore();
+  }
+
+  void _drawFinishFlag(Canvas canvas, Offset center, {double rotation = 0}) {
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    if (rotation != 0) canvas.rotate(rotation);
+    canvas.drawLine(
+      const Offset(-7, -10),
+      const Offset(-7, 11),
+      Paint()
+        ..color = const Color(0xFFFFFFFF)
+        ..strokeWidth = 2,
+    );
+    const cell = 5.0;
+    for (var row = 0; row < 2; row++) {
+      for (var column = 0; column < 3; column++) {
+        canvas.drawRect(
+          Rect.fromLTWH(-5 + column * cell, -10 + row * cell, cell, cell),
+          Paint()
+            ..color = (row + column).isEven
+                ? const Color(0xFFFFFFFF)
+                : const Color(0xFF101B28),
+        );
+      }
+    }
+    canvas.restore();
   }
 
   void _drawFinishPresentation(Canvas canvas, LaneDashResult result) {
@@ -690,7 +814,7 @@ class LaneDashGame extends Game {
         title: 'PHOTO FINISH',
         subtitle: 'DRAW',
         color: const Color(0xFFFFD166),
-        rotation: math.pi,
+        rotation: session.options.mode == PlayMode.friend ? math.pi : 0,
       );
       _drawFinishCard(
         canvas,
@@ -703,6 +827,7 @@ class LaneDashGame extends Game {
     }
     final winner = result == LaneDashResult.playerOne ? 0 : 1;
     final top = winner == 1;
+    final mirrored = top && session.options.mode == PlayMode.friend;
     _drawFinishCard(
       canvas,
       center: Offset(180, top ? 150 : 450),
@@ -713,7 +838,7 @@ class LaneDashGame extends Game {
           : session.options.mode == PlayMode.friend
           ? const Color(0xFFFF7043)
           : const Color(0xFFFFD166),
-      rotation: top ? math.pi : 0,
+      rotation: mirrored ? math.pi : 0,
     );
   }
 
@@ -803,7 +928,7 @@ class LaneDashGame extends Game {
     Canvas canvas,
     LaneObstacleKind kind,
     Offset center, {
-    required bool top,
+    required bool mirrored,
   }) {
     final size = switch (kind) {
       LaneObstacleKind.cone => const Size(32, 40),
@@ -815,12 +940,46 @@ class LaneDashGame extends Game {
       LaneObstacleKind.van => const Size(53, 74),
       LaneObstacleKind.truck => const Size(57, 80),
     };
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: center + const Offset(0, 8),
+        width: size.width * .82,
+        height: size.height * .36,
+      ),
+      Paint()..color = const Color(0x66000000),
+    );
+    if (kind.isTraffic) {
+      final direction = mirrored ? -1.0 : 1.0;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: center + Offset(0, 36 * direction),
+            width: size.width * .55,
+            height: 38,
+          ),
+          const Radius.circular(12),
+        ),
+        Paint()
+          ..shader =
+              LinearGradient(
+                begin: mirrored ? Alignment.topCenter : Alignment.bottomCenter,
+                end: mirrored ? Alignment.bottomCenter : Alignment.topCenter,
+                colors: const [Color(0x0000C8FF), Color(0x7000C8FF)],
+              ).createShader(
+                Rect.fromCenter(
+                  center: center + Offset(0, 36 * direction),
+                  width: size.width * .55,
+                  height: 38,
+                ),
+              ),
+      );
+    }
     _drawSprite(
       canvas,
       obstacleSpriteForKind(kind),
       center,
       size,
-      rotation: top ? math.pi : 0,
+      rotation: mirrored ? math.pi : 0,
     );
   }
 

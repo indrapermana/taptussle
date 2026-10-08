@@ -60,6 +60,14 @@ class _LaneDashViewState extends State<LaneDashView> {
     setState(() {});
   }
 
+  void _moveToLane(int player, double localX, double width) {
+    final targetLane = (localX / (width / 3)).floor().clamp(0, 2);
+    final direction = targetLane - game.model.lanes[player];
+    if (direction == 0) return;
+    game.move(player, direction);
+    setState(() {});
+  }
+
   @override
   void dispose() {
     widget.session.removeListener(_sync);
@@ -84,13 +92,12 @@ class _LaneDashViewState extends State<LaneDashView> {
             child: Semantics(
               key: const ValueKey('lane-dash-player-zone-1'),
               container: true,
-              button: widget.options.mode != PlayMode.bot,
               label: widget.options.mode == PlayMode.bot
                   ? '${widget.options.playerLabel(1)} track'
                   : '${widget.options.playerLabel(1)} track. ${_laneName(1)}',
               hint: widget.options.mode == PlayMode.bot
                   ? 'The bot controls this car'
-                  : 'Swipe left or right, or use adjust actions, to change lanes',
+                  : 'Swipe left or right, tap a lane, or use adjust actions',
               onIncrease: widget.options.mode == PlayMode.bot
                   ? null
                   : () => _moveFromSemantics(1, 1),
@@ -109,10 +116,8 @@ class _LaneDashViewState extends State<LaneDashView> {
             child: Semantics(
               key: const ValueKey('lane-dash-player-zone-0'),
               container: true,
-              button: true,
               label: '${widget.options.playerLabel(0)} track. ${_laneName(0)}',
-              hint:
-                  'Swipe left or right, or use adjust actions, to change lanes',
+              hint: 'Swipe left or right, tap a lane, or use adjust actions',
               onIncrease: () => _moveFromSemantics(0, 1),
               onDecrease: () => _moveFromSemantics(0, -1),
               child: const SizedBox.expand(),
@@ -150,8 +155,15 @@ class _LaneDashViewState extends State<LaneDashView> {
             }
             final delta = event.localPosition - swipe.$2;
             final threshold = (context.size!.width * .06).clamp(24.0, 48.0);
-            if (delta.dx.abs() < threshold ||
-                delta.dx.abs() <= delta.dy.abs()) {
+            if (delta.distance < threshold) {
+              _moveToLane(
+                swipe.$1,
+                event.localPosition.dx,
+                context.size!.width,
+              );
+              return;
+            }
+            if (delta.dx.abs() <= delta.dy.abs()) {
               return;
             }
             game.move(swipe.$1, delta.dx.isNegative ? -1 : 1);

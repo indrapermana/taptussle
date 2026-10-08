@@ -179,6 +179,73 @@ void main() {
     expect(game.model.lanes, [1, 1]);
   });
 
+  testWidgets('tapping a lane moves the correct friend-mode car directly', (
+    tester,
+  ) async {
+    final session = MatchSession(options: MatchOptions.friend())..start();
+    addTearDown(session.dispose);
+    final game = LaneDashGame(session);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 600,
+            child: LaneDashView(
+              session: session,
+              options: session.options,
+              gameOverride: game,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tapAt(const Offset(60, 450));
+    expect(game.model.lanes[0], 0);
+    await tester.tapAt(const Offset(300, 450));
+    expect(game.model.lanes[0], 2);
+
+    await tester.tapAt(const Offset(60, 150));
+    expect(game.model.lanes[1], 0);
+    await tester.tapAt(const Offset(300, 150));
+    expect(game.model.lanes[1], 2);
+  });
+
+  testWidgets('bot track ignores taps while the human track accepts them', (
+    tester,
+  ) async {
+    final session = MatchSession(
+      options: MatchOptions.bot(difficulty: BotDifficulty.normal),
+    )..start();
+    addTearDown(session.dispose);
+    final game = LaneDashGame(session);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 600,
+            child: LaneDashView(
+              session: session,
+              options: session.options,
+              gameOverride: game,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tapAt(const Offset(60, 150));
+    expect(game.model.lanes[1], 1);
+    await tester.tapAt(const Offset(60, 450));
+    expect(game.model.lanes[0], 0);
+  });
+
   testWidgets('simultaneous friend swipes keep independent pointer ownership', (
     tester,
   ) async {

@@ -1320,6 +1320,21 @@ installed, and launched successfully on the connected iPhone named Indra
 - [ ] Lane Dash LD5 physical-device verification: verify friend mode, Easy,
   Normal, and Hard bots, pause/resume, rematch, results, accessibility controls,
   and stable performance on iPhone and Android.
+- [x] LD6.1 — Child-first Lane Dash controls: retain full-half swipes, add direct
+  lane taps, and demonstrate left/right movement visually during READY without
+  relying on written instructions.
+- [x] LD6.2 — Child-friendly Lane Dash HUD and feedback: replace meter-heavy
+  status with larger names, finish-oriented progress, visual hit indicators,
+  clearer collision slowdown feedback, and restrained obstacle warnings.
+- [x] LD6.3 — Lane Dash orientation and road cleanup: mirror the top track only
+  for a human friend, present bot races entirely toward the local player, and
+  replace inconsistent road crops with a stable native three-lane road.
+- [x] LD6.4 — Lane Dash regression coverage: cover taps, swipes, friend and bot
+  controls, compact layouts, lifecycle, rematch, and delayed results.
+- [ ] Lane Dash LD6 physical-device verification: verify the child-first hints,
+  tap and swipe controls, friend mirroring, upright bot presentation, road and
+  hazard readability, collision feedback, and stable performance on iPhone and
+  Android.
 
 ## M23 — Eighteen-game release validation and store preparation
 
