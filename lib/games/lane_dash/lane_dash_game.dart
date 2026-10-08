@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
 import '../../core/sound_service.dart';
@@ -29,10 +30,16 @@ class LaneDashGame extends Game {
   final _visualLaneX = [180.0, 180.0];
   final _lastLane = [1, 1];
   final _laneChangeEffect = [0.0, 0.0];
+  final _laneChangeDirection = [0, 0];
+  final _collisionEffect = [0.0, 0.0];
   final Map<String, ui.Image> _sprites = {};
   var _reportedCountdown = 3;
   double _goEffect = 0;
+  LaneDashResult? _pendingResult;
+  double _finishPresentationRemaining = 0;
   bool _stopped = false;
+
+  static const finishPresentationDuration = 1.25;
 
   static const _assetRoot = 'assets/games/lane_dash/';
   static const _assetNames = <String>[
@@ -60,6 +67,10 @@ class LaneDashGame extends Game {
     'obstacle_car',
     'obstacle_van',
     'obstacle_truck',
+    'hit_spark',
+    'hit_debris',
+    'hit_smoke',
+    'hit_ring',
   ];
 
   @override
@@ -81,8 +92,12 @@ class LaneDashGame extends Game {
     _visualLaneX[0] = _visualLaneX[1] = 180;
     _lastLane[0] = _lastLane[1] = 1;
     _laneChangeEffect[0] = _laneChangeEffect[1] = 0;
+    _laneChangeDirection[0] = _laneChangeDirection[1] = 0;
+    _collisionEffect[0] = _collisionEffect[1] = 0;
     _reportedCountdown = 3;
     _goEffect = 0;
+    _pendingResult = null;
+    _finishPresentationRemaining = 0;
   }
 
   void stopMatch() {
@@ -91,6 +106,8 @@ class LaneDashGame extends Game {
   }
 
   void move(int player, int direction) => model.move(player, direction);
+
+  bool get isPresentingFinish => _pendingResult != null;
 
   String carSpriteForPlayer(int player) {
     if (player == 0) return 'car_blue';
@@ -121,10 +138,15 @@ class LaneDashGame extends Game {
   void update(double dt) {
     if (_stopped || session.phase != MatchPhase.playing) return;
     _goEffect = math.max(0, _goEffect - dt);
+    for (var player = 0; player < 2; player++) {
+      _collisionEffect[player] = math.max(0, _collisionEffect[player] - dt);
+    }
     bot?.update(model, dt);
     model.update(dt);
     for (var player = 0; player < 2; player++) {
       if (_lastLane[player] != model.lanes[player]) {
+        _laneChangeDirection[player] =
+            (model.lanes[player] - _lastLane[player]).sign;
         _lastLane[player] = model.lanes[player];
         _laneChangeEffect[player] = .28;
       } else {
@@ -142,14 +164,43 @@ class LaneDashGame extends Game {
         countdown == 0 ? SoundEffect.countdownGo : SoundEffect.countdownTick,
       );
     }
-    if (model.collisionCount[0] != _reportedCollisions[0] ||
-        model.collisionCount[1] != _reportedCollisions[1]) {
-      _reportedCollisions[0] = model.collisionCount[0];
-      _reportedCollisions[1] = model.collisionCount[1];
+    var collided = false;
+    for (var player = 0; player < 2; player++) {
+      if (model.collisionCount[player] != _reportedCollisions[player]) {
+        _reportedCollisions[player] = model.collisionCount[player];
+        _collisionEffect[player] = .48;
+        collided = true;
+      }
+    }
+    if (collided) {
       SoundEffects.play(SoundEffect.impactHeavy);
+      HapticEffects.paddleHit();
     }
     final progress = [model.distance[0].round(), model.distance[1].round()];
     final result = model.result;
+    if (result != null) {
+      if (_pendingResult == null) {
+        _pendingResult = result;
+        _finishPresentationRemaining = finishPresentationDuration;
+        SoundEffects.play(SoundEffect.roundReveal);
+      } else {
+        _finishPresentationRemaining = math.max(
+          0,
+          _finishPresentationRemaining - dt,
+        );
+      }
+      if (_finishPresentationRemaining <= 0) {
+        _reportResult(result, progress);
+      }
+    } else if (progress[0] != _reportedProgress[0] ||
+        progress[1] != _reportedProgress[1]) {
+      _reportedProgress[0] = progress[0];
+      _reportedProgress[1] = progress[1];
+      session.reportScore(progress[0], progress[1]);
+    }
+  }
+
+  void _reportResult(LaneDashResult result, List<int> progress) {
     if (result == LaneDashResult.draw || result == LaneDashResult.timeout) {
       session.reportNonPointResult(
         winner: null,
@@ -171,11 +222,6 @@ class LaneDashGame extends Game {
             '${session.options.playerLabel(loser)} reached '
             '${model.distance[loser].round()} m.',
       );
-    } else if (progress[0] != _reportedProgress[0] ||
-        progress[1] != _reportedProgress[1]) {
-      _reportedProgress[0] = progress[0];
-      _reportedProgress[1] = progress[1];
-      session.reportScore(progress[0], progress[1]);
     }
   }
 
@@ -192,6 +238,13 @@ class LaneDashGame extends Game {
       canvas.save();
       canvas.clipRect(Rect.fromLTWH(0, panelTop, 360, 300));
       final player = top ? 1 : 0;
+      if (_collisionEffect[player] > 0) {
+        final strength = _collisionEffect[player] / .48;
+        canvas.translate(
+          math.sin(_collisionEffect[player] * 95) * 3 * strength,
+          math.cos(_collisionEffect[player] * 73) * 1.5 * strength,
+        );
+      }
       _drawRoad(canvas, player: player, top: top, panelTop: panelTop);
       final runnerY = top ? 66.0 : 534.0;
       for (final obstacle in model.obstaclesFor(player)) {
@@ -219,6 +272,18 @@ class LaneDashGame extends Game {
         center: Offset(runnerX, runnerY),
         top: top,
         color: color,
+      );
+      _drawSwipeFeedback(
+        canvas,
+        player: player,
+        center: Offset(runnerX, runnerY),
+        color: color,
+      );
+      _drawCollisionFeedback(
+        canvas,
+        player: player,
+        center: Offset(runnerX, runnerY),
+        top: top,
       );
       final hudY = top ? 16.0 : 322.0;
       final participant = session.options.playerLabel(player).toUpperCase();
@@ -254,35 +319,40 @@ class LaneDashGame extends Game {
           right: true,
         );
       }
-      final bar = Rect.fromLTWH(12, top ? 281 : 305, 336, 5);
+      final bar = Rect.fromLTWH(12, top ? 279 : 305, 336, 8);
       canvas.drawRRect(
-        RRect.fromRectAndRadius(bar, const Radius.circular(3)),
-        Paint()..color = const Color(0x3DFFFFFF),
+        RRect.fromRectAndRadius(bar, const Radius.circular(5)),
+        Paint()..color = const Color(0x66101B28),
       );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bar, const Radius.circular(5)),
+        Paint()
+          ..color = const Color(0x80FFFFFF)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+      final progressRatio =
+          (model.distance[player] / LaneDashModel.finishDistance).clamp(
+            0.0,
+            1.0,
+          );
       final progress = Rect.fromLTWH(
         bar.left,
         bar.top,
-        bar.width *
-            (model.distance[player] / LaneDashModel.finishDistance).clamp(
-              0.0,
-              1.0,
-            ),
+        bar.width * progressRatio,
         bar.height,
       );
       canvas.drawRRect(
-        RRect.fromRectAndRadius(progress, const Radius.circular(3)),
+        RRect.fromRectAndRadius(progress, const Radius.circular(5)),
         Paint()..color = color,
       );
+      canvas.drawCircle(
+        Offset(bar.left + bar.width * progressRatio, bar.center.dy),
+        5,
+        Paint()..color = const Color(0xFFFFFFFF),
+      );
       if (model.slowdown[player] > 0) {
-        _drawLabel(
-          canvas,
-          'HIT • SLOW',
-          Offset(180, top ? 258 : 342),
-          const Color(0xFFFFC36B),
-          13,
-          centered: true,
-          rotation: top ? math.pi : 0,
-        );
+        _drawSlowdownBadge(canvas, player: player, top: top);
       }
       if (top) {
         _drawLabel(
@@ -306,7 +376,9 @@ class LaneDashGame extends Game {
       canvas.restore();
     }
     canvas.drawLine(const Offset(0, 300), const Offset(360, 300), divider);
-    if (model.countdown > 0) {
+    if (_pendingResult != null) {
+      _drawFinishPresentation(canvas, _pendingResult!);
+    } else if (model.countdown > 0) {
       _drawSprite(
         canvas,
         'ready_text',
@@ -451,6 +523,203 @@ class LaneDashGame extends Game {
       carSpriteForPlayer(player),
       center,
       const Size(52, 76),
+      rotation: rotation,
+    );
+  }
+
+  void _drawSwipeFeedback(
+    Canvas canvas, {
+    required int player,
+    required Offset center,
+    required Color color,
+  }) {
+    if (_laneChangeEffect[player] <= 0 || _laneChangeDirection[player] == 0) {
+      return;
+    }
+    final direction = _laneChangeDirection[player].toDouble();
+    final opacity = (_laneChangeEffect[player] / .28).clamp(0, 1).toDouble();
+    final arrowCenter = center + Offset(42 * direction, 0);
+    final path = Path()
+      ..moveTo(arrowCenter.dx + 9 * direction, arrowCenter.dy)
+      ..lineTo(arrowCenter.dx - 5 * direction, arrowCenter.dy - 10)
+      ..moveTo(arrowCenter.dx + 9 * direction, arrowCenter.dy)
+      ..lineTo(arrowCenter.dx - 5 * direction, arrowCenter.dy + 10);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color.withValues(alpha: opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  void _drawCollisionFeedback(
+    Canvas canvas, {
+    required int player,
+    required Offset center,
+    required bool top,
+  }) {
+    final effect = _collisionEffect[player];
+    if (effect > 0) {
+      final opacity = (effect / .48).clamp(0, 1).toDouble();
+      final rotation = top ? math.pi : 0.0;
+      _drawSprite(
+        canvas,
+        'hit_ring',
+        center,
+        const Size(96, 88),
+        rotation: rotation,
+        opacity: opacity * .75,
+      );
+      _drawSprite(
+        canvas,
+        'hit_spark',
+        center,
+        const Size(67, 67),
+        rotation: rotation,
+        opacity: opacity,
+      );
+      _drawSprite(
+        canvas,
+        'hit_debris',
+        center,
+        const Size(92, 78),
+        rotation: rotation,
+        opacity: opacity,
+      );
+    }
+    if (model.slowdown[player] > 0) {
+      final direction = top ? -1.0 : 1.0;
+      _drawSprite(
+        canvas,
+        'hit_smoke',
+        center + Offset(0, 27 * direction),
+        const Size(58, 49),
+        rotation: top ? math.pi : 0,
+        opacity: (model.slowdown[player] / .9).clamp(.18, .62).toDouble(),
+      );
+    }
+  }
+
+  void _drawSlowdownBadge(
+    Canvas canvas, {
+    required int player,
+    required bool top,
+  }) {
+    final center = Offset(180, top ? 254 : 346);
+    final badge = Rect.fromCenter(center: center, width: 118, height: 27);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(badge, const Radius.circular(14)),
+      Paint()..color = const Color(0xE6291720),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(badge, const Radius.circular(14)),
+      Paint()
+        ..color = const Color(0xFFFFC36B)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    final remaining = (model.slowdown[player] / .9).clamp(0.0, 1.0);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          badge.left + 8,
+          badge.bottom - 6,
+          (badge.width - 16) * remaining,
+          3,
+        ),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFFFFC36B),
+    );
+    _drawLabel(
+      canvas,
+      'SLOWED',
+      center - const Offset(0, 2),
+      const Color(0xFFFFFFFF),
+      11,
+      centered: true,
+      rotation: top ? math.pi : 0,
+    );
+  }
+
+  void _drawFinishPresentation(Canvas canvas, LaneDashResult result) {
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, 360, 600),
+      Paint()..color = const Color(0x85040B18),
+    );
+    if (result == LaneDashResult.draw || result == LaneDashResult.timeout) {
+      _drawFinishCard(
+        canvas,
+        center: const Offset(180, 238),
+        title: 'PHOTO FINISH',
+        subtitle: 'DRAW',
+        color: const Color(0xFFFFD166),
+        rotation: math.pi,
+      );
+      _drawFinishCard(
+        canvas,
+        center: const Offset(180, 362),
+        title: 'PHOTO FINISH',
+        subtitle: 'DRAW',
+        color: const Color(0xFFFFD166),
+      );
+      return;
+    }
+    final winner = result == LaneDashResult.playerOne ? 0 : 1;
+    final top = winner == 1;
+    _drawFinishCard(
+      canvas,
+      center: Offset(180, top ? 150 : 450),
+      title: session.options.playerLabel(winner).toUpperCase(),
+      subtitle: 'WINS!',
+      color: winner == 0
+          ? const Color(0xFF29C9FF)
+          : session.options.mode == PlayMode.friend
+          ? const Color(0xFFFF7043)
+          : const Color(0xFFFFD166),
+      rotation: top ? math.pi : 0,
+    );
+  }
+
+  void _drawFinishCard(
+    Canvas canvas, {
+    required Offset center,
+    required String title,
+    required String subtitle,
+    required Color color,
+    double rotation = 0,
+  }) {
+    final card = Rect.fromCenter(center: center, width: 286, height: 104);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(card, const Radius.circular(24)),
+      Paint()..color = const Color(0xE80A1830),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(card, const Radius.circular(24)),
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+    _drawLabel(
+      canvas,
+      title,
+      center - const Offset(0, 20),
+      color,
+      18,
+      centered: true,
+      rotation: rotation,
+    );
+    _drawLabel(
+      canvas,
+      subtitle,
+      center + const Offset(0, 17),
+      const Color(0xFFFFFFFF),
+      30,
+      centered: true,
       rotation: rotation,
     );
   }

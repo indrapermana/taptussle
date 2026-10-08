@@ -45,6 +45,28 @@ void main() {
     session.dispose();
   });
 
+  test('holds the finish presentation before reporting the result', () {
+    final session = MatchSession(options: MatchOptions.friend())..start();
+    final game = LaneDashGame(session)..resetMatch();
+    game.model.countdown = 0;
+    game.model.distance[0] = LaneDashModel.finishDistance - 1;
+
+    game.update(.1);
+
+    expect(game.isPresentingFinish, isTrue);
+    expect(session.phase, MatchPhase.playing);
+
+    game.update(LaneDashGame.finishPresentationDuration - .01);
+    expect(session.phase, MatchPhase.playing);
+
+    game.update(.02);
+    expect(session.phase, MatchPhase.finished);
+    expect(session.winner, 0);
+
+    game.stopMatch();
+    session.dispose();
+  });
+
   testWidgets('both players move in the same screen direction as their swipe', (
     tester,
   ) async {

@@ -1307,7 +1307,7 @@ installed, and launched successfully on the connected iPhone named Indra
   hazards, and give cars, vans, and trucks deterministic longitudinal movement.
   Preserve a reachable safe route, matching visual and collision footprints,
   frame-rate-independent outcomes, legal bot lookahead, and equal runner speed.
-- [ ] LD4 — Lane Dash feedback and HUD: add readable READY/GO presentation,
+- [x] LD4 — Lane Dash feedback and HUD: add readable READY/GO presentation,
   swipe feedback, restrained speed effects, collision spark/debris/smoke, bounded
   camera response, clear slowdown state, stronger progress presentation, and a
   finish moment before the shared result page. Keep unused pickup, life, lap,
