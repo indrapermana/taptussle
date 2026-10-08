@@ -7,12 +7,14 @@ class AirHockeyModel {
       malletRadius = 28.0,
       puckRadius = 12.0,
       goalWidth = 150.0;
+  static const scoredServeDelay = 2.5;
   final int winningScore;
   final scores = [0, 0];
   final mallets = [math.Point<double>(180, 500), math.Point<double>(180, 100)];
   final targets = [math.Point<double>(180, 500), math.Point<double>(180, 100)];
   math.Point<double> puck = math.Point(180, 300);
   math.Point<double> velocity = const math.Point(0, 0);
+  double serveRemaining = 0;
   int? winner;
   int hitCount = 0;
   int wallHitCount = 0;
@@ -29,6 +31,7 @@ class AirHockeyModel {
     wallHitCount = 0;
     lastTouchPlayer = null;
     lastWallHit = null;
+    serveRemaining = 0;
     _serve(0);
   }
 
@@ -45,8 +48,12 @@ class AirHockeyModel {
 
   void update(double dt) {
     if (winner != null) return;
+    if (serveRemaining > 0) {
+      serveRemaining = math.max(0, serveRemaining - dt);
+      return;
+    }
     var left = math.min(dt, .1);
-    while (left > .000001 && winner == null) {
+    while (left > .000001 && winner == null && serveRemaining <= 0) {
       final step = math.min(left, 1 / 240);
       _step(step);
       left -= step;
@@ -125,11 +132,12 @@ class AirHockeyModel {
       winner = player;
       return;
     }
-    _serve(player == 0 ? -1 : 1);
+    _serve(player == 0 ? -1 : 1, delay: scoredServeDelay);
   }
 
-  void _serve(int direction) {
+  void _serve(int direction, {double delay = 0}) {
     puck = const math.Point(180, 300);
     velocity = math.Point(95.0, 300.0 * direction.toDouble());
+    serveRemaining = delay;
   }
 }

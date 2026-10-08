@@ -33,4 +33,24 @@ void main() {
     expect(model.wallHitCount, greaterThan(0));
     expect(model.lastWallHit, isNotNull);
   });
+
+  test('a goal holds the centered puck before the next serve', () {
+    final model = AirHockeyModel(winningScore: 5)..reset();
+    model.puck = const Point(180, -13);
+    model.velocity = const Point(0, -300);
+
+    model.update(.1);
+
+    expect(model.scores, [1, 0]);
+    expect(model.puck, const Point<double>(180, 300));
+    expect(model.serveRemaining, AirHockeyModel.scoredServeDelay);
+
+    model.update(2);
+    expect(model.puck, const Point<double>(180, 300));
+    expect(model.serveRemaining, closeTo(.5, .0001));
+
+    model.update(.5);
+    model.update(.1);
+    expect(model.puck.y, lessThan(300));
+  });
 }

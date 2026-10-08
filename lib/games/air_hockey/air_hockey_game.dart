@@ -90,7 +90,7 @@ class AirHockeyGame extends Game {
     _paddleHitEffect = math.max(0, _paddleHitEffect - dt);
     _wallHitEffect = math.max(0, _wallHitEffect - dt);
     _goalEffect = math.max(0, _goalEffect - dt);
-    bot?.update(model, dt);
+    if (model.serveRemaining <= 0) bot?.update(model, dt);
     model.update(dt);
     if (model.hitCount != _hits) {
       _hits = model.hitCount;
