@@ -101,6 +101,37 @@ void main() {
   });
 
   test(
+    'result reveal delay is cancelled on pause and restarted on resume',
+    () async {
+      final session = MatchSession(options: MatchOptions.friend());
+      final controller = TicTacToeController(
+        session: session,
+        resultRevealDelay: const Duration(milliseconds: 60),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+      session.start();
+
+      for (final cell in const [0, 3, 1, 4, 2]) {
+        expect(controller.humanMove(cell), TicTacToeMoveResult.accepted);
+      }
+      expect(controller.isPresentingResult, isTrue);
+      expect(session.phase, MatchPhase.playing);
+
+      session.pause();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(session.phase, MatchPhase.paused);
+
+      session.resume();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(session.phase, MatchPhase.playing);
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(session.phase, MatchPhase.finished);
+      expect(session.winner, 0);
+    },
+  );
+
+  test(
     'rematch alternates starter and schedules the bot when it starts',
     () async {
       final session = MatchSession(

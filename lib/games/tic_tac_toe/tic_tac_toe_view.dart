@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/haptic_service.dart';
@@ -25,12 +28,16 @@ class _TicTacToeViewState extends State<TicTacToeView> {
   late final TicTacToeController controller;
   int _reportedMoves = 0;
   bool _reportedResult = false;
+  int? _invalidCell;
+  Timer? _invalidTimer;
 
   @override
   void initState() {
     super.initState();
-    controller = TicTacToeController(session: widget.session)
-      ..addListener(_playEffects);
+    controller = TicTacToeController(
+      session: widget.session,
+      resultRevealDelay: const Duration(milliseconds: 1300),
+    )..addListener(_playEffects);
   }
 
   void _playEffects() {
@@ -43,13 +50,28 @@ class _TicTacToeViewState extends State<TicTacToeView> {
     _reportedMoves = moves;
     if (controller.model.isFinished && !_reportedResult) {
       _reportedResult = true;
+      SoundEffects.play(SoundEffect.roundReveal);
+    } else {
+      SoundEffects.play(SoundEffect.pieceMove);
     }
-    SoundEffects.play(SoundEffect.pieceMove);
     HapticEffects.preview();
+  }
+
+  void _handleCellTap(int cell) {
+    final result = controller.humanMove(cell);
+    if (result != TicTacToeMoveResult.occupied) return;
+    _invalidTimer?.cancel();
+    setState(() => _invalidCell = cell);
+    SoundEffects.play(SoundEffect.uiInvalid);
+    HapticEffects.preview();
+    _invalidTimer = Timer(const Duration(milliseconds: 420), () {
+      if (mounted) setState(() => _invalidCell = null);
+    });
   }
 
   @override
   void dispose() {
+    _invalidTimer?.cancel();
     controller.removeListener(_playEffects);
     controller.dispose();
     super.dispose();
@@ -65,8 +87,9 @@ class _TicTacToeViewState extends State<TicTacToeView> {
         widget.options.playerLabel(1),
       ],
       enabled: controller.acceptsHumanInput,
-      statusOverride: controller.isBotThinking ? 'BOT IS THINKING… • O' : null,
-      onCellTap: controller.humanMove,
+      statusOverride: controller.isBotThinking ? 'O THINKING…' : null,
+      invalidCell: _invalidCell,
+      onCellTap: _handleCellTap,
     ),
   );
 }
@@ -79,6 +102,7 @@ class TicTacToeBoard extends StatelessWidget {
     this.playerLabels = const ['Player 1', 'Player 2'],
     this.enabled = true,
     this.statusOverride,
+    this.invalidCell,
     super.key,
   }) : assert(playerLabels.length == 2);
 
@@ -87,9 +111,12 @@ class TicTacToeBoard extends StatelessWidget {
   final List<String> playerLabels;
   final bool enabled;
   final String? statusOverride;
+  final int? invalidCell;
 
-  static const _mint = Color(0xFF9DF5CF);
-  static const _coral = Color(0xFFFF968A);
+  static const _warm = Color(0xFFFF7043);
+  static const _cool = Color(0xFF29C9FF);
+  static const _xAsset = 'assets/games/tic_tac_toe/x_warm.png';
+  static const _oAsset = 'assets/games/tic_tac_toe/o_cool.png';
 
   @override
   Widget build(BuildContext context) {
@@ -97,11 +124,10 @@ class TicTacToeBoard extends StatelessWidget {
     final status =
         statusOverride ??
         (model.isDraw
-            ? 'DRAW • BOARD FULL'
+            ? 'DRAW!'
             : winner != null
             ? '${playerLabels[winner].toUpperCase()} WINS'
-            : '${playerLabels[model.currentPlayer].toUpperCase()}\'S TURN • '
-                  '${_markLabel(model.markForPlayer(model.currentPlayer))}');
+            : '${_markLabel(model.markForPlayer(model.currentPlayer))} TURN');
 
     return ColoredBox(
       color: const Color(0xFF101A27),
@@ -116,7 +142,7 @@ class TicTacToeBoard extends StatelessWidget {
                     child: _PlayerBadge(
                       label: playerLabels[0],
                       mark: TicTacToeMark.x,
-                      color: _mint,
+                      color: _warm,
                       active: !model.isFinished && model.currentPlayer == 0,
                       winner: winner == 0,
                     ),
@@ -126,7 +152,7 @@ class TicTacToeBoard extends StatelessWidget {
                     child: _PlayerBadge(
                       label: playerLabels[1],
                       mark: TicTacToeMark.o,
-                      color: _coral,
+                      color: _cool,
                       active: !model.isFinished && model.currentPlayer == 1,
                       winner: winner == 1,
                     ),
@@ -134,20 +160,23 @@ class TicTacToeBoard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 22),
-              Text(
-                status,
-                key: const ValueKey('tic-tac-toe-status'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: model.isDraw
-                      ? Colors.white
-                      : winner == 1 ||
-                            (!model.isFinished && model.currentPlayer == 1)
-                      ? _coral
-                      : _mint,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  status,
+                  key: const ValueKey('tic-tac-toe-status'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: model.isDraw
+                        ? Colors.white
+                        : winner == 1 ||
+                              (!model.isFinished && model.currentPlayer == 1)
+                        ? _cool
+                        : _warm,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -157,26 +186,82 @@ class TicTacToeBoard extends StatelessWidget {
                     constraints: const BoxConstraints(maxWidth: 440),
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              mainAxisSpacing: 10,
-                              crossAxisSpacing: 10,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  mainAxisSpacing: 10,
+                                  crossAxisSpacing: 10,
+                                ),
+                            itemCount: TicTacToeModel.cellCount,
+                            itemBuilder: (context, cell) => _Cell(
+                              cell: cell,
+                              mark: model.board[cell],
+                              winning:
+                                  model.winningLine?.contains(cell) ?? false,
+                              draw: model.isDraw,
+                              invalid: invalidCell == cell,
+                              interactive: enabled && !model.isFinished,
+                              enabled:
+                                  enabled &&
+                                  !model.isFinished &&
+                                  model.board[cell] == null,
+                              onTap: onCellTap,
                             ),
-                        itemCount: TicTacToeModel.cellCount,
-                        itemBuilder: (context, cell) => _Cell(
-                          cell: cell,
-                          mark: model.board[cell],
-                          winning: model.winningLine?.contains(cell) ?? false,
-                          draw: model.isDraw,
-                          enabled:
-                              enabled &&
-                              !model.isFinished &&
-                              model.board[cell] == null,
-                          onTap: onCellTap,
-                        ),
+                          ),
+                          if (model.winningLine case final line?)
+                            IgnorePointer(
+                              child: TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0, end: 1),
+                                duration: const Duration(milliseconds: 520),
+                                curve: Curves.easeOutBack,
+                                builder: (context, progress, _) => CustomPaint(
+                                  painter: _WinningLinePainter(
+                                    line: line,
+                                    color: winner == 0 ? _warm : _cool,
+                                    progress: progress,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          IgnorePointer(
+                            child: Center(
+                              child: AnimatedScale(
+                                scale: model.isDraw ? 1 : 0,
+                                duration: const Duration(milliseconds: 280),
+                                curve: Curves.easeOutBack,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xF21A2740),
+                                    borderRadius: BorderRadius.circular(22),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFD166),
+                                      width: 3,
+                                    ),
+                                  ),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 28,
+                                      vertical: 16,
+                                    ),
+                                    child: Text(
+                                      'DRAW!',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -211,39 +296,51 @@ class _PlayerBadge extends StatelessWidget {
   final bool winner;
 
   @override
-  Widget build(BuildContext context) => AnimatedContainer(
-    duration: const Duration(milliseconds: 180),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    decoration: BoxDecoration(
-      color: active || winner
-          ? color.withValues(alpha: .14)
-          : const Color(0xFF182A3A),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: active || winner ? color : const Color(0xFF304253),
-        width: active || winner ? 2 : 1,
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(end: active || winner ? 1.035 : 1),
+    duration: const Duration(milliseconds: 220),
+    curve: Curves.easeOutBack,
+    builder: (context, scale, child) =>
+        Transform.scale(scale: scale, child: child),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: active || winner
+            ? color.withValues(alpha: .18)
+            : const Color(0xFF182A3A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: active || winner ? color : const Color(0xFF304253),
+          width: active || winner ? 2.5 : 1,
+        ),
+        boxShadow: active || winner
+            ? [BoxShadow(color: color.withValues(alpha: .28), blurRadius: 16)]
+            : null,
       ),
-    ),
-    child: Row(
-      children: [
-        Text(
-          TicTacToeBoard._markLabel(mark),
-          style: TextStyle(
-            color: color,
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
+      child: Row(
+        children: [
+          Image.asset(
+            mark == TicTacToeMark.x
+                ? TicTacToeBoard._xAsset
+                : TicTacToeBoard._oAsset,
+            width: 34,
+            height: 34,
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            winner ? '$label wins' : label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w800),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              winner ? '$label wins' : label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: active || winner ? Colors.white : Colors.white70,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
@@ -254,6 +351,8 @@ class _Cell extends StatelessWidget {
     required this.mark,
     required this.winning,
     required this.draw,
+    required this.invalid,
+    required this.interactive,
     required this.enabled,
     required this.onTap,
   });
@@ -262,14 +361,16 @@ class _Cell extends StatelessWidget {
   final TicTacToeMark? mark;
   final bool winning;
   final bool draw;
+  final bool invalid;
+  final bool interactive;
   final bool enabled;
   final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
     final markColor = mark == TicTacToeMark.o
-        ? TicTacToeBoard._coral
-        : TicTacToeBoard._mint;
+        ? TicTacToeBoard._cool
+        : TicTacToeBoard._warm;
     final semanticMark = mark == null
         ? 'empty'
         : TicTacToeBoard._markLabel(mark!);
@@ -278,44 +379,70 @@ class _Cell extends StatelessWidget {
       semanticMark,
       if (winning) 'winning cell',
       if (draw) 'draw',
+      if (invalid) 'invalid move',
     ].join(', ');
 
-    return Semantics(
-      label: semanticLabel,
-      button: true,
-      enabled: enabled,
-      excludeSemantics: true,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: ValueKey('tic-tac-toe-cell-$cell'),
-          borderRadius: BorderRadius.circular(18),
-          onTap: enabled ? () => onTap(cell) : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: winning
-                  ? markColor.withValues(alpha: .2)
-                  : draw
-                  ? const Color(0xFF223346)
-                  : const Color(0xFF182A3A),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: winning ? markColor : const Color(0xFF304253),
-                width: winning ? 3 : 1.5,
-              ),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                mark == null ? '' : TicTacToeBoard._markLabel(mark!),
-                style: TextStyle(
-                  color: markColor,
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: invalid ? 1 : 0),
+      duration: const Duration(milliseconds: 320),
+      builder: (context, shake, child) => Transform.translate(
+        offset: Offset(math.sin(shake * math.pi * 6) * 7, 0),
+        child: child,
+      ),
+      child: Semantics(
+        label: semanticLabel,
+        liveRegion: invalid,
+        button: true,
+        enabled: enabled,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            key: ValueKey('tic-tac-toe-cell-$cell'),
+            borderRadius: BorderRadius.circular(18),
+            onTap: interactive ? () => onTap(cell) : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: invalid
+                    ? const Color(0x4DFF3B30)
+                    : winning
+                    ? markColor.withValues(alpha: .2)
+                    : draw
+                    ? const Color(0xFF223346)
+                    : const Color(0xFF182A3A),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: invalid
+                      ? const Color(0xFFFF5A52)
+                      : winning
+                      ? markColor
+                      : const Color(0xFF304253),
+                  width: invalid || winning ? 3 : 1.5,
                 ),
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutBack,
+                  ),
+                  child: FadeTransition(opacity: animation, child: child),
+                ),
+                child: mark == null
+                    ? const SizedBox.shrink(key: ValueKey('empty'))
+                    : Padding(
+                        key: ValueKey(mark),
+                        padding: const EdgeInsets.all(14),
+                        child: Image.asset(
+                          mark == TicTacToeMark.x
+                              ? TicTacToeBoard._xAsset
+                              : TicTacToeBoard._oAsset,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -323,4 +450,50 @@ class _Cell extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WinningLinePainter extends CustomPainter {
+  const _WinningLinePainter({
+    required this.line,
+    required this.color,
+    required this.progress,
+  });
+
+  final List<int> line;
+  final Color color;
+  final double progress;
+
+  Offset _center(int cell, Size size) => Offset(
+    (cell % 3 + .5) * size.width / 3,
+    (cell ~/ 3 + .5) * size.height / 3,
+  );
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final start = _center(line.first, size);
+    final end = _center(line.last, size);
+    final animatedEnd = Offset.lerp(start, end, progress)!;
+    canvas.drawLine(
+      start,
+      animatedEnd,
+      Paint()
+        ..color = color.withValues(alpha: .32)
+        ..strokeWidth = 18
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawLine(
+      start,
+      animatedEnd,
+      Paint()
+        ..color = Colors.white
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_WinningLinePainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.color != color ||
+      oldDelegate.line != line;
 }

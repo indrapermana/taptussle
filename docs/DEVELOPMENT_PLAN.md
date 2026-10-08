@@ -1335,6 +1335,22 @@ installed, and launched successfully on the connected iPhone named Indra
   tap and swipe controls, friend mirroring, upright bot presentation, road and
   hazard readability, collision feedback, and stable performance on iPhone and
   Android.
+- [x] TT1 — Tic-Tac-Toe artwork: clean and resize the supplied warm X and cool O
+  into transparent production sprites while rejecting sprite-sheet crops that
+  contain filenames, neighboring artwork, or fixed backgrounds.
+- [x] TT2 — Child-first Tic-Tac-Toe interaction: use symbol-led turn feedback,
+  animated mark placement, stronger active-player badges, and visible invalid
+  occupied-cell feedback without changing legal-move rules or bot timing.
+- [x] TT3 — Tic-Tac-Toe completion presentation: keep the finished board visible,
+  animate a native line across winning cells, show a distinct draw moment, and
+  delay shared result navigation with lifecycle-safe scheduling.
+- [x] TT4 — Tic-Tac-Toe accessibility and automated validation: retain large
+  semantic cells, announce turns and invalid moves, cover compact and
+  enlarged-text layouts, and regression-test friend, bot, rematch, and lifecycle
+  behavior.
+- [ ] Tic-Tac-Toe TT4 physical-device verification: verify touch feedback,
+  artwork, animations, sounds, haptics, delayed results, and responsive layout
+  on iPhone and Android.
 
 ## M23 — Eighteen-game release validation and store preparation
 

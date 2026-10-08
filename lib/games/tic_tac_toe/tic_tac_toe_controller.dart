@@ -14,6 +14,7 @@ class TicTacToeController extends ChangeNotifier {
     required this.session,
     Random? random,
     this.botThinkDelay,
+    this.resultRevealDelay = Duration.zero,
   }) : _random = random ?? Random(),
        model = TicTacToeModel() {
     bot = session.options.mode == PlayMode.bot
@@ -29,10 +30,12 @@ class TicTacToeController extends ChangeNotifier {
   final MatchSession session;
   final Random _random;
   final Duration? botThinkDelay;
+  final Duration resultRevealDelay;
   final TicTacToeModel model;
   late final TicTacToeBot? bot;
 
   Timer? _botTimer;
+  Timer? _resultTimer;
   int _observedRound = 0;
   MatchPhase _observedPhase = MatchPhase.ready;
   bool _hasStartedRound = false;
@@ -41,6 +44,7 @@ class TicTacToeController extends ChangeNotifier {
   bool get isBotTurn =>
       bot != null && !model.isFinished && model.currentPlayer == bot!.player;
   bool get isBotThinking => _botTimer?.isActive ?? false;
+  bool get isPresentingResult => model.isFinished && !_disposed;
   bool get acceptsHumanInput =>
       !_disposed &&
       session.phase == MatchPhase.playing &&
@@ -57,7 +61,7 @@ class TicTacToeController extends ChangeNotifier {
 
     notifyListeners();
     if (model.isFinished) {
-      _publishResult();
+      _scheduleResult();
     } else {
       _scheduleBotTurn();
     }
@@ -69,6 +73,7 @@ class TicTacToeController extends ChangeNotifier {
     final roundChanged = session.round != _observedRound;
     if (roundChanged) {
       _cancelBotTurn();
+      _cancelResult();
       _observedRound = session.round;
       if (session.round > 0) {
         if (_hasStartedRound) {
@@ -84,8 +89,13 @@ class TicTacToeController extends ChangeNotifier {
     _observedPhase = session.phase;
     if (session.phase != MatchPhase.playing) {
       _cancelBotTurn();
+      _cancelResult();
     } else if (roundChanged || phaseChanged) {
-      _scheduleBotTurn();
+      if (model.isFinished) {
+        _scheduleResult();
+      } else {
+        _scheduleBotTurn();
+      }
     }
     if (roundChanged || phaseChanged) notifyListeners();
   }
@@ -120,7 +130,30 @@ class TicTacToeController extends ChangeNotifier {
     if (result != TicTacToeMoveResult.accepted) return;
 
     notifyListeners();
-    if (model.isFinished) _publishResult();
+    if (model.isFinished) _scheduleResult();
+  }
+
+  void _scheduleResult() {
+    if (_disposed ||
+        session.phase != MatchPhase.playing ||
+        !model.isFinished ||
+        _resultTimer != null) {
+      return;
+    }
+    if (resultRevealDelay == Duration.zero) {
+      _publishResult();
+      return;
+    }
+    _resultTimer = Timer(resultRevealDelay, () {
+      _resultTimer = null;
+      if (_disposed ||
+          session.phase != MatchPhase.playing ||
+          !model.isFinished) {
+        return;
+      }
+      _publishResult();
+    });
+    notifyListeners();
   }
 
   void _publishResult() {
@@ -144,12 +177,18 @@ class TicTacToeController extends ChangeNotifier {
     _botTimer = null;
   }
 
+  void _cancelResult() {
+    _resultTimer?.cancel();
+    _resultTimer = null;
+  }
+
   @override
   void dispose() {
     if (_disposed) return;
     _disposed = true;
     session.removeListener(_syncSession);
     _cancelBotTurn();
+    _cancelResult();
     super.dispose();
   }
 }

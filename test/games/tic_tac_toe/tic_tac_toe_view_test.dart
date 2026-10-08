@@ -27,7 +27,7 @@ void main() {
 
     expect(find.text('Player 1'), findsOneWidget);
     expect(find.text('Player 2'), findsOneWidget);
-    expect(find.text("PLAYER 1'S TURN • X"), findsOneWidget);
+    expect(find.text('X TURN'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('tic-tac-toe-cell-4')));
     expect(tappedCell, 4);
@@ -38,8 +38,8 @@ void main() {
     expect(model.play(0, 0), TicTacToeMoveResult.accepted);
     await tester.pumpWidget(board(model));
 
-    expect(find.text('X'), findsNWidgets(2));
-    expect(find.text("PLAYER 2'S TURN • O"), findsOneWidget);
+    expect(find.text('O TURN'), findsOneWidget);
+    expect(find.byType(Image), findsNWidgets(3));
     expect(find.bySemanticsLabel('Cell 1, X'), findsOneWidget);
   });
 
@@ -71,7 +71,7 @@ void main() {
     }
     await tester.pumpWidget(board(model));
 
-    expect(find.text('DRAW • BOARD FULL'), findsOneWidget);
+    expect(find.text('DRAW!'), findsNWidgets(2));
     expect(find.bySemanticsLabel('Cell 1, X, draw'), findsOneWidget);
   });
 
@@ -85,6 +85,55 @@ void main() {
 
     expect(find.byType(TicTacToeBoard), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('fits compact enlarged text without layout overflow', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.6)),
+            child: Scaffold(
+              body: TicTacToeBoard(model: TicTacToeModel(), onCellTap: (_) {}),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(TicTacToeBoard), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('occupied cell gives visible invalid feedback', (tester) async {
+    final session = MatchSession(options: MatchOptions.friend())..start();
+    addTearDown(session.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
+        home: Scaffold(
+          body: TicTacToeView(session: session, options: session.options),
+        ),
+      ),
+    );
+
+    final firstCell = find.byKey(const ValueKey('tic-tac-toe-cell-0'));
+    await tester.tap(firstCell);
+    await tester.pump();
+    await tester.tap(firstCell);
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('Cell 1, X, invalid move'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(find.bySemanticsLabel('Cell 1, X'), findsOneWidget);
   });
 
   testWidgets('friend match reports a result and rematch alternates starter', (
@@ -105,13 +154,17 @@ void main() {
       await tester.tap(find.byKey(ValueKey('tic-tac-toe-cell-$cell')));
       await tester.pump();
     }
+    expect(session.phase, MatchPhase.playing);
+    expect(find.text('PLAYER 1 WINS'), findsOneWidget);
+    expect(find.byType(CustomPaint), findsWidgets);
+
+    await tester.pump(const Duration(milliseconds: 1300));
     expect(session.phase, MatchPhase.finished);
     expect(session.winner, 0);
-    expect(find.text('PLAYER 1 WINS'), findsOneWidget);
 
     session.start();
     await tester.pump();
-    expect(find.text("PLAYER 2'S TURN • O"), findsOneWidget);
+    expect(find.text('O TURN'), findsOneWidget);
     expect(find.bySemanticsLabel('Cell 1, empty'), findsOneWidget);
   });
 
@@ -133,7 +186,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('tic-tac-toe-cell-0')));
     await tester.pump();
-    expect(find.text('BOT IS THINKING… • O'), findsOneWidget);
+    expect(find.text('O THINKING…'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const ValueKey('tic-tac-toe-cell-1')),
