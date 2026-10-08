@@ -6,6 +6,31 @@ import 'package:tap_tussle/games/lane_dash/lane_dash_game.dart';
 import 'package:tap_tussle/games/lane_dash/lane_dash_view.dart';
 
 void main() {
+  test('assigns friend and difficulty-specific bot cars', () {
+    final friendSession = MatchSession(options: MatchOptions.friend());
+    final friendGame = LaneDashGame(friendSession);
+    expect(friendGame.carSpriteForPlayer(0), 'car_blue');
+    expect(friendGame.carSpriteForPlayer(1), 'car_red');
+    friendGame.stopMatch();
+    friendSession.dispose();
+
+    const expected = {
+      BotDifficulty.easy: 'car_green',
+      BotDifficulty.normal: 'car_yellow',
+      BotDifficulty.hard: 'car_purple',
+    };
+    for (final entry in expected.entries) {
+      final session = MatchSession(
+        options: MatchOptions.bot(difficulty: entry.key),
+      );
+      final game = LaneDashGame(session);
+      expect(game.carSpriteForPlayer(0), 'car_blue');
+      expect(game.carSpriteForPlayer(1), entry.value);
+      game.stopMatch();
+      session.dispose();
+    }
+  });
+
   testWidgets('both players move in the same screen direction as their swipe', (
     tester,
   ) async {
@@ -29,6 +54,7 @@ void main() {
       ),
     );
     await tester.pump();
+    expect(tester.takeException(), isNull);
 
     await tester.dragFrom(const Offset(180, 450), const Offset(-80, 0));
     expect(game.model.lanes[0], 0, reason: 'Player 1 swiped left');

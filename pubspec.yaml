@@ -71,6 +71,7 @@ flutter:
     - assets/games/paddle_duel/
     - assets/games/reaction_duel/
     - assets/games/air_hockey/
+    - assets/games/lane_dash/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

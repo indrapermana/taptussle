@@ -1297,7 +1297,7 @@ installed, and launched successfully on the connected iPhone named Indra
   cars follow the swipe's screen direction, ignore short and predominantly
   vertical gestures, clarify the friend and bot instructions, and cover left and
   right swipes for both halves with production-view tests.
-- [ ] LD2 — Lane Dash cars, road, and presentation: clean, crop, resize, and
+- [x] LD2 — Lane Dash cars, road, and presentation: clean, crop, resize, and
   integrate the selected car, road, countdown, trail, drift, and speed assets;
   animate lane changes and road motion; assign blue/red cars in friend mode and
   blue plus difficulty-specific green/yellow/purple cars in bot mode; orient the
