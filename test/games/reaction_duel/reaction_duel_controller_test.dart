@@ -21,13 +21,18 @@ void main() {
 
     expect(controller.scores, [0, 1]);
     expect(session.scores, [0, 1]);
+    expect(controller.phase, ReactionPhase.resolving);
+    expect(controller.lastResult?.outcome, ReactionRoundOutcome.falseStart);
+    expect(controller.lastResult?.falseStarter, 0);
+    expect(controller.lastResult?.winner, 1);
   });
 
-  test('near-simultaneous legal taps replay without a score', () async {
+  test('same-event legal taps replay without a score', () async {
     final session = MatchSession(options: MatchOptions.friend(winningScore: 5))
       ..start();
     final controller = ReactionDuelController(
       session: session,
+      prepareDelay: Duration.zero,
       waitDelay: Duration.zero,
       random: Random(1),
     );
@@ -35,13 +40,38 @@ void main() {
     addTearDown(session.dispose);
 
     controller.startRound();
-    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(controller.phase, ReactionPhase.signal);
     controller.tap(0);
     controller.tap(1);
+    expect(controller.lastResult?.outcome, ReactionRoundOutcome.tie);
+    expect(controller.lastResult?.difference, isNotNull);
     await Future<void>.delayed(const Duration(milliseconds: 750));
 
     expect(controller.scores, [0, 0]);
+  });
+
+  test('a 15 ms difference awards the faster player', () async {
+    final session = MatchSession(options: MatchOptions.friend(winningScore: 5))
+      ..start();
+    final controller = ReactionDuelController(
+      session: session,
+      prepareDelay: Duration.zero,
+      waitDelay: Duration.zero,
+      random: Random(3),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    controller.startRound();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    controller.tap(0);
+    await Future<void>.delayed(const Duration(milliseconds: 15));
+    controller.tap(1);
+
+    expect(controller.scores, [1, 0]);
+    expect(controller.lastResult?.outcome, ReactionRoundOutcome.point);
+    expect(controller.lastResult?.winner, 0);
   });
 
   test('bot only reacts after the signal', () async {
@@ -50,6 +80,7 @@ void main() {
     )..start();
     final controller = ReactionDuelController(
       session: session,
+      prepareDelay: Duration.zero,
       waitDelay: const Duration(milliseconds: 20),
       botDelay: const Duration(milliseconds: 20),
       random: Random(1),
@@ -63,5 +94,34 @@ void main() {
     expect(controller.scores, [0, 0]);
     await Future<void>.delayed(const Duration(milliseconds: 150));
     expect(controller.scores, [0, 1]);
+    expect(controller.lastResult?.outcome, ReactionRoundOutcome.point);
+    expect(controller.lastResult?.reactionTimes[1], isNotNull);
   });
+
+  test(
+    'legal tap publishes reaction time without changing score rules',
+    () async {
+      final session = MatchSession(
+        options: MatchOptions.friend(winningScore: 5),
+      )..start();
+      final controller = ReactionDuelController(
+        session: session,
+        prepareDelay: Duration.zero,
+        waitDelay: Duration.zero,
+        random: Random(2),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+
+      controller.startRound();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      controller.tap(0);
+      await Future<void>.delayed(const Duration(milliseconds: 90));
+
+      expect(controller.scores, [1, 0]);
+      expect(controller.lastResult?.winner, 0);
+      expect(controller.lastResult?.reactionTimes[0], isNotNull);
+      expect(controller.lastResult?.reactionTimes[1], isNull);
+    },
+  );
 }

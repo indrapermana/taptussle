@@ -399,7 +399,7 @@ rounds without awarding points.
 - [x] M4.5 Register the game with setup, favourites, sound, vibration, and results.
 
 Reaction Duel is implemented as a pure Flutter game. It uses a timer/state
-machine rather than render frames, replays legal taps within a 75 ms tie window,
+machine rather than render frames, replays legal taps within a 5 ms tie window,
 and gives a false starter's opponent the point. Bot delays begin only after the
 signal, vary by difficulty, and use the shared configured winning score.
 
@@ -1274,6 +1274,15 @@ installed, and launched successfully on the connected iPhone named Indra
   layouts with widget tests.
 - [ ] Shared results: confirm score cards, standings, result announcements, and
   all three actions on physical iPhone and Android devices.
+- [x] Reaction Duel: preserve the existing score and false-start rules, use a
+  refined 5 ms simultaneous-tap window, and preserve post-signal bot rules while
+  redesigning the arena around two full-half touch
+  zones, mirrored friend labels, a prominent animated signal core, per-round
+  reaction times, explicit false-start and tie feedback, and the six supplied
+  visual effects. Keep reaction times match-local rather than stored records.
+- [ ] Reaction Duel: verify full-half simultaneous touch input, mirrored Player 2
+  readability, signal visibility, reaction-time feedback, false starts, ties,
+  and all three bot difficulties on physical iPhone and Android devices.
 
 ## M23 — Eighteen-game release validation and store preparation
 

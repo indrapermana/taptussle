@@ -69,6 +69,7 @@ flutter:
     - assets/fonts/fredoka/OFL.txt
     - assets/game_logos/catalog/
     - assets/games/paddle_duel/
+    - assets/games/reaction_duel/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

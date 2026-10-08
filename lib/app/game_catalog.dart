@@ -287,7 +287,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     supportedPlayerCounts: const {PlayerCount.two},
     difficultyType: DifficultyType.bot,
     botInstructions:
-        'Wait for TAP. You control the mint zone at the bottom; the bot uses the coral zone at the top. Tapping before the signal awards the bot a point.',
+        'Wait for TAP. You control the blue zone at the bottom; the bot uses the warm zone at the top. Tapping before the signal awards the bot a point.',
     title: 'Reaction Duel',
     subtitle: 'Wait. Watch. Win the tap.',
     instructions:
