@@ -1293,6 +1293,29 @@ installed, and launched successfully on the connected iPhone named Indra
 - [ ] Air Hockey: verify sprite-to-collision alignment, goal-mouth readability,
   simultaneous friend input, goal announcements, effects, scoring, rematch, and
   all bot difficulties on physical iPhone and Android devices.
+- [x] LD1 — Lane Dash controls and regression coverage: make both participants'
+  cars follow the swipe's screen direction, ignore short and predominantly
+  vertical gestures, clarify the friend and bot instructions, and cover left and
+  right swipes for both halves with production-view tests.
+- [ ] LD2 — Lane Dash cars, road, and presentation: clean, crop, resize, and
+  integrate the selected car, road, countdown, trail, drift, and speed assets;
+  animate lane changes and road motion; assign blue/red cars in friend mode and
+  blue plus difficulty-specific green/yellow/purple cars in bot mode; orient the
+  top car and participant HUD for same-device play.
+- [ ] LD3 — Lane Dash varied static and moving obstacles: introduce seeded typed
+  obstacles, use cones, boxes, barriers, barricades, rocks, and tires as static
+  hazards, and give cars, vans, and trucks deterministic longitudinal movement.
+  Preserve a reachable safe route, matching visual and collision footprints,
+  frame-rate-independent outcomes, legal bot lookahead, and equal runner speed.
+- [ ] LD4 — Lane Dash feedback and HUD: add readable READY/GO presentation,
+  swipe feedback, restrained speed effects, collision spark/debris/smoke, bounded
+  camera response, clear slowdown state, stronger progress presentation, and a
+  finish moment before the shared result page. Keep unused pickup, life, lap,
+  pause, and settings assets out until their rules are intentionally designed.
+- [ ] LD5 — Lane Dash accessibility, performance, and device validation: retain
+  native semantic status, optimize and preload only shipped sprites, cover compact
+  phones and enlarged text, and verify simultaneous friend input, every bot
+  difficulty, pause/resume, restoration, rematch, results, iPhone, and Android.
 
 ## M23 — Eighteen-game release validation and store preparation
 

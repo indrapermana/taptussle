@@ -6,10 +6,17 @@ import '../../core/match_session.dart';
 import 'lane_dash_game.dart';
 
 class LaneDashView extends StatefulWidget {
-  const LaneDashView({required this.session, required this.options, super.key});
+  const LaneDashView({
+    required this.session,
+    required this.options,
+    this.gameOverride,
+    super.key,
+  });
 
   final MatchSession session;
   final MatchOptions options;
+  @visibleForTesting
+  final LaneDashGame? gameOverride;
 
   @override
   State<LaneDashView> createState() => _LaneDashViewState();
@@ -23,7 +30,7 @@ class _LaneDashViewState extends State<LaneDashView> {
   @override
   void initState() {
     super.initState();
-    game = LaneDashGame(widget.session);
+    game = widget.gameOverride ?? LaneDashGame(widget.session);
     widget.session.addListener(_sync);
     _sync();
   }
@@ -65,11 +72,12 @@ class _LaneDashViewState extends State<LaneDashView> {
           if (swipe == null || widget.session.phase != MatchPhase.playing) {
             return;
           }
-          final delta = event.localPosition.dx - swipe.$2.dx;
+          final delta = event.localPosition - swipe.$2;
           final threshold = (context.size!.width * .06).clamp(24.0, 48.0);
-          if (delta.abs() < threshold) return;
-          final direction = delta.isNegative ? -1 : 1;
-          game.move(swipe.$1, swipe.$1 == 1 ? -direction : direction);
+          if (delta.dx.abs() < threshold || delta.dx.abs() <= delta.dy.abs()) {
+            return;
+          }
+          game.move(swipe.$1, delta.dx.isNegative ? -1 : 1);
         },
         onPointerCancel: (event) => _swipes.remove(event.pointer),
         child: const SizedBox.expand(),

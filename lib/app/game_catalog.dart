@@ -248,11 +248,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     subtitle: 'Dodge, switch, finish.',
     instructions:
         'Race along your own three-lane track. Swipe left or right across your '
-        'half to switch lanes and avoid orange cones. Hitting a cone slows you '
-        'down. The top runner faces the opposite way. Reach 1,200 m first to win.',
+        'half to move the car in that same screen direction and avoid obstacles. '
+        'Hitting an obstacle slows you down. Reach 1,200 m first to win.',
     botInstructions:
-        'Swipe left or right across the bottom track to move the mint runner. '
-        'Hitting a cone slows you down. Each runner gets a different course. '
+        'Swipe left or right across the bottom track to move your car in that '
+        'same screen direction. Hitting an obstacle slows you down. Each runner '
+        'gets a different course. '
         'Higher difficulties add more obstacles while the bot reacts faster '
         'and makes fewer mistakes.',
     icon: Icons.directions_run_rounded,
