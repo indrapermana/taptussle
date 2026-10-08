@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 
@@ -33,6 +34,9 @@ class LaneDashGame extends Game {
   final _laneChangeDirection = [0, 0];
   final _collisionEffect = [0.0, 0.0];
   final Map<String, ui.Image> _sprites = {};
+  final ValueNotifier<String> accessibilityAnnouncement = ValueNotifier(
+    'Get ready',
+  );
   var _reportedCountdown = 3;
   double _goEffect = 0;
   LaneDashResult? _pendingResult;
@@ -49,11 +53,8 @@ class LaneDashGame extends Game {
     'car_yellow',
     'car_purple',
     'road_straight',
-    'road_dashed',
     'road_edge_left',
     'road_edge_right',
-    'ready_text',
-    'go_text',
     'boost_trail_blue',
     'boost_trail_red',
     'drift_dust',
@@ -98,6 +99,7 @@ class LaneDashGame extends Game {
     _goEffect = 0;
     _pendingResult = null;
     _finishPresentationRemaining = 0;
+    accessibilityAnnouncement.value = 'Get ready';
   }
 
   void stopMatch() {
@@ -160,21 +162,26 @@ class LaneDashGame extends Game {
     if (countdown != _reportedCountdown) {
       _reportedCountdown = countdown;
       if (countdown == 0) _goEffect = .7;
+      accessibilityAnnouncement.value = countdown == 0 ? 'Go' : '$countdown';
       SoundEffects.play(
         countdown == 0 ? SoundEffect.countdownGo : SoundEffect.countdownTick,
       );
     }
     var collided = false;
+    final collidedPlayers = <String>[];
     for (var player = 0; player < 2; player++) {
       if (model.collisionCount[player] != _reportedCollisions[player]) {
         _reportedCollisions[player] = model.collisionCount[player];
         _collisionEffect[player] = .48;
         collided = true;
+        collidedPlayers.add(session.options.playerLabel(player));
       }
     }
     if (collided) {
       SoundEffects.play(SoundEffect.impactHeavy);
       HapticEffects.paddleHit();
+      accessibilityAnnouncement.value =
+          '${collidedPlayers.join(' and ')} hit an obstacle and slowed down';
     }
     final progress = [model.distance[0].round(), model.distance[1].round()];
     final result = model.result;
@@ -183,6 +190,14 @@ class LaneDashGame extends Game {
         _pendingResult = result;
         _finishPresentationRemaining = finishPresentationDuration;
         SoundEffects.play(SoundEffect.roundReveal);
+        accessibilityAnnouncement.value = switch (result) {
+          LaneDashResult.playerOne =>
+            '${session.options.playerLabel(0)} wins the race',
+          LaneDashResult.playerTwo =>
+            '${session.options.playerLabel(1)} wins the race',
+          LaneDashResult.draw ||
+          LaneDashResult.timeout => 'Photo finish. The race is a draw',
+        };
       } else {
         _finishPresentationRemaining = math.max(
           0,
@@ -379,56 +394,74 @@ class LaneDashGame extends Game {
     if (_pendingResult != null) {
       _drawFinishPresentation(canvas, _pendingResult!);
     } else if (model.countdown > 0) {
-      _drawSprite(
+      _drawCountdownBanner(
         canvas,
-        'ready_text',
-        const Offset(180, 220),
-        const Size(142, 80),
-        rotation: math.pi,
-        opacity: .88,
-      );
-      _drawSprite(
-        canvas,
-        'ready_text',
-        const Offset(180, 380),
-        const Size(142, 80),
-        opacity: .88,
-      );
-      _drawLabel(
-        canvas,
-        model.countdown.ceil().toString(),
-        const Offset(180, 269),
-        const Color(0xFFFFFFFF),
-        34,
-        centered: true,
-        rotation: math.pi,
-      );
-      _drawLabel(
-        canvas,
-        model.countdown.ceil().toString(),
-        const Offset(180, 331),
-        const Color(0xFFFFFFFF),
-        34,
-        centered: true,
+        label: 'READY',
+        detail: model.countdown.ceil().toString(),
       );
     } else if (_goEffect > 0) {
-      _drawSprite(
+      _drawCountdownBanner(
         canvas,
-        'go_text',
-        const Offset(180, 235),
-        Size(142 + 18 * _goEffect, 80 + 12 * _goEffect),
-        rotation: math.pi,
-        opacity: (_goEffect / .3).clamp(0, 1).toDouble(),
-      );
-      _drawSprite(
-        canvas,
-        'go_text',
-        const Offset(180, 365),
-        Size(142 + 18 * _goEffect, 80 + 12 * _goEffect),
+        label: 'GO!',
         opacity: (_goEffect / .3).clamp(0, 1).toDouble(),
       );
     }
     canvas.restore();
+  }
+
+  void _drawCountdownBanner(
+    Canvas canvas, {
+    required String label,
+    String? detail,
+    double opacity = 1,
+  }) {
+    final accent = label == 'GO!'
+        ? const Color(0xFFFFD166)
+        : const Color(0xFFEEF7FF);
+    for (final top in [true, false]) {
+      final center = Offset(180, top ? 247 : 353);
+      final plate = RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: center,
+          width: detail == null ? 128 : 150,
+          height: detail == null ? 58 : 76,
+        ),
+        const Radius.circular(18),
+      );
+      canvas.drawRRect(
+        plate,
+        Paint()
+          ..color = const Color(0xE6122030).withValues(alpha: .9 * opacity),
+      );
+      canvas.drawRRect(
+        plate,
+        Paint()
+          ..color = accent.withValues(alpha: .9 * opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+      final rotation = top ? math.pi : 0.0;
+      _drawLabel(
+        canvas,
+        label,
+        center + Offset(0, detail == null ? 0 : (top ? 14 : -14)),
+        accent.withValues(alpha: opacity),
+        detail == null ? 34 : 23,
+        centered: true,
+        rotation: rotation,
+      );
+      if (detail != null) {
+        _drawLabel(
+          canvas,
+          detail,
+          center + Offset(0, top ? -17 : 17),
+          const Color(0xFFFFFFFF).withValues(alpha: opacity),
+          26,
+          centered: true,
+          rotation: rotation,
+        );
+      }
+    }
   }
 
   void _drawRoad(
@@ -449,7 +482,7 @@ class LaneDashGame extends Game {
           : panelTop + tile * tileHeight + offset;
       final laneSprites = [
         'road_edge_left',
-        tile.isEven ? 'road_dashed' : 'road_straight',
+        'road_straight',
         'road_edge_right',
       ];
       for (var lane = 0; lane < 3; lane++) {
@@ -479,7 +512,7 @@ class LaneDashGame extends Game {
     required bool top,
     required Color color,
   }) {
-    final rotation = top ? 0.0 : math.pi;
+    final rotation = top ? math.pi : 0.0;
     final direction = top ? -1.0 : 1.0;
     if (model.countdown <= 0) {
       _drawSprite(

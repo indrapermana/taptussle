@@ -1312,10 +1312,14 @@ installed, and launched successfully on the connected iPhone named Indra
   camera response, clear slowdown state, stronger progress presentation, and a
   finish moment before the shared result page. Keep unused pickup, life, lap,
   pause, and settings assets out until their rules are intentionally designed.
-- [ ] LD5 — Lane Dash accessibility, performance, and device validation: retain
-  native semantic status, optimize and preload only shipped sprites, cover compact
-  phones and enlarged text, and verify simultaneous friend input, every bot
-  difficulty, pause/resume, restoration, rematch, results, iPhone, and Android.
+- [x] LD5 — Lane Dash accessibility, performance, and lifecycle validation:
+  provide adjustable semantic player zones and live race announcements, preload
+  only sprites used by the renderer within a bounded asset budget, and cover compact
+  phones, enlarged text, simultaneous friend input, every bot difficulty,
+  pause/resume, rematch, and delayed result reporting.
+- [ ] Lane Dash LD5 physical-device verification: verify friend mode, Easy,
+  Normal, and Hard bots, pause/resume, rematch, results, accessibility controls,
+  and stable performance on iPhone and Android.
 
 ## M23 — Eighteen-game release validation and store preparation
 

@@ -45,6 +45,21 @@ class _LaneDashViewState extends State<LaneDashView> {
     }
   }
 
+  String _laneName(int player) => switch (game.model.lanes[player]) {
+    0 => 'Left lane',
+    1 => 'Middle lane',
+    _ => 'Right lane',
+  };
+
+  void _moveFromSemantics(int player, int direction) {
+    if (widget.session.phase != MatchPhase.playing ||
+        (player == 1 && widget.options.mode == PlayMode.bot)) {
+      return;
+    }
+    game.move(player, direction);
+    setState(() {});
+  }
+
   @override
   void dispose() {
     widget.session.removeListener(_sync);
@@ -53,35 +68,99 @@ class _LaneDashViewState extends State<LaneDashView> {
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
-    children: [
-      GameWidget(game: game),
-      Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: (event) {
-          if (widget.session.phase != MatchPhase.playing) return;
-          final player = event.localPosition.dy < context.size!.height / 2
-              ? 1
-              : 0;
-          if (player == 1 && widget.options.mode == PlayMode.bot) return;
-          _swipes[event.pointer] = (player, event.localPosition);
-        },
-        onPointerUp: (event) {
-          final swipe = _swipes.remove(event.pointer);
-          if (swipe == null || widget.session.phase != MatchPhase.playing) {
-            return;
-          }
-          final delta = event.localPosition - swipe.$2;
-          final threshold = (context.size!.width * .06).clamp(24.0, 48.0);
-          if (delta.dx.abs() < threshold || delta.dx.abs() <= delta.dy.abs()) {
-            return;
-          }
-          game.move(swipe.$1, delta.dx.isNegative ? -1 : 1);
-        },
-        onPointerCancel: (event) => _swipes.remove(event.pointer),
-        child: const SizedBox.expand(),
-      ),
-    ],
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    label:
+        'Lane Dash. Swipe horizontally in your half to move between three lanes.',
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        ExcludeSemantics(child: GameWidget(game: game)),
+        Align(
+          alignment: Alignment.topCenter,
+          child: FractionallySizedBox(
+            widthFactor: 1,
+            heightFactor: .5,
+            child: Semantics(
+              key: const ValueKey('lane-dash-player-zone-1'),
+              container: true,
+              button: widget.options.mode != PlayMode.bot,
+              label: widget.options.mode == PlayMode.bot
+                  ? '${widget.options.playerLabel(1)} track'
+                  : '${widget.options.playerLabel(1)} track. ${_laneName(1)}',
+              hint: widget.options.mode == PlayMode.bot
+                  ? 'The bot controls this car'
+                  : 'Swipe left or right, or use adjust actions, to change lanes',
+              onIncrease: widget.options.mode == PlayMode.bot
+                  ? null
+                  : () => _moveFromSemantics(1, 1),
+              onDecrease: widget.options.mode == PlayMode.bot
+                  ? null
+                  : () => _moveFromSemantics(1, -1),
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: FractionallySizedBox(
+            widthFactor: 1,
+            heightFactor: .5,
+            child: Semantics(
+              key: const ValueKey('lane-dash-player-zone-0'),
+              container: true,
+              button: true,
+              label: '${widget.options.playerLabel(0)} track. ${_laneName(0)}',
+              hint:
+                  'Swipe left or right, or use adjust actions, to change lanes',
+              onIncrease: () => _moveFromSemantics(0, 1),
+              onDecrease: () => _moveFromSemantics(0, -1),
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ),
+        ValueListenableBuilder<String>(
+          valueListenable: game.accessibilityAnnouncement,
+          builder: (context, announcement, _) => Align(
+            alignment: Alignment.center,
+            child: Semantics(
+              key: const ValueKey('lane-dash-status'),
+              container: true,
+              liveRegion: true,
+              label: announcement,
+              child: const SizedBox(width: 1, height: 1),
+            ),
+          ),
+        ),
+        Listener(
+          key: const ValueKey('lane-dash-track'),
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (event) {
+            if (widget.session.phase != MatchPhase.playing) return;
+            final player = event.localPosition.dy < context.size!.height / 2
+                ? 1
+                : 0;
+            if (player == 1 && widget.options.mode == PlayMode.bot) return;
+            _swipes[event.pointer] = (player, event.localPosition);
+          },
+          onPointerUp: (event) {
+            final swipe = _swipes.remove(event.pointer);
+            if (swipe == null || widget.session.phase != MatchPhase.playing) {
+              return;
+            }
+            final delta = event.localPosition - swipe.$2;
+            final threshold = (context.size!.width * .06).clamp(24.0, 48.0);
+            if (delta.dx.abs() < threshold ||
+                delta.dx.abs() <= delta.dy.abs()) {
+              return;
+            }
+            game.move(swipe.$1, delta.dx.isNegative ? -1 : 1);
+            setState(() {});
+          },
+          onPointerCancel: (event) => _swipes.remove(event.pointer),
+          child: const SizedBox.expand(),
+        ),
+      ],
+    ),
   );
 }
