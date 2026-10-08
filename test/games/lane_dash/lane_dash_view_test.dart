@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
 import 'package:tap_tussle/games/lane_dash/lane_dash_game.dart';
+import 'package:tap_tussle/games/lane_dash/lane_dash_model.dart';
 import 'package:tap_tussle/games/lane_dash/lane_dash_view.dart';
 
 void main() {
@@ -29,6 +30,19 @@ void main() {
       game.stopMatch();
       session.dispose();
     }
+  });
+
+  test('maps every obstacle kind to a production sprite', () {
+    final session = MatchSession(options: MatchOptions.friend());
+    final game = LaneDashGame(session);
+
+    expect(
+      LaneObstacleKind.values.map(game.obstacleSpriteForKind).toSet().length,
+      LaneObstacleKind.values.length,
+    );
+
+    game.stopMatch();
+    session.dispose();
   });
 
   testWidgets('both players move in the same screen direction as their swipe', (

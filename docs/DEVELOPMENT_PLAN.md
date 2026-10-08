@@ -1302,7 +1302,7 @@ installed, and launched successfully on the connected iPhone named Indra
   animate lane changes and road motion; assign blue/red cars in friend mode and
   blue plus difficulty-specific green/yellow/purple cars in bot mode; orient the
   top car and participant HUD for same-device play.
-- [ ] LD3 — Lane Dash varied static and moving obstacles: introduce seeded typed
+- [x] LD3 — Lane Dash varied static and moving obstacles: introduce seeded typed
   obstacles, use cones, boxes, barriers, barricades, rocks, and tires as static
   hazards, and give cars, vans, and trucks deterministic longitudinal movement.
   Preserve a reachable safe route, matching visual and collision footprints,

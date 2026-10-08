@@ -4,10 +4,51 @@ import '../../core/match_options.dart';
 
 enum LaneDashResult { playerOne, playerTwo, draw, timeout }
 
+enum LaneObstacleKind {
+  cone,
+  box,
+  barrier,
+  barricade,
+  rock,
+  tires,
+  car,
+  van,
+  truck;
+
+  bool get isTraffic => switch (this) {
+    car || van || truck => true,
+    _ => false,
+  };
+
+  double get longitudinalSpeed => switch (this) {
+    car => -18,
+    van => -13,
+    truck => -9,
+    _ => 0,
+  };
+}
+
 class LaneObstacle {
-  const LaneObstacle(this.distance, this.blockedLanes);
+  const LaneObstacle({
+    required this.id,
+    required this.distance,
+    required this.blockedLanes,
+    required this.kind,
+  });
+
+  final int id;
   final double distance;
   final Set<int> blockedLanes;
+  final LaneObstacleKind kind;
+
+  double positionAt(double elapsed) {
+    if (!kind.isTraffic) return distance;
+    final activationTime = max(
+      0,
+      (distance - LaneDashModel.trafficActivationGap) / LaneDashModel.baseSpeed,
+    );
+    return distance + kind.longitudinalSpeed * max(0, elapsed - activationTime);
+  }
 }
 
 /// Seedable three-lane race simulation with an independent course per runner.
@@ -19,8 +60,12 @@ class LaneDashModel {
       final first = obstacleCourses[1].first;
       obstacleCourses[1] = [
         LaneObstacle(
-          first.distance,
-          first.blockedLanes.map((lane) => (lane + 1) % laneCount).toSet(),
+          id: first.id,
+          distance: first.distance,
+          blockedLanes: first.blockedLanes
+              .map((lane) => (lane + 1) % laneCount)
+              .toSet(),
+          kind: first.kind,
         ),
         ...obstacleCourses[1].skip(1),
       ];
@@ -29,11 +74,16 @@ class LaneDashModel {
 
   static const laneCount = 3;
   static const finishDistance = 1200.0;
+  static const trafficActivationGap = 240.0;
   static const maximumDuration = Duration(seconds: 45);
   final BotDifficulty difficulty;
   final Random _random;
   late final List<List<LaneObstacle>> obstacleCourses;
   List<LaneObstacle> obstaclesFor(int player) => obstacleCourses[player];
+  double obstaclePosition(LaneObstacle obstacle) =>
+      obstacle.positionAt(elapsed);
+  double obstacleGap(int player, LaneObstacle obstacle) =>
+      obstaclePosition(obstacle) - distance[player];
   final lanes = [1, 1];
   final distance = [0.0, 0.0];
   final slowdown = [0.0, 0.0];
@@ -90,15 +140,48 @@ class LaneDashModel {
       for (var index = 0; index < blockedLaneCount; index++) {
         blocked.add(candidates[index]);
       }
-      generated.add(LaneObstacle(distance, blocked));
+      generated.add(
+        LaneObstacle(
+          id: generated.length,
+          distance: distance,
+          blockedLanes: Set.unmodifiable(blocked),
+          kind: _obstacleKind(generated.length),
+        ),
+      );
     }
     return List.unmodifiable(generated);
+  }
+
+  LaneObstacleKind _obstacleKind(int index) {
+    const staticKinds = [
+      LaneObstacleKind.cone,
+      LaneObstacleKind.box,
+      LaneObstacleKind.barrier,
+      LaneObstacleKind.barricade,
+      LaneObstacleKind.rock,
+      LaneObstacleKind.tires,
+    ];
+    const trafficKinds = [
+      LaneObstacleKind.car,
+      LaneObstacleKind.van,
+      LaneObstacleKind.truck,
+    ];
+    final trafficFrequency = switch (difficulty) {
+      BotDifficulty.easy => 5,
+      BotDifficulty.normal => 4,
+      BotDifficulty.hard => 3,
+    };
+    if ((index + 1) % trafficFrequency == 0) {
+      return trafficKinds[_random.nextInt(trafficKinds.length)];
+    }
+    return staticKinds[_random.nextInt(staticKinds.length)];
   }
 
   bool _samePattern(List<LaneObstacle> first, List<LaneObstacle> second) {
     if (first.length != second.length) return false;
     for (var index = 0; index < first.length; index++) {
       if (first[index].distance != second[index].distance ||
+          first[index].kind != second[index].kind ||
           first[index].blockedLanes.length !=
               second[index].blockedLanes.length ||
           !first[index].blockedLanes.containsAll(second[index].blockedLanes)) {
@@ -117,10 +200,21 @@ class LaneDashModel {
     if (result != null || dt <= 0) {
       return;
     }
+    var remaining = dt;
     if (countdown > 0) {
-      countdown = max(0, countdown - dt);
-      return;
+      final countdownStep = min(countdown, remaining);
+      countdown -= countdownStep;
+      remaining -= countdownStep;
+      if (remaining <= 0) return;
     }
+    while (remaining > .000001 && result == null) {
+      final step = min(remaining, 1 / 120);
+      _step(step);
+      remaining -= step;
+    }
+  }
+
+  void _step(double dt) {
     elapsed += dt;
     for (var player = 0; player < 2; player++) {
       final previous = distance[player];
@@ -130,8 +224,10 @@ class LaneDashModel {
       distance[player] +=
           (slowdown[player] > 0 ? speed[player] * .48 : speed[player]) * dt;
       for (final obstacle in obstacleCourses[player]) {
-        if (previous < obstacle.distance &&
-            distance[player] >= obstacle.distance &&
+        final previousObstaclePosition = obstacle.positionAt(elapsed - dt);
+        final obstaclePosition = obstacle.positionAt(elapsed);
+        if (previous < previousObstaclePosition &&
+            distance[player] >= obstaclePosition &&
             obstacle.blockedLanes.contains(lanes[player])) {
           slowdown[player] = .9;
           collisionCount[player]++;

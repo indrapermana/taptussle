@@ -51,6 +51,15 @@ class LaneDashGame extends Game {
     'boost_trail_red',
     'drift_dust',
     'speed_streak',
+    'obstacle_cone',
+    'obstacle_box',
+    'obstacle_barrier',
+    'obstacle_barricade',
+    'obstacle_rock',
+    'obstacle_tires',
+    'obstacle_car',
+    'obstacle_van',
+    'obstacle_truck',
   ];
 
   @override
@@ -92,6 +101,18 @@ class LaneDashGame extends Game {
       BotDifficulty.hard => 'car_purple',
     };
   }
+
+  String obstacleSpriteForKind(LaneObstacleKind kind) => switch (kind) {
+    LaneObstacleKind.cone => 'obstacle_cone',
+    LaneObstacleKind.box => 'obstacle_box',
+    LaneObstacleKind.barrier => 'obstacle_barrier',
+    LaneObstacleKind.barricade => 'obstacle_barricade',
+    LaneObstacleKind.rock => 'obstacle_rock',
+    LaneObstacleKind.tires => 'obstacle_tires',
+    LaneObstacleKind.car => 'obstacle_car',
+    LaneObstacleKind.van => 'obstacle_van',
+    LaneObstacleKind.truck => 'obstacle_truck',
+  };
 
   @override
   Color backgroundColor() => const Color(0xFF142333);
@@ -174,11 +195,16 @@ class LaneDashGame extends Game {
       _drawRoad(canvas, player: player, top: top, panelTop: panelTop);
       final runnerY = top ? 66.0 : 534.0;
       for (final obstacle in model.obstaclesFor(player)) {
-        final gap = obstacle.distance - model.distance[player];
-        if (gap < -5 || gap > 650) continue;
+        final gap = model.obstacleGap(player, obstacle);
+        if (gap < -80 || gap > 650) continue;
         final y = top ? runnerY + gap * 1.15 : runnerY - gap * 1.15;
         for (final lane in obstacle.blockedLanes) {
-          _drawCone(canvas, 60 + 120.0 * lane, y);
+          _drawObstacle(
+            canvas,
+            obstacle.kind,
+            Offset(60 + 120.0 * lane, y),
+            top: top,
+          );
         }
       }
       final color = player == 0
@@ -471,34 +497,28 @@ class LaneDashGame extends Game {
     );
   }
 
-  void _drawCone(Canvas canvas, double x, double y) {
-    final path = Path()
-      ..moveTo(x, y - 13)
-      ..lineTo(x + 10, y + 11)
-      ..lineTo(x - 10, y + 11)
-      ..close();
-    canvas.drawShadow(path, const Color(0x8A000000), 3, true);
-    canvas.drawPath(path, Paint()..color = const Color(0xFFFF8B45));
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0xFFFFD9BB)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
-    canvas.drawLine(
-      Offset(x - 5, y + 3),
-      Offset(x + 5, y + 3),
-      Paint()
-        ..color = const Color(0xFFFFFFFF)
-        ..strokeWidth = 3,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(x, y + 12), width: 25, height: 4),
-        const Radius.circular(2),
-      ),
-      Paint()..color = const Color(0xFFFF8B45),
+  void _drawObstacle(
+    Canvas canvas,
+    LaneObstacleKind kind,
+    Offset center, {
+    required bool top,
+  }) {
+    final size = switch (kind) {
+      LaneObstacleKind.cone => const Size(32, 40),
+      LaneObstacleKind.box => const Size(43, 43),
+      LaneObstacleKind.barrier ||
+      LaneObstacleKind.barricade => const Size(72, 42),
+      LaneObstacleKind.rock || LaneObstacleKind.tires => const Size(48, 42),
+      LaneObstacleKind.car => const Size(49, 69),
+      LaneObstacleKind.van => const Size(53, 74),
+      LaneObstacleKind.truck => const Size(57, 80),
+    };
+    _drawSprite(
+      canvas,
+      obstacleSpriteForKind(kind),
+      center,
+      size,
+      rotation: top ? math.pi : 0,
     );
   }
 
