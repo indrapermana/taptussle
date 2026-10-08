@@ -70,6 +70,7 @@ flutter:
     - assets/game_logos/catalog/
     - assets/games/paddle_duel/
     - assets/games/reaction_duel/
+    - assets/games/air_hockey/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

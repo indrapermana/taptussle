@@ -15,6 +15,9 @@ class AirHockeyModel {
   math.Point<double> velocity = const math.Point(0, 0);
   int? winner;
   int hitCount = 0;
+  int wallHitCount = 0;
+  int? lastTouchPlayer;
+  math.Point<double>? lastWallHit;
   void reset() {
     scores[0] = scores[1] = 0;
     mallets[0] = const math.Point(180, 500);
@@ -23,6 +26,9 @@ class AirHockeyModel {
     targets[1] = mallets[1];
     winner = null;
     hitCount = 0;
+    wallHitCount = 0;
+    lastTouchPlayer = null;
+    lastWallHit = null;
     _serve(0);
   }
 
@@ -64,16 +70,28 @@ class AirHockeyModel {
     final goalMin = (width - goalWidth) / 2, goalMax = goalMin + goalWidth;
     if (puck.x < puckRadius || puck.x > width - puckRadius) {
       velocity = math.Point(-velocity.x, velocity.y);
+      lastWallHit = math.Point(
+        puck.x < puckRadius ? puckRadius : width - puckRadius,
+        puck.y.clamp(puckRadius, height - puckRadius),
+      );
+      wallHitCount++;
     }
     if ((puck.y < puckRadius && (puck.x < goalMin || puck.x > goalMax)) ||
         (puck.y > height - puckRadius &&
             (puck.x < goalMin || puck.x > goalMax))) {
       velocity = math.Point(velocity.x, -velocity.y);
+      lastWallHit = math.Point(
+        puck.x,
+        puck.y < puckRadius ? puckRadius : height - puckRadius,
+      );
+      wallHitCount++;
     }
     // Side rails are solid. The ends are only solid outside a goal mouth, so a
     // puck travelling through the mouth can cross the scoring line.
     puck = math.Point(puck.x.clamp(puckRadius, width - puckRadius), puck.y);
-    for (final mallet in mallets) {
+    for (final entry in mallets.indexed) {
+      final player = entry.$1;
+      final mallet = entry.$2;
       final dx = puck.x - mallet.x, dy = puck.y - mallet.y;
       final d = math.sqrt(dx * dx + dy * dy);
       if (d > 0 && d < malletRadius + puckRadius) {
@@ -90,6 +108,7 @@ class AirHockeyModel {
           ),
         );
         velocity = math.Point(nx * speed, ny * speed);
+        lastTouchPlayer = player;
         hitCount++;
       }
     }

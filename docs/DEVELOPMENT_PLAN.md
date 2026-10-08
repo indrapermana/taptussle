@@ -1283,6 +1283,13 @@ installed, and launched successfully on the connected iPhone named Indra
 - [ ] Reaction Duel: verify full-half simultaneous touch input, mirrored Player 2
   readability, signal visibility, reaction-time feedback, false starts, ties,
   and all three bot difficulties on physical iPhone and Android devices.
+- [x] Air Hockey: clean and integrate 15 supplied sprites for red/blue mallets,
+  puck and glow, directional trails, paddle and wall impacts, goal frames and
+  nets, and goal celebrations. Keep the portrait rink, collision boundaries,
+  scores, controls, results, physics, and bot decisions native and authoritative.
+- [ ] Air Hockey: verify sprite-to-collision alignment, goal-mouth readability,
+  simultaneous friend input, effects, scoring, rematch, and all bot difficulties
+  on physical iPhone and Android devices.
 
 ## M23 — Eighteen-game release validation and store preparation
 
