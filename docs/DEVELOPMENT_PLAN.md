@@ -685,6 +685,21 @@ Memory Match child-first visual review:
 - [x] M11.3 Integrate setup, effects, rematch, favourites, filters, lifecycle, and
   physical-device verification.
 
+Rock Paper Scissors child-first visual review:
+
+- [x] RPS1 — Replace generic choice icons with the supplied warm and cool
+  participant artwork, retain concealed friend choices, and add clear locked
+  choice artwork.
+- [x] RPS2 — Present both choices together after every round, animate the reveal,
+  emphasize the winner and point awarded, and keep the final round visible before
+  opening the shared match result.
+- [x] RPS3 — Cover friend privacy, bot timing, pause and resume, rematch,
+  accessibility semantics, compact phones, and enlarged text with automated
+  regressions.
+- [ ] Rock Paper Scissors physical-device verification — Verify choice sizing,
+  concealed handoff, animated round results, final-result timing, sounds, and
+  haptics on physical iPhone and Android devices.
+
 ## M12 — Snakes & Ladders
 
 Confirmed board: 8×8 with squares 1–64 and square 64 as the finish. An **extra

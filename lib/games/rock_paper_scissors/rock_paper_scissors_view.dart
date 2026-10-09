@@ -5,6 +5,7 @@ import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
 import '../../core/match_session.dart';
 import '../../core/sound_service.dart';
+import 'rock_paper_scissors_assets.dart';
 import 'rock_paper_scissors_controller.dart';
 import 'rock_paper_scissors_model.dart';
 
@@ -30,8 +31,10 @@ class _RockPaperScissorsViewState extends State<RockPaperScissorsView> {
   @override
   void initState() {
     super.initState();
-    controller = RockPaperScissorsController(session: widget.session)
-      ..addListener(_playEffects);
+    controller = RockPaperScissorsController(
+      session: widget.session,
+      finalRevealDelay: const Duration(milliseconds: 1400),
+    )..addListener(_playEffects);
   }
 
   void _playEffects() {
@@ -125,6 +128,7 @@ class RockPaperScissorsBoard extends StatelessWidget {
   Widget _content() => switch (controller.phase) {
     RockPaperScissorsRoundPhase.choosing => _ChoicePanel(
       playerLabel: playerLabels[controller.activePlayer],
+      warm: controller.activePlayer == 1,
       enabled: controller.acceptsChoice,
       onChoice: controller.selectChoice,
     ),
@@ -193,68 +197,114 @@ class _Scoreboard extends StatelessWidget {
 class _ChoicePanel extends StatelessWidget {
   const _ChoicePanel({
     required this.playerLabel,
+    required this.warm,
     required this.enabled,
     required this.onChoice,
   });
 
   final String playerLabel;
+  final bool warm;
   final bool enabled;
   final ValueChanged<RockPaperScissorsChoice> onChoice;
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Text(
-        '${playerLabel.toUpperCase()}, CHOOSE',
-        key: const ValueKey('rps-status'),
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontFamily: 'Lilita One',
-          fontSize: 26,
-          letterSpacing: .8,
-        ),
-      ),
-      const SizedBox(height: 8),
-      const Text(
-        'Your choice locks immediately',
-        style: TextStyle(color: TapTussleColors.mutedText),
-      ),
-      const SizedBox(height: 26),
-      for (final choice in RockPaperScissorsChoice.values) ...[
-        _ChoiceButton(
-          choice: choice,
-          enabled: enabled,
-          onPressed: () => onChoice(choice),
-        ),
-        const SizedBox(height: 12),
-      ],
-    ],
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final choiceHeight = (constraints.maxHeight - 100).clamp(100.0, 210.0);
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '${playerLabel.toUpperCase()}, CHOOSE',
+              key: const ValueKey('rps-status'),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Lilita One',
+                fontSize: 26,
+                letterSpacing: .8,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Your choice locks immediately',
+              maxLines: 1,
+              style: TextStyle(color: TapTussleColors.mutedText),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: choiceHeight,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final choice in RockPaperScissorsChoice.values) ...[
+                  if (choice != RockPaperScissorsChoice.rock)
+                    const SizedBox(width: 8),
+                  Expanded(
+                    child: _ChoiceButton(
+                      choice: choice,
+                      warm: warm,
+                      enabled: enabled,
+                      onPressed: () => onChoice(choice),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
+    },
   );
 }
 
 class _ChoiceButton extends StatelessWidget {
   const _ChoiceButton({
     required this.choice,
+    required this.warm,
     required this.enabled,
     required this.onPressed,
   });
 
   final RockPaperScissorsChoice choice;
+  final bool warm;
   final bool enabled;
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: double.infinity,
-    child: FilledButton.icon(
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'Choose ${_choiceLabel(choice).toLowerCase()}',
+    child: FilledButton(
       key: ValueKey('rps-choice-${choice.name}'),
       onPressed: enabled ? onPressed : null,
-      icon: Icon(_choiceIcon(choice), size: 28),
-      label: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Text(_choiceLabel(choice)),
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.fromLTRB(5, 8, 5, 10),
+        backgroundColor: warm
+            ? TapTussleColors.rivalRed.withValues(alpha: .28)
+            : TapTussleColors.electricBlue.withValues(alpha: .28),
+      ),
+      child: SizedBox.expand(
+        child: Column(
+          children: [
+            Expanded(
+              child: Image.asset(
+                RockPaperScissorsAssets.choice(choice, warm: warm),
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+              ),
+            ),
+            const SizedBox(height: 3),
+            FittedBox(fit: BoxFit.scaleDown, child: Text(_choiceLabel(choice))),
+          ],
+        ),
       ),
     ),
   );
@@ -274,10 +324,12 @@ class _HandoffPanel extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.visibility_off_rounded,
-              color: TapTussleColors.gold,
-              size: 42,
+            Image.asset(
+              RockPaperScissorsAssets.choiceLocked,
+              key: const ValueKey('rps-choice-locked-art'),
+              width: 112,
+              height: 112,
+              fit: BoxFit.contain,
             ),
             const SizedBox(height: 10),
             const Text(
@@ -333,7 +385,7 @@ class _WaitingPanel extends StatelessWidget {
   );
 }
 
-class _RevealPanel extends StatelessWidget {
+class _RevealPanel extends StatefulWidget {
   const _RevealPanel({
     required this.round,
     required this.labels,
@@ -347,57 +399,160 @@ class _RevealPanel extends StatelessWidget {
   final VoidCallback onNextRound;
 
   @override
+  State<_RevealPanel> createState() => _RevealPanelState();
+}
+
+class _RevealPanelState extends State<_RevealPanel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final round = widget.round;
     final result = switch (round.outcome) {
-      RockPaperScissorsRoundOutcome.playerOneWin => '${labels[0]} wins!',
-      RockPaperScissorsRoundOutcome.playerTwoWin => '${labels[1]} wins!',
+      RockPaperScissorsRoundOutcome.playerOneWin => '${widget.labels[0]} wins!',
+      RockPaperScissorsRoundOutcome.playerTwoWin => '${widget.labels[1]} wins!',
       RockPaperScissorsRoundOutcome.draw => 'Draw!',
     };
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          result.toUpperCase(),
-          key: const ValueKey('rps-status'),
-          style: const TextStyle(
-            color: TapTussleColors.gold,
-            fontFamily: 'Lilita One',
-            fontSize: 30,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: _RevealedChoice(
-                label: labels[0],
-                choice: round.playerOneChoice,
-                color: TapTussleColors.electricBlue,
+    final winner = switch (round.outcome) {
+      RockPaperScissorsRoundOutcome.playerOneWin => 0,
+      RockPaperScissorsRoundOutcome.playerTwoWin => 1,
+      RockPaperScissorsRoundOutcome.draw => null,
+    };
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, _) {
+        final choicesProgress = Curves.easeOutCubic.transform(
+          (_animation.value / .55).clamp(0.0, 1.0),
+        );
+        final resultProgress = Curves.easeOutBack.transform(
+          ((_animation.value - .42) / .58).clamp(0.0, 1.0),
+        );
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: 430,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 90,
+                      child: Opacity(
+                        opacity: resultProgress.clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: .7 + (.3 * resultProgress),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              children: [
+                                Text(
+                                  result.toUpperCase(),
+                                  key: const ValueKey('rps-status'),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: TapTussleColors.gold,
+                                    fontFamily: 'Lilita One',
+                                    fontSize: 30,
+                                  ),
+                                ),
+                                Text(
+                                  winner == null
+                                      ? 'NO POINT — PLAY AGAIN'
+                                      : '+1 POINT',
+                                  key: const ValueKey('rps-round-points'),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: .7,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 90,
+                      left: 0,
+                      right: 0,
+                      bottom: widget.matchFinished ? 0 : 62,
+                      child: Transform.scale(
+                        scale: choicesProgress,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _RevealedChoice(
+                                label: widget.labels[0],
+                                choice: round.playerOneChoice,
+                                warm: false,
+                                winner: winner == 0,
+                                dimmed: winner == 1,
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                'VS',
+                                style: TextStyle(fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                            Expanded(
+                              child: _RevealedChoice(
+                                label: widget.labels[1],
+                                choice: round.playerTwoChoice,
+                                warm: true,
+                                winner: winner == 1,
+                                dimmed: winner == 0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (!widget.matchFinished) ...[
+                      Positioned(
+                        bottom: 0,
+                        height: 52,
+                        child: Opacity(
+                          opacity: resultProgress.clamp(0.0, 1.0),
+                          child: FilledButton.icon(
+                            key: const ValueKey('rps-next-round'),
+                            onPressed: widget.onNextRound,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('NEXT ROUND'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('VS', style: TextStyle(fontWeight: FontWeight.w900)),
-            ),
-            Expanded(
-              child: _RevealedChoice(
-                label: labels[1],
-                choice: round.playerTwoChoice,
-                color: TapTussleColors.rivalRed,
-              ),
-            ),
-          ],
-        ),
-        if (!matchFinished) ...[
-          const SizedBox(height: 28),
-          FilledButton.icon(
-            key: const ValueKey('rps-next-round'),
-            onPressed: onNextRound,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('NEXT ROUND'),
-          ),
-        ],
-      ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -406,47 +561,90 @@ class _RevealedChoice extends StatelessWidget {
   const _RevealedChoice({
     required this.label,
     required this.choice,
-    required this.color,
+    required this.warm,
+    required this.winner,
+    required this.dimmed,
   });
 
   final String label;
   final RockPaperScissorsChoice choice;
-  final Color color;
+  final bool warm;
+  final bool winner;
+  final bool dimmed;
 
   @override
-  Widget build(BuildContext context) => ArcadePanel(
-    accent: color,
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
-    child: Column(
-      children: [
-        Icon(_choiceIcon(choice), color: color, size: 48),
-        const SizedBox(height: 10),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: color, fontWeight: FontWeight.w800),
-        ),
-        Text(
-          _choiceLabel(choice),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
+  Widget build(BuildContext context) {
+    final color = warm
+        ? TapTussleColors.rivalRed
+        : TapTussleColors.electricBlue;
+    return Semantics(
+      label:
+          '$label chose ${_choiceLabel(choice).toLowerCase()}${winner ? ' and won the round' : ''}',
+      container: true,
+      excludeSemantics: true,
+      child: AnimatedOpacity(
+        key: ValueKey('rps-reveal-card-${warm ? 'warm' : 'cool'}'),
+        duration: const Duration(milliseconds: 300),
+        opacity: dimmed ? .52 : 1,
+        child: ArcadePanel(
+          accent: winner ? TapTussleColors.gold : color,
+          padding: const EdgeInsets.fromLTRB(7, 7, 7, 12),
+          child: Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    Positioned.fill(
+                      child: Image.asset(
+                        RockPaperScissorsAssets.choice(choice, warm: warm),
+                        key: ValueKey('rps-reveal-${warm ? 'warm' : 'cool'}'),
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                      ),
+                    ),
+                    if (winner)
+                      const DecoratedBox(
+                        key: ValueKey('rps-round-winner'),
+                        decoration: BoxDecoration(
+                          color: TapTussleColors.gold,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Icon(
+                            Icons.emoji_events_rounded,
+                            color: Color(0xFF342300),
+                            size: 21,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: color, fontWeight: FontWeight.w800),
+              ),
+              Text(
+                _choiceLabel(choice),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
 
 String _choiceLabel(RockPaperScissorsChoice choice) => switch (choice) {
   RockPaperScissorsChoice.rock => 'ROCK',
   RockPaperScissorsChoice.paper => 'PAPER',
   RockPaperScissorsChoice.scissors => 'SCISSORS',
-};
-
-IconData _choiceIcon(RockPaperScissorsChoice choice) => switch (choice) {
-  RockPaperScissorsChoice.rock => Icons.sports_mma_rounded,
-  RockPaperScissorsChoice.paper => Icons.back_hand_rounded,
-  RockPaperScissorsChoice.scissors => Icons.content_cut_rounded,
 };

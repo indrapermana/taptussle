@@ -17,6 +17,7 @@ class RockPaperScissorsController extends ChangeNotifier {
     required this.session,
     Random? random,
     this.botThinkDelay,
+    this.finalRevealDelay = Duration.zero,
   }) : _random = random ?? Random(),
        model = RockPaperScissorsModel(
          winningScore: session.options.winningScore,
@@ -34,10 +35,12 @@ class RockPaperScissorsController extends ChangeNotifier {
   final MatchSession session;
   final Random _random;
   final Duration? botThinkDelay;
+  final Duration finalRevealDelay;
   final RockPaperScissorsModel model;
   late final RockPaperScissorsBot? bot;
 
   Timer? _botTimer;
+  Timer? _resultTimer;
   var _phase = RockPaperScissorsRoundPhase.choosing;
   RockPaperScissorsRoundPhase get phase => _phase;
   var _activePlayer = 0;
@@ -148,19 +151,41 @@ class RockPaperScissorsController extends ChangeNotifier {
     if (winner == null) {
       session.reportScores(model.scores);
     } else {
-      session.reportResult(
-        outcome: MatchOutcome.winner,
-        scores: model.scores,
-        winner: winner,
-      );
+      _scheduleFinalResult();
     }
+  }
+
+  void _scheduleFinalResult() {
+    if (_disposed ||
+        session.phase != MatchPhase.playing ||
+        !model.isFinished ||
+        _resultTimer != null) {
+      return;
+    }
+    if (finalRevealDelay == Duration.zero) {
+      _publishFinalResult();
+      return;
+    }
+    _resultTimer = Timer(finalRevealDelay, () {
+      _resultTimer = null;
+      if (_disposed || session.phase != MatchPhase.playing) return;
+      _publishFinalResult();
+    });
+  }
+
+  void _publishFinalResult() {
+    session.reportResult(
+      outcome: MatchOutcome.winner,
+      scores: model.scores,
+      winner: model.winner!,
+    );
   }
 
   void _syncSession() {
     if (_disposed) return;
     final roundChanged = session.round != _observedMatchRound;
     if (roundChanged) {
-      _cancelBotChoice();
+      _cancelTimers();
       _observedMatchRound = session.round;
       if (session.round > 0) {
         if (_hasStartedMatch) {
@@ -180,7 +205,9 @@ class RockPaperScissorsController extends ChangeNotifier {
     final phaseChanged = session.phase != _observedPhase;
     _observedPhase = session.phase;
     if (session.phase != MatchPhase.playing) {
-      _cancelBotChoice();
+      _cancelTimers();
+    } else if ((roundChanged || phaseChanged) && model.isFinished) {
+      _scheduleFinalResult();
     } else if ((roundChanged || phaseChanged) &&
         _phase == RockPaperScissorsRoundPhase.botThinking) {
       _scheduleBotChoice();
@@ -193,12 +220,18 @@ class RockPaperScissorsController extends ChangeNotifier {
     _botTimer = null;
   }
 
+  void _cancelTimers() {
+    _cancelBotChoice();
+    _resultTimer?.cancel();
+    _resultTimer = null;
+  }
+
   @override
   void dispose() {
     if (_disposed) return;
     _disposed = true;
     session.removeListener(_syncSession);
-    _cancelBotChoice();
+    _cancelTimers();
     super.dispose();
   }
 }

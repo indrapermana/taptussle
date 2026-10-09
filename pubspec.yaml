@@ -74,6 +74,7 @@ flutter:
     - assets/games/lane_dash/
     - assets/games/tic_tac_toe/
     - assets/games/memory_match/
+    - assets/games/rock_paper_scissors/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

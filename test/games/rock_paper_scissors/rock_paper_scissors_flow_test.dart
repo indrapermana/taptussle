@@ -75,6 +75,10 @@ void main() {
     board.controller.selectChoice(RockPaperScissorsChoice.rock);
     board.controller.confirmHandoff();
     board.controller.selectChoice(RockPaperScissorsChoice.scissors);
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.text('PLAYER 1 WINS!'), findsOneWidget);
+    expect(find.byKey(const ValueKey('rps-round-winner')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
 
     expect(find.text('Player 1 wins!'), findsOneWidget);

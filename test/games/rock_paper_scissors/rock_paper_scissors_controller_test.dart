@@ -174,6 +174,44 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets(
+    'final choices remain visible and result delay is lifecycle safe',
+    (tester) async {
+      final session = MatchSession(
+        options: MatchOptions.bot(
+          difficulty: BotDifficulty.easy,
+          winningScore: 1,
+        ),
+      );
+      final controller = RockPaperScissorsController(
+        session: session,
+        random: _FixedRandom(2),
+        botThinkDelay: const Duration(milliseconds: 1),
+        finalRevealDelay: const Duration(milliseconds: 100),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+      session.start();
+      controller.selectChoice(RockPaperScissorsChoice.rock);
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(controller.phase, RockPaperScissorsRoundPhase.reveal);
+      expect(controller.model.lastRound, isNotNull);
+      expect(session.phase, MatchPhase.playing);
+
+      await tester.pump(const Duration(milliseconds: 40));
+      session.pause();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(session.phase, MatchPhase.paused);
+
+      session.resume();
+      await tester.pump(const Duration(milliseconds: 99));
+      expect(session.phase, MatchPhase.playing);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(session.phase, MatchPhase.finished);
+    },
+  );
+
   testWidgets('disposal cancels a pending bot choice', (tester) async {
     final session = MatchSession(
       options: MatchOptions.bot(difficulty: BotDifficulty.hard),
