@@ -44,17 +44,9 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
     _resizeParticipants(_playerCount.value);
   }
 
-  @override
-  void dispose() {
-    for (final participant in _participants) {
-      participant.dispose();
-    }
-    super.dispose();
-  }
-
   void _resizeParticipants(int count) {
     while (_participants.length > count) {
-      _participants.removeLast().dispose();
+      _participants.removeLast();
     }
     while (_participants.length < count) {
       final index = _participants.length;
@@ -104,9 +96,6 @@ class _ParticipantSetupScreenState extends State<ParticipantSetupScreen> {
   }
 
   bool get _canPlay {
-    if (_participants.any((draft) => draft.name.text.trim().isEmpty)) {
-      return false;
-    }
     final hasBot = _participants.any(
       (participant) => participant.kind == ParticipantKind.bot,
     );
@@ -269,48 +258,33 @@ class _ParticipantDraft {
     required this.kind,
     required this.difficulty,
   }) : seatNumber = index + 1,
-       name = TextEditingController(
-         text: kind == ParticipantKind.bot
-             ? 'Bot ${index + 1}'
-             : 'Player ${index + 1}',
-       ),
        color = ParticipantColor.values[index],
        token = ParticipantToken.values[index];
 
-  final TextEditingController name;
   final int seatNumber;
   ParticipantKind kind;
   ParticipantColor color;
   ParticipantToken token;
   BotDifficulty difficulty;
 
-  void changeKind(ParticipantKind next) {
-    final oldDefault = kind == ParticipantKind.bot
-        ? 'Bot $seatNumber'
-        : 'Player $seatNumber';
-    if (name.text == oldDefault) {
-      name.text = next == ParticipantKind.bot
-          ? 'Bot $seatNumber'
-          : 'Player $seatNumber';
-    }
-    kind = next;
-  }
+  String get displayName =>
+      kind == ParticipantKind.bot ? 'Bot $seatNumber' : 'Player $seatNumber';
+
+  void changeKind(ParticipantKind next) => kind = next;
 
   MatchParticipant build() => switch (kind) {
     ParticipantKind.human => MatchParticipant.human(
-      displayName: name.text.trim(),
+      displayName: displayName,
       color: color,
       token: token,
     ),
     ParticipantKind.bot => MatchParticipant.bot(
-      displayName: name.text.trim(),
+      displayName: displayName,
       color: color,
       token: token,
       difficulty: difficulty,
     ),
   };
-
-  void dispose() => name.dispose();
 }
 
 class _ParticipantCard extends StatelessWidget {
@@ -340,48 +314,10 @@ class _ParticipantCard extends StatelessWidget {
   final ValueChanged<ParticipantKind> onKindChanged;
   final VoidCallback onChanged;
 
-  Future<void> _editName(BuildContext context) async {
-    final editor = TextEditingController(text: draft.name.text);
-    final nextName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Name Player ${index + 1}'),
-        content: TextField(
-          key: ValueKey('participant-name-$index'),
-          controller: editor,
-          autofocus: true,
-          maxLength: 18,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(labelText: 'Display name'),
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) Navigator.of(context).pop(value);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (editor.text.trim().isNotEmpty) {
-                Navigator.of(context).pop(editor.text);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    if (nextName == null || nextName.trim().isEmpty) return;
-    draft.name.text = nextName.trim();
-    onChanged();
-  }
-
   @override
   Widget build(BuildContext context) {
     final accent = _participantColor(draft.color);
-    final participantLabel = index == 0 ? 'You' : 'Player ${index + 1}';
+    final participantLabel = draft.displayName;
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -425,36 +361,6 @@ class _ParticipantCard extends StatelessWidget {
               _LockedKindLabel(
                 isBot: fixedBot || draft.kind == ParticipantKind.bot,
               ),
-            const SizedBox(height: 10),
-            Material(
-              color: TapTussleColors.midnight.withValues(alpha: .45),
-              borderRadius: BorderRadius.circular(14),
-              child: ListTile(
-                dense: true,
-                leading: Icon(
-                  draft.kind == ParticipantKind.bot
-                      ? Icons.smart_toy_rounded
-                      : Icons.face_rounded,
-                  color: accent,
-                ),
-                title: Text(
-                  draft.name.text,
-                  key: ValueKey('participant-name-label-$index'),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                trailing: Semantics(
-                  button: true,
-                  excludeSemantics: true,
-                  label: 'Edit name for ${draft.name.text}',
-                  child: IconButton(
-                    key: ValueKey('participant-edit-name-$index'),
-                    tooltip: 'Edit name for ${draft.name.text}',
-                    onPressed: enabled ? () => _editName(context) : null,
-                    icon: const Icon(Icons.edit_rounded),
-                  ),
-                ),
-              ),
-            ),
             const SizedBox(height: 14),
             const Text('COLOR', style: _choiceLabelStyle),
             const SizedBox(height: 7),

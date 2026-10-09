@@ -83,18 +83,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final editSecondName = find.byKey(
-      const ValueKey('participant-edit-name-1'),
-    );
-    await tester.ensureVisible(editSecondName);
-    await tester.tap(editSecondName);
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('participant-name-1')),
-      'Rival Bot',
-    );
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
     final hardDifficulty = find.byKey(
       const ValueKey('participant-difficulty-1-hard'),
     );
@@ -141,7 +129,7 @@ void main() {
       startedOptions!.participants.map(
         (participant) => participant.displayName,
       ),
-      ['Player 1', 'Rival Bot', 'Player 3'],
+      ['Player 1', 'Bot 2', 'Player 3'],
     );
     expect(startedOptions!.participants[1].kind, ParticipantKind.bot);
     expect(startedOptions!.participants[1].botDifficulty, BotDifficulty.hard);
@@ -184,8 +172,8 @@ void main() {
         await tester.pumpAndSettle();
 
         for (var index = 0; index < count; index++) {
-          final participant = find.byKey(
-            ValueKey('participant-name-label-$index'),
+          final participant = find.bySemanticsLabel(
+            'Player ${index + 1} setup',
           );
           await tester.scrollUntilVisible(participant, 300);
           await tester.pumpAndSettle();
@@ -209,7 +197,7 @@ void main() {
     },
   );
 
-  testWidgets('visual choices and name editing expose screen-reader actions', (
+  testWidgets('visual choices and static names expose screen-reader actions', (
     tester,
   ) async {
     final settings = await _settings(tester);
@@ -225,33 +213,13 @@ void main() {
     await tester.tap(find.bySemanticsLabel('3 players'));
     await tester.pumpAndSettle();
 
-    expect(find.bySemanticsLabel('You setup'), findsOneWidget);
+    expect(find.bySemanticsLabel('Player 1 setup'), findsOneWidget);
     expect(find.bySemanticsLabel('Mint color'), findsOneWidget);
     expect(find.bySemanticsLabel('Circle token'), findsOneWidget);
     expect(find.bySemanticsLabel('Local human player'), findsWidgets);
 
-    final editButton = find.byKey(const ValueKey('participant-edit-name-0'));
-    await tester.ensureVisible(editButton);
-    await tester.pumpAndSettle();
-    expect(
-      find.bySemanticsLabel(RegExp('Edit name for Player 1')),
-      findsOneWidget,
-    );
-    await tester.tap(editButton);
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('participant-name-0')),
-      'Sam',
-    );
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('participant-name-label-0')),
-      findsOneWidget,
-    );
-    expect(find.text('Sam'), findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp('Edit name for Sam')), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byIcon(Icons.edit_rounded), findsNothing);
     expect(tester.takeException(), isNull);
     semantics.dispose();
   });
@@ -269,9 +237,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.getSize(find.byType(ListView)).width, lessThanOrEqualTo(680));
-    final fourthParticipant = find.byKey(
-      const ValueKey('participant-name-label-3'),
-    );
+    final fourthParticipant = find.bySemanticsLabel('Player 4 setup');
     await tester.scrollUntilVisible(fourthParticipant, 300);
     await tester.pumpAndSettle();
     expect(fourthParticipant, findsOneWidget);

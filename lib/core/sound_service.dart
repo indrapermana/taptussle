@@ -103,13 +103,26 @@ abstract interface class SoundPlayer {
 class SoundService with WidgetsBindingObserver implements SoundPlayer {
   SoundService() {
     WidgetsBinding.instance.addObserver(this);
+    _audioContextReady = _configureAudioContext();
   }
 
   final _players = List.generate(3, (_) => AudioPlayer());
+  late final Future<void> _audioContextReady;
   final _lastStarted = <SoundEffect, DateTime>{};
   static const _duplicateCooldown = Duration(milliseconds: 35);
   var _nextPlayer = 0;
   double _volume = .7;
+
+  Future<void> _configureAudioContext() async {
+    final context = AudioContextConfig(
+      route: AudioContextConfigRoute.system,
+      respectSilence: true,
+    ).build();
+    await AudioPlayer.global.setAudioContext(context);
+    for (final player in _players) {
+      await player.setAudioContext(context);
+    }
+  }
 
   @override
   void setVolume(double value) => _volume = value.clamp(0.0, 1.0).toDouble();
@@ -126,6 +139,7 @@ class SoundService with WidgetsBindingObserver implements SoundPlayer {
     _lastStarted[effect] = now;
     final player = _players[_nextPlayer++ % _players.length];
     try {
+      await _audioContextReady;
       await player.stop();
       await player.setReleaseMode(ReleaseMode.stop);
       await player.play(
