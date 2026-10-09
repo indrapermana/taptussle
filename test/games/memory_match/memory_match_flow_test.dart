@@ -131,6 +131,38 @@ void main() {
     expect(session.resultDetails, isNull);
   });
 
+  testWidgets('production view celebrates the final pair before results', (
+    tester,
+  ) async {
+    final options = MatchOptions.solo(difficulty: BotDifficulty.easy);
+    final session = MatchSession(options: options)..start();
+    addTearDown(session.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTapTussleTheme(),
+        home: MemoryMatchView(session: session, options: options),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 3));
+    final board = tester.widget<MemoryMatchBoard>(
+      find.byType(MemoryMatchBoard),
+    );
+    completeEveryPair(board.controller);
+    await tester.pump();
+
+    expect(session.phase, MatchPhase.playing);
+    expect(find.text('MATCH!'), findsOneWidget);
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(12));
+
+    await tester.pump(const Duration(milliseconds: 621));
+    expect(find.text('ALL PAIRS FOUND!'), findsOneWidget);
+    expect(session.phase, MatchPhase.playing);
+
+    await tester.pump(const Duration(milliseconds: 679));
+    expect(session.phase, MatchPhase.finished);
+  });
+
   testWidgets('solo and friend modes choose difficulty and build that grid', (
     tester,
   ) async {
@@ -207,7 +239,8 @@ void main() {
     await tester.tap(find.byKey(ValueKey('memory-card-${mismatch[1]}')));
     await tester.pump(const Duration(milliseconds: 850));
 
-    expect(find.text('BOT IS THINKING'), findsOneWidget);
+    expect(find.text('BOT THINKING…'), findsOneWidget);
+    expect(find.byKey(const ValueKey('memory-bot-thinking')), findsOneWidget);
     expect(board.controller.acceptsInput, isFalse);
   });
 
@@ -297,6 +330,14 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(ValueKey('memory-card-${indexes[1]}')));
     await tester.pump();
+    expect(
+      find.byKey(ValueKey('memory-card-feedback-${indexes[0]}-match')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(ValueKey('memory-card-feedback-${indexes[1]}-match')),
+      findsOneWidget,
+    );
 
     final unmatched = <int>[];
     for (var index = 0; index < board.controller.model.cardCount; index++) {
@@ -313,6 +354,23 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(ValueKey('memory-card-${unmatched[1]}')));
     await tester.pump();
+    expect(
+      find.byKey(ValueKey('memory-card-feedback-${unmatched[0]}-mismatch')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(ValueKey('memory-card-feedback-${unmatched[1]}-mismatch')),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(milliseconds: 620));
+    expect(
+      find.byKey(ValueKey('memory-card-feedback-${unmatched[0]}-mismatch')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(ValueKey('memory-card-feedback-${unmatched[1]}-mismatch')),
+      findsNothing,
+    );
 
     expect(
       sounds.played,

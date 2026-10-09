@@ -73,6 +73,7 @@ flutter:
     - assets/games/air_hockey/
     - assets/games/lane_dash/
     - assets/games/tic_tac_toe/
+    - assets/games/memory_match/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

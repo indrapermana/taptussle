@@ -656,6 +656,26 @@ mode uses the selected grid size without an opening preview for either player.
   and Android devices, including previews, turn changes, results, rematch,
   favourites, records, sounds, vibration-on/off, and lifecycle interruption.
 
+Memory Match child-first visual review:
+
+- [x] MM1 — Prepare the supplied Memory Match artwork: clean the shared card back
+  and twelve pair symbols, remove source-sheet artifacts, resize them for mobile,
+  register the assets, and validate their production mapping.
+- [x] MM2 — Replace generic icons with the prepared artwork, add a clear card-flip
+  animation, and keep matched cards visually readable across all grid sizes.
+- [x] MM3 — Add localized match and mismatch feedback using responsive Flutter
+  animation with the existing sounds and haptics.
+- [x] MM4 — Redesign the status area with child-readable player badges, scores,
+  turn states, bot-thinking feedback, and Easy/Normal preview progress while
+  preserving the no-preview friend rule.
+- [x] MM5 — Keep the final pair visible before results, improve symbol semantics,
+  cover compact phones and enlarged text, and run lifecycle, bot, and rematch
+  regressions.
+- [ ] Memory Match MM5 physical-device verification — Verify the finished
+  redesign on physical iPhone and Android devices, including the final-pair
+  celebration, descriptive screen-reader labels, compact layouts, lifecycle,
+  bots, and rematch.
+
 ## M11 — Rock Paper Scissors
 
 - [x] M11.1 Implement round rules, draws, configured points-to-win, and deterministic

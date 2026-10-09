@@ -16,6 +16,7 @@ class MemoryMatchController extends ChangeNotifier {
     this.mismatchRevealDuration = const Duration(milliseconds: 850),
     Duration? openingPreviewDuration,
     Duration? botThinkDuration,
+    this.resultRevealDelay = Duration.zero,
     DateTime Function()? now,
     this.onSelection,
   }) : _random = random ?? Random(),
@@ -38,6 +39,7 @@ class MemoryMatchController extends ChangeNotifier {
   final MatchSession session;
   final MemoryMatchModel model;
   final Duration mismatchRevealDuration;
+  final Duration resultRevealDelay;
   final ValueChanged<MemorySelectionResult>? onSelection;
   final Random _random;
   final Duration? _openingPreviewDuration;
@@ -47,16 +49,22 @@ class MemoryMatchController extends ChangeNotifier {
   Timer? _previewTimer;
   Timer? _mismatchTimer;
   Timer? _botTimer;
+  Timer? _resultTimer;
   var _previewing = false;
   var _observedRound = 0;
   var _observedPhase = MatchPhase.ready;
   var _hasStartedRound = false;
   var _disposed = false;
   var _elapsedBeforeActive = Duration.zero;
+  int? _completedElapsedMilliseconds;
+  List<int> _lastSelectedCards = const [];
   DateTime? _activeStartedAt;
 
   bool get isPreviewing => _previewing;
+  Duration get previewDuration => _previewDuration;
   bool get isResolvingMismatch => _mismatchTimer?.isActive ?? false;
+  bool get isPresentingResult => model.isFinished && _resultTimer != null;
+  List<int> get lastSelectedCards => List.unmodifiable(_lastSelectedCards);
   int? get _botPlayer {
     final participants = session.options.participants;
     for (var index = 0; index < participants.length; index++) {
@@ -93,8 +101,10 @@ class MemoryMatchController extends ChangeNotifier {
   }
 
   MemorySelectionResult _selectCard(int player, int index) {
+    final previouslyRevealed = model.revealedCards;
     final result = model.selectCard(player, index);
     if (_isReveal(result)) {
+      _lastSelectedCards = [...previouslyRevealed, index];
       _bot?.observeCard(index, model.cardAt(index).pairId);
       onSelection?.call(result);
     }
@@ -105,7 +115,7 @@ class MemoryMatchController extends ChangeNotifier {
     if (result == MemorySelectionResult.matched) {
       session.reportScores(model.scores);
     } else if (result == MemorySelectionResult.completed) {
-      _publishResult();
+      _scheduleResult();
     }
     if ((result == MemorySelectionResult.firstCard ||
             result == MemorySelectionResult.matched) &&
@@ -131,6 +141,7 @@ class MemoryMatchController extends ChangeNotifier {
     final roundChanged = session.round != _observedRound;
     if (roundChanged) {
       _cancelTimers();
+      _lastSelectedCards = const [];
       _bot?.reset();
       _observedRound = session.round;
       if (session.round > 0) {
@@ -140,6 +151,7 @@ class MemoryMatchController extends ChangeNotifier {
           _hasStartedRound = true;
         }
         _elapsedBeforeActive = Duration.zero;
+        _completedElapsedMilliseconds = null;
         _activeStartedAt = null;
         _previewing = _previewDuration > Duration.zero;
       }
@@ -150,8 +162,10 @@ class MemoryMatchController extends ChangeNotifier {
     if (session.phase != MatchPhase.playing) {
       _cancelTimers();
     } else if (roundChanged || phaseChanged) {
-      _activeStartedAt ??= _now();
-      if (_previewing) {
+      if (!model.isFinished) _activeStartedAt ??= _now();
+      if (model.isFinished) {
+        _scheduleResult();
+      } else if (_previewing) {
         _schedulePreviewEnd();
       } else if (model.hasPendingMismatch) {
         _scheduleMismatchResolution();
@@ -170,8 +184,8 @@ class MemoryMatchController extends ChangeNotifier {
   }
 
   void _publishResult() {
-    _stopElapsedClock();
-    final elapsedMilliseconds = elapsed.inMilliseconds;
+    final elapsedMilliseconds =
+        _completedElapsedMilliseconds ?? elapsed.inMilliseconds;
     final details = model.playerCount == 1
         ? 'Completed in ${model.moveCount} moves • '
               '${_formatElapsed(elapsedMilliseconds)}'
@@ -192,6 +206,31 @@ class MemoryMatchController extends ChangeNotifier {
         details: details,
       );
     }
+  }
+
+  void _scheduleResult() {
+    if (_disposed ||
+        session.phase != MatchPhase.playing ||
+        !model.isFinished ||
+        _resultTimer != null) {
+      return;
+    }
+    _stopElapsedClock();
+    _completedElapsedMilliseconds ??= elapsed.inMilliseconds;
+    if (resultRevealDelay == Duration.zero) {
+      _publishResult();
+      return;
+    }
+    _resultTimer = Timer(resultRevealDelay, () {
+      _resultTimer = null;
+      if (_disposed ||
+          session.phase != MatchPhase.playing ||
+          !model.isFinished) {
+        return;
+      }
+      _publishResult();
+    });
+    notifyListeners();
   }
 
   String _formatElapsed(int milliseconds) {
@@ -293,6 +332,8 @@ class MemoryMatchController extends ChangeNotifier {
     _mismatchTimer = null;
     _botTimer?.cancel();
     _botTimer = null;
+    _resultTimer?.cancel();
+    _resultTimer = null;
   }
 
   @override

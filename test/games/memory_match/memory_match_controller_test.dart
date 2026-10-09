@@ -12,6 +12,18 @@ List<int> differentPairIndexes(MemoryMatchModel model) {
   return [first, second];
 }
 
+void completeEveryPair(MemoryMatchController controller) {
+  for (var pair = 0; pair < controller.model.pairCount; pair++) {
+    final indexes = <int>[];
+    for (var index = 0; index < controller.model.cardCount; index++) {
+      if (controller.model.deck[index] == pair) indexes.add(index);
+    }
+    controller
+      ..selectCard(indexes[0])
+      ..selectCard(indexes[1]);
+  }
+}
+
 void main() {
   testWidgets('solo preview reveals every card and locks input', (
     tester,
@@ -59,6 +71,7 @@ void main() {
 
     expect(controller.selectCard(cards[0]), MemorySelectionResult.firstCard);
     expect(controller.selectCard(cards[1]), MemorySelectionResult.mismatch);
+    expect(controller.lastSelectedCards, cards);
     expect(controller.acceptsInput, isFalse);
     expect(controller.isResolvingMismatch, isTrue);
 
@@ -122,6 +135,64 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     expect(controller.model.hasPendingMismatch, isTrue);
+    session.dispose();
+  });
+
+  testWidgets(
+    'finished cards remain visible and result delay restarts on resume',
+    (tester) async {
+      final session = MatchSession(options: MatchOptions.solo())..start();
+      final controller = MemoryMatchController(
+        session: session,
+        difficulty: MemoryMatchDifficulty.easy,
+        random: Random(10),
+        openingPreviewDuration: Duration.zero,
+        resultRevealDelay: const Duration(milliseconds: 100),
+      );
+      addTearDown(controller.dispose);
+      addTearDown(session.dispose);
+
+      completeEveryPair(controller);
+
+      expect(controller.model.isFinished, isTrue);
+      expect(controller.isPresentingResult, isTrue);
+      expect(session.phase, MatchPhase.playing);
+      expect(
+        List.generate(controller.model.cardCount, controller.isCardFaceUp),
+        everyElement(isTrue),
+      );
+
+      await tester.pump(const Duration(milliseconds: 40));
+      session.pause();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(session.phase, MatchPhase.paused);
+
+      session.resume();
+      await tester.pump(const Duration(milliseconds: 99));
+      expect(session.phase, MatchPhase.playing);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(session.phase, MatchPhase.finished);
+    },
+  );
+
+  testWidgets('disposing cancels a pending result presentation', (
+    tester,
+  ) async {
+    final session = MatchSession(options: MatchOptions.solo())..start();
+    final controller = MemoryMatchController(
+      session: session,
+      difficulty: MemoryMatchDifficulty.easy,
+      random: Random(11),
+      openingPreviewDuration: Duration.zero,
+      resultRevealDelay: const Duration(milliseconds: 30),
+    );
+
+    completeEveryPair(controller);
+    expect(controller.isPresentingResult, isTrue);
+    controller.dispose();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(session.phase, MatchPhase.playing);
     session.dispose();
   });
 }
