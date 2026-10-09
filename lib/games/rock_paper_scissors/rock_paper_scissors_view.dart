@@ -593,25 +593,31 @@ class _RevealedChoice extends StatelessWidget {
             children: [
               Expanded(
                 child: Stack(
+                  fit: StackFit.expand,
                   alignment: Alignment.topRight,
                   children: [
                     Positioned.fill(
                       child: Image.asset(
                         RockPaperScissorsAssets.choice(choice, warm: warm),
                         key: ValueKey('rps-reveal-${warm ? 'warm' : 'cool'}'),
+                        width: double.infinity,
+                        height: double.infinity,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
                       ),
                     ),
                     if (winner)
-                      const DecoratedBox(
-                        key: ValueKey('rps-round-winner'),
-                        decoration: BoxDecoration(
-                          color: TapTussleColors.gold,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(5),
+                      const Positioned(
+                        top: 0,
+                        right: 0,
+                        width: 31,
+                        height: 31,
+                        child: DecoratedBox(
+                          key: ValueKey('rps-round-winner'),
+                          decoration: BoxDecoration(
+                            color: TapTussleColors.gold,
+                            shape: BoxShape.circle,
+                          ),
                           child: Icon(
                             Icons.emoji_events_rounded,
                             color: Color(0xFF342300),
