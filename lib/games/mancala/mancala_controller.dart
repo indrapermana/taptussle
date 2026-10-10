@@ -17,8 +17,8 @@ class MancalaController extends ChangeNotifier {
     MancalaModel? model,
     Random? random,
     this.botThinkDelay,
-    this.sowingStepDuration = const Duration(milliseconds: 110),
-    this.settleDuration = const Duration(milliseconds: 160),
+    this.sowingStepDuration = const Duration(milliseconds: 420),
+    this.settleDuration = const Duration(milliseconds: 650),
   }) : _random = random ?? Random(),
        model = model ?? MancalaModel() {
     bot = session.options.mode == PlayMode.bot
@@ -45,9 +45,10 @@ class MancalaController extends ChangeNotifier {
 
   Timer? _animationTimer;
   Timer? _botTimer;
+  bool _isAnimating = false;
   int? _activePosition;
   int? get activePosition => _activePosition;
-  bool get isAnimating => _animationTimer != null;
+  bool get isAnimating => _isAnimating;
   bool get isBotTurn =>
       bot != null && !model.isFinished && model.currentPlayer == bot!.player;
   bool get isBotThinking => _botTimer?.isActive ?? false;
@@ -88,6 +89,7 @@ class MancalaController extends ChangeNotifier {
 
     _displayBoard = List.of(before)..[source] = 0;
     _activePosition = source;
+    _isAnimating = true;
     _animateSowing(model.lastTurn!.sowingPath, 0);
     notifyListeners();
     return MancalaTapResult.accepted;
@@ -124,6 +126,7 @@ class MancalaController extends ChangeNotifier {
   void _settleAnimation({bool publishResult = true}) {
     _animationTimer?.cancel();
     _animationTimer = null;
+    _isAnimating = false;
     _activePosition = null;
     _displayBoard = model.board;
     notifyListeners();
@@ -183,6 +186,7 @@ class MancalaController extends ChangeNotifier {
   void _cancelAnimation() {
     _animationTimer?.cancel();
     _animationTimer = null;
+    _isAnimating = false;
   }
 
   void _scheduleBotTurn() {

@@ -76,6 +76,7 @@ flutter:
     - assets/games/memory_match/
     - assets/games/rock_paper_scissors/
     - assets/games/cangkulan/
+    - assets/games/mancala/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

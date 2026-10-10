@@ -41,7 +41,8 @@ void main() {
       expect(find.byKey(ValueKey('mancala-store-$player')), findsOneWidget);
     }
     expect(find.text("PLAYER 1'S TURN"), findsOneWidget);
-    expect(find.text('0 IN STORE'), findsNWidgets(2));
+    expect(find.text('0'), findsNWidgets(2));
+    expect(find.textContaining('IN STORE'), findsNothing);
     expect(
       find.bySemanticsLabel('Player 1 pit 1, 4 stones, legal move'),
       findsOneWidget,
@@ -85,6 +86,7 @@ void main() {
     );
 
     expect(find.text('PLAYER 1 • SOWING…'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mancala-moving-stone')), findsOneWidget);
     expect(find.bySemanticsLabel('Player 1 pit 4, 5 stones'), findsOneWidget);
     final pit = tester.widget<Semantics>(
       find.bySemanticsLabel('Player 1 pit 4, 5 stones'),
@@ -106,8 +108,8 @@ void main() {
     winner.play(0, 5);
     await tester.pumpWidget(board(winner));
     expect(find.text('PLAYER 2 WINS'), findsOneWidget);
-    expect(find.text('21 IN STORE'), findsOneWidget);
-    expect(find.text('23 IN STORE'), findsOneWidget);
+    expect(find.text('21'), findsOneWidget);
+    expect(find.text('23'), findsOneWidget);
 
     final draw = MancalaModel.fromBoard(
       board: const [0, 0, 0, 0, 0, 1, 23, 1, 0, 0, 0, 0, 0, 23],
@@ -115,7 +117,7 @@ void main() {
     draw.play(0, 5);
     await tester.pumpWidget(board(draw));
     expect(find.text('DRAW • STORES ARE EVEN'), findsOneWidget);
-    expect(find.text('24 IN STORE'), findsNWidgets(2));
+    expect(find.text('24'), findsNWidgets(2));
   });
 
   testWidgets('fits compact phone and large tablet sizes without overflow', (
@@ -128,6 +130,21 @@ void main() {
       expect(tester.takeException(), isNull);
     }
     await tester.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('uses most of a landscape phone for the play board', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(700, 390));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(board(MancalaModel()));
+
+    final playBoard = tester.getSize(
+      find.byKey(const ValueKey('mancala-play-board')),
+    );
+    expect(playBoard.width, greaterThan(600));
+    expect(playBoard.height, greaterThan(300));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('shows bot thinking and disables every pit', (tester) async {

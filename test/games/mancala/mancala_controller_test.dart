@@ -38,6 +38,37 @@ void main() {
     expect(controller.acceptsInput, isTrue);
   });
 
+  testWidgets('stays animating throughout a long sowing path before capture', (
+    tester,
+  ) async {
+    final session = MatchSession(options: MatchOptions.friend())..start();
+    final controller = MancalaController(
+      session: session,
+      model: MancalaModel.fromBoard(
+        board: const [13, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 5, 21],
+      ),
+      sowingStepDuration: const Duration(milliseconds: 10),
+      settleDuration: const Duration(milliseconds: 10),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    expect(controller.tapPit(0, 0), MancalaTapResult.accepted);
+    expect(controller.model.lastTurn!.wasCapture, isTrue);
+
+    for (var step = 0; step < 13; step++) {
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(
+        controller.isAnimating,
+        isTrue,
+        reason: 'sowing must remain active after step ${step + 1}',
+      );
+    }
+
+    await tester.pump(const Duration(milliseconds: 10));
+    expect(controller.isAnimating, isFalse);
+  });
+
   test('ignores wrong-side and empty-pit input without mutation', () {
     final session = MatchSession(options: MatchOptions.friend())..start();
     final model = MancalaModel.fromBoard(

@@ -805,6 +805,23 @@ The larger store wins, and equal stores produce a draw.
 - [x] M15.5 Test sowing invariants, captures, extra turns, terminal collection, bot
   legality/lifecycle, and complete every mode on physical iOS and Android devices.
 
+### Mancala child-friendly board refresh
+
+- [x] MC1 Enlarge the responsive board and play area while retaining compact-phone,
+  tablet, and enlarged-text safety.
+- [x] MC2 Restyle the board, stores, pits, and stones as a bright tactile toy with
+  clear ownership, counts, legal moves, and accessible contrast.
+- [x] MC3 Animate a visible stone along the production sowing path and strengthen
+  landing, capture, store, and extra-turn feedback.
+- [ ] MC4 Run focused model, controller, bot, flow, layout, and lifecycle coverage,
+  then complete physical-device verification.
+- [x] MC5 Present Mancala in landscape, use generated wooden-board and single-color
+  stone assets, separate warm/cool ownership rings, move counts outside the bowls,
+  and slow the visible sowing transition.
+- [x] MC6 Fill the landscape play area with geometry-aligned native board artwork,
+  remove duplicate store summaries, slow sowing further, and defer capture feedback
+  until the final stone has visibly landed; restore portrait before showing results.
+
 ## M16 — Slither-style Snakes
 
 This is a solo real-time survival game, separate from Snakes & Ladders.

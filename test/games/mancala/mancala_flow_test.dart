@@ -124,6 +124,7 @@ void main() {
       board: const [0, 0, 0, 0, 0, 1, 20, 3, 0, 0, 0, 0, 0, 20],
     );
     expect(controller.tapPit(0, 5).name, 'accepted');
+    await tester.pump(const Duration(milliseconds: 1070));
     await tester.pumpAndSettle();
 
     expect(find.text('Player 2 wins!'), findsOneWidget);
@@ -145,6 +146,7 @@ void main() {
     HapticEffects.configure(haptics);
 
     Future<void> playPosition(MancalaModel model, int pit) async {
+      final stonesToSow = model.stonesInPit(0, pit);
       final options = MatchOptions.friend();
       final session = MatchSession(options: options)..start();
       addTearDown(session.dispose);
@@ -160,6 +162,7 @@ void main() {
         ),
       );
       await tester.tap(find.byKey(ValueKey('mancala-pit-0-$pit')));
+      await tester.pump(Duration(milliseconds: stonesToSow * 420 + 901));
       await tester.pumpAndSettle();
     }
 

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/haptic_service.dart';
 import '../../core/match_options.dart';
@@ -29,17 +31,38 @@ class _MancalaViewState extends State<MancalaView> {
   late final MancalaController controller;
   late MancalaModel _observedModel;
   MancalaTurn? _observedTurn;
+  Timer? _captureEffectTimer;
   var _wasAnimating = false;
+  late MatchPhase _observedPhase;
 
   @override
   void initState() {
     super.initState();
+    _setGameOrientation(MatchPhase.playing);
     controller = MancalaController(
       session: widget.session,
       model: widget.initialModel,
     )..addListener(_playEffects);
     _observedModel = controller.model;
     _observedTurn = controller.model.lastTurn;
+    _observedPhase = widget.session.phase;
+    widget.session.addListener(_syncOrientation);
+  }
+
+  void _syncOrientation() {
+    if (_observedPhase == widget.session.phase) return;
+    _observedPhase = widget.session.phase;
+    _setGameOrientation(_observedPhase);
+  }
+
+  void _setGameOrientation(MatchPhase phase) {
+    final orientations = phase == MatchPhase.finished
+        ? const [DeviceOrientation.portraitUp]
+        : const [
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ];
+    unawaited(SystemChrome.setPreferredOrientations(orientations));
   }
 
   void _playEffects() {
@@ -52,14 +75,18 @@ class _MancalaViewState extends State<MancalaView> {
 
     final turn = controller.model.lastTurn;
     if (!identical(turn, _observedTurn) && controller.isAnimating) {
+      _captureEffectTimer?.cancel();
       _observedTurn = turn;
       SoundEffects.play(SoundEffect.collect);
       HapticEffects.preview();
     }
     if (_wasAnimating && !controller.isAnimating && turn != null) {
       if (turn.wasCapture) {
-        SoundEffects.play(SoundEffect.boardCapture);
-        HapticEffects.paddleHit();
+        _captureEffectTimer = Timer(const Duration(milliseconds: 250), () {
+          if (!mounted) return;
+          SoundEffects.play(SoundEffect.boardCapture);
+          HapticEffects.paddleHit();
+        });
       } else if (turn.extraTurn) {
         SoundEffects.play(SoundEffect.uiConfirm);
         HapticEffects.paddleHit();
@@ -70,6 +97,13 @@ class _MancalaViewState extends State<MancalaView> {
 
   @override
   void dispose() {
+    _captureEffectTimer?.cancel();
+    widget.session.removeListener(_syncOrientation);
+    unawaited(
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+      ]),
+    );
     controller.removeListener(_playEffects);
     controller.dispose();
     super.dispose();
@@ -122,9 +156,7 @@ class MancalaBoard extends StatelessWidget {
 
   static const playerOneColor = Color(0xFFFF7043);
   static const playerTwoColor = Color(0xFF36C5F0);
-  static const _woodDark = Color(0xFF4A2515);
   static const _wood = Color(0xFF9A552F);
-  static const _pit = Color(0xFF24150F);
   static const _legal = Color(0xFFFFD54F);
 
   @override
@@ -142,33 +174,9 @@ class MancalaBoard extends StatelessWidget {
           builder: (context, constraints) {
             final compact = constraints.maxHeight < 610;
             return Padding(
-              padding: EdgeInsets.fromLTRB(12, compact ? 8 : 18, 12, 14),
+              padding: EdgeInsets.fromLTRB(6, compact ? 4 : 8, 6, 6),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _PlayerStoreBadge(
-                          label: playerLabels[0],
-                          stones: board[MancalaModel.playerOneStore],
-                          color: playerOneColor,
-                          active: !model.isFinished && model.currentPlayer == 0,
-                          winner: model.winner == 0,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _PlayerStoreBadge(
-                          label: playerLabels[1],
-                          stones: board[MancalaModel.playerTwoStore],
-                          color: playerTwoColor,
-                          active: !model.isFinished && model.currentPlayer == 1,
-                          winner: model.winner == 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: compact ? 8 : 14),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 180),
                     child: Text(
@@ -184,37 +192,46 @@ class MancalaBoard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: compact ? 8 : 14),
+                  SizedBox(height: compact ? 3 : 6),
                   Expanded(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 760),
-                        child: AspectRatio(
-                          aspectRatio: 1.75,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Color(0xFFB96A3B), _wood],
-                              ),
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(color: _woodDark, width: 5),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black54,
-                                  blurRadius: 20,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
+                    child: DecoratedBox(
+                      key: const ValueKey('mancala-play-board'),
+                      decoration: BoxDecoration(
+                        color: _wood,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFFD7904E), Color(0xFF8A4728)],
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: const Color(0xFF5D2D1C),
+                          width: 5,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black54,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
                             child: Padding(
-                              padding: EdgeInsets.all(compact ? 7 : 11),
+                              padding: EdgeInsets.fromLTRB(
+                                compact ? 12 : 20,
+                                compact ? 20 : 28,
+                                compact ? 12 : 20,
+                                compact ? 16 : 24,
+                              ),
                               child: Row(
                                 children: [
                                   _Store(
                                     key: const ValueKey('mancala-store-1'),
                                     label: playerLabels[1],
+                                    player: 1,
                                     stones: board[MancalaModel.playerTwoStore],
                                     color: playerTwoColor,
                                     active:
@@ -236,6 +253,7 @@ class MancalaBoard extends StatelessWidget {
                                                       'mancala-pit-1-$pit',
                                                     ),
                                                     pit: pit,
+                                                    player: 1,
                                                     label: playerLabels[1],
                                                     stones:
                                                         board[model
@@ -273,6 +291,7 @@ class MancalaBoard extends StatelessWidget {
                                                       'mancala-pit-0-$pit',
                                                     ),
                                                     pit: pit,
+                                                    player: 0,
                                                     label: playerLabels[0],
                                                     stones:
                                                         board[model
@@ -306,6 +325,7 @@ class MancalaBoard extends StatelessWidget {
                                   _Store(
                                     key: const ValueKey('mancala-store-0'),
                                     label: playerLabels[0],
+                                    player: 0,
                                     stones: board[MancalaModel.playerOneStore],
                                     color: playerOneColor,
                                     active:
@@ -316,12 +336,14 @@ class MancalaBoard extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ),
+                          if (isAnimating && activePosition != null)
+                            _MovingStone(position: activePosition!),
+                        ],
                       ),
                     ),
                   ),
                   if (!compact) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 7),
                     Text(
                       'Choose a glowing pit on your side',
                       style: TextStyle(
@@ -364,67 +386,10 @@ class MancalaBoard extends StatelessWidget {
   }
 }
 
-class _PlayerStoreBadge extends StatelessWidget {
-  const _PlayerStoreBadge({
-    required this.label,
-    required this.stones,
-    required this.color,
-    required this.active,
-    required this.winner,
-  });
-
-  final String label;
-  final int stones;
-  final Color color;
-  final bool active;
-  final bool winner;
-
-  @override
-  Widget build(BuildContext context) => AnimatedContainer(
-    duration: const Duration(milliseconds: 180),
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-    decoration: BoxDecoration(
-      color: active || winner
-          ? color.withValues(alpha: .16)
-          : const Color(0xFF182A3A),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(
-        color: active || winner ? color : const Color(0xFF304253),
-        width: active || winner ? 2 : 1,
-      ),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-        ),
-        const SizedBox(width: 7),
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              '$stones IN STORE',
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 class _Pit extends StatelessWidget {
   const _Pit({
     required this.pit,
+    required this.player,
     required this.label,
     required this.stones,
     required this.color,
@@ -435,6 +400,7 @@ class _Pit extends StatelessWidget {
   });
 
   final int pit;
+  final int player;
   final String label;
   final int stones;
   final Color color;
@@ -448,7 +414,7 @@ class _Pit extends StatelessWidget {
         '$label pit ${pit + 1}, $stones '
         '${stones == 1 ? 'stone' : 'stones'}${legal ? ', legal move' : ''}';
     return Padding(
-      padding: const EdgeInsets.all(2.5),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Semantics(
         label: semantics,
         button: true,
@@ -457,33 +423,52 @@ class _Pit extends StatelessWidget {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: legal ? onTap : null,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              decoration: BoxDecoration(
-                color: MancalaBoard._pit,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: active
-                      ? Colors.white
-                      : legal
-                      ? MancalaBoard._legal
-                      : color.withValues(alpha: .45),
-                  width: active
-                      ? 4
-                      : legal
-                      ? 3
-                      : 1.5,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: player == 1 ? 18 : 0,
+                    bottom: player == 0 ? 18 : 0,
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: legal ? .16 : .07),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: active
+                            ? Colors.white
+                            : legal
+                            ? MancalaBoard._legal
+                            : color.withValues(alpha: .72),
+                        width: active
+                            ? 4
+                            : legal
+                            ? 3
+                            : 2,
+                      ),
+                      boxShadow: legal
+                          ? [
+                              BoxShadow(
+                                color: MancalaBoard._legal.withValues(
+                                  alpha: .42,
+                                ),
+                                blurRadius: 10,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: _StoneContents(stones: stones),
+                  ),
                 ),
-                boxShadow: legal
-                    ? [
-                        BoxShadow(
-                          color: MancalaBoard._legal.withValues(alpha: .35),
-                          blurRadius: 9,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: _StoneContents(stones: stones, color: color),
+                Positioned(
+                  top: player == 1 ? 0 : null,
+                  bottom: player == 0 ? 0 : null,
+                  child: _StoneCount(stones: stones, color: color),
+                ),
+              ],
             ),
           ),
         ),
@@ -495,6 +480,7 @@ class _Pit extends StatelessWidget {
 class _Store extends StatelessWidget {
   const _Store({
     required this.label,
+    required this.player,
     required this.stones,
     required this.color,
     required this.active,
@@ -502,6 +488,7 @@ class _Store extends StatelessWidget {
   });
 
   final String label;
+  final int player;
   final int stones;
   final Color color;
   final bool active;
@@ -511,17 +498,34 @@ class _Store extends StatelessWidget {
     child: Semantics(
       label: '$label store, $stones ${stones == 1 ? 'stone' : 'stones'}',
       child: ExcludeSemantics(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          decoration: BoxDecoration(
-            color: MancalaBoard._pit,
-            borderRadius: BorderRadius.circular(40),
-            border: Border.all(
-              color: active ? Colors.white : color.withValues(alpha: .75),
-              width: active ? 4 : 2,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(
+                top: player == 1 ? 18 : 0,
+                bottom: player == 0 ? 18 : 0,
+              ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(44),
+                  border: Border.all(
+                    color: active ? Colors.white : color,
+                    width: active ? 4 : 3,
+                  ),
+                ),
+                child: _StoneContents(stones: stones),
+              ),
             ),
-          ),
-          child: _StoneContents(stones: stones, color: color),
+            Positioned(
+              top: player == 1 ? 0 : null,
+              bottom: player == 0 ? 0 : null,
+              child: _StoneCount(stones: stones, color: color),
+            ),
+          ],
         ),
       ),
     ),
@@ -529,10 +533,9 @@ class _Store extends StatelessWidget {
 }
 
 class _StoneContents extends StatelessWidget {
-  const _StoneContents({required this.stones, required this.color});
+  const _StoneContents({required this.stones});
 
   final int stones;
-  final Color color;
 
   @override
   Widget build(BuildContext context) => Stack(
@@ -544,31 +547,93 @@ class _StoneContents extends StatelessWidget {
             math.cos(index * 2.4) * .48,
             math.sin(index * 2.4) * .48,
           ),
-          child: Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: index.isEven ? color : const Color(0xFFFFD54F),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white70, width: .7),
-            ),
-          ),
+          child: const _MancalaStone(size: 15),
         ),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: .72),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          '$stones',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            fontSize: 14,
-          ),
-        ),
-      ),
     ],
+  );
+}
+
+class _StoneCount extends StatelessWidget {
+  const _StoneCount({required this.stones, required this.color});
+
+  final int stones;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: ValueKey('mancala-count-$stones'),
+    constraints: const BoxConstraints(minWidth: 24, minHeight: 20),
+    alignment: Alignment.center,
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+    decoration: BoxDecoration(
+      color: const Color(0xFF0C1724),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: color, width: 2),
+    ),
+    child: Text(
+      '$stones',
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w900,
+        fontSize: 13,
+      ),
+    ),
+  );
+}
+
+class _MovingStone extends StatelessWidget {
+  const _MovingStone({required this.position});
+
+  final int position;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: AnimatedAlign(
+      key: const ValueKey('mancala-moving-stone'),
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeInOutCubic,
+      alignment: _alignmentForPosition(position),
+      child: const _MancalaStone(size: 24, moving: true),
+    ),
+  );
+
+  static Alignment _alignmentForPosition(int position) {
+    if (position == MancalaModel.playerOneStore) {
+      return const Alignment(.91, 0);
+    }
+    if (position == MancalaModel.playerTwoStore) {
+      return const Alignment(-.91, 0);
+    }
+    if (position < MancalaModel.playerOneStore) {
+      return Alignment(-.65 + position * .26, .43);
+    }
+    return Alignment(.65 - (position - 7) * .26, -.43);
+  }
+}
+
+class _MancalaStone extends StatelessWidget {
+  const _MancalaStone({required this.size, this.moving = false});
+
+  final double size;
+  final bool moving;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      boxShadow: [
+        BoxShadow(
+          color: moving ? Colors.white70 : Colors.black45,
+          blurRadius: moving ? 10 : 3,
+          offset: Offset(0, moving ? 0 : 2),
+        ),
+      ],
+    ),
+    child: Image.asset(
+      'assets/games/mancala/stone.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+    ),
   );
 }
