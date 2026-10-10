@@ -932,7 +932,8 @@ direct home-column entry, and final physical-device pass. M18 is complete.
   token rendering where it provides cleaner scaling, correct configured token
   shapes, and reliable transparency.
 - [x] LUDO2 Brighten the board and center all four token slots inside every home
-  base while keeping selectable-token and shared-square behavior intact.
+  base, enlarge the board and pieces, and provide at least 44×44 token targets
+  plus nearby-cell selection while keeping shared-square behavior intact.
 - [x] LUDO3 Add a lifecycle-safe animated dice presentation above the board that
   locks input and settles on the authoritative fair model roll.
 - [x] LUDO4 Slow each movement step and lengthen the between-square token tween

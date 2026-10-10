@@ -23,6 +23,10 @@ void main() {
     await tester.pumpWidget(_app(controller, options));
 
     expect(find.byKey(const ValueKey('ludo-board')), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('ludo-board'))).width,
+      greaterThanOrEqualTo(418),
+    );
     expect(find.text('ONE’S TURN'), findsOneWidget);
     expect(find.text('One 0/4'), findsOneWidget);
     expect(find.text('Four 0/4'), findsOneWidget);
@@ -45,6 +49,10 @@ void main() {
         'One, token 1, in the starting box, available to move',
       ),
       findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const ValueKey('ludo-token-0-0'))).shortestSide,
+      greaterThanOrEqualTo(44),
     );
     expect(
       tester

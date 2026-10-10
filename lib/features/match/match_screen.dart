@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../app/tap_tussle_theme.dart';
@@ -39,6 +41,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
   GameRecordBests? _recordBests;
   bool _recordSaving = false;
   bool _isNewOverallBest = false;
+  bool _isAbandoning = false;
 
   @override
   void initState() {
@@ -135,6 +138,29 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed) session.pause();
   }
 
+  Future<void> _abandonMatchAfterExit() async {
+    if (_isAbandoning) return;
+    _isAbandoning = true;
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      await widget.game.onAbandonMatch?.call(widget.options);
+    } on Object {
+      // The route has already closed; a storage failure must not strand the UI.
+    } finally {
+      _isAbandoning = false;
+    }
+  }
+
+  Future<void> _changeOptions() async {
+    Navigator.of(context).pop();
+    await _abandonMatchAfterExit();
+  }
+
+  Future<void> _backToGames() async {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await _abandonMatchAfterExit();
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -149,7 +175,11 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
     builder: (context, _) => PopScope(
       canPop: session.phase != MatchPhase.playing,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) session.pause();
+        if (didPop) {
+          unawaited(_abandonMatchAfterExit());
+        } else {
+          session.pause();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -161,7 +191,7 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
               if (session.phase == MatchPhase.playing) {
                 session.pause();
               } else {
-                Navigator.of(context).pop();
+                unawaited(_changeOptions());
               }
             },
           ),
@@ -229,13 +259,11 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                               },
                               onChangeOptions: () {
                                 SoundEffects.play(SoundEffect.uiBack);
-                                Navigator.of(context).pop();
+                                unawaited(_changeOptions());
                               },
                               onBackToGames: () {
                                 SoundEffects.play(SoundEffect.uiBack);
-                                Navigator.of(
-                                  context,
-                                ).popUntil((route) => route.isFirst);
+                                unawaited(_backToGames());
                               },
                             ),
                         ],

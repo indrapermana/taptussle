@@ -164,7 +164,7 @@ class LudoBoard extends StatelessWidget {
             builder: (context, constraints) {
               final compact = constraints.maxHeight < 680;
               return Padding(
-                padding: EdgeInsets.fromLTRB(10, compact ? 7 : 12, 10, 10),
+                padding: EdgeInsets.fromLTRB(3, compact ? 5 : 9, 3, 7),
                 child: Column(
                   children: [
                     _TurnBanner(controller: controller, options: options),
@@ -258,7 +258,7 @@ class _LudoGameBoard extends StatelessWidget {
     builder: (context, constraints) {
       final boardSize = math.min(constraints.maxWidth, constraints.maxHeight);
       final cellSize = boardSize / _LudoGeometry.gridSize;
-      final tokenSize = (cellSize * .9).clamp(14.0, 31.0);
+      final tokenSize = (cellSize * 1.05).clamp(17.0, 36.0);
       final legal = controller.legalTokenIndexes.toSet();
       final activePlayer = controller.model.currentPlayer;
 
@@ -277,55 +277,86 @@ class _LudoGameBoard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Stack(
-                key: const ValueKey('ludo-board'),
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _LudoBoardPainter(
-                        participantColors: [
-                          for (final participant in options.participants)
-                            _participantColor(participant.color),
-                        ],
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: legal.isEmpty
+                    ? null
+                    : (details) {
+                        final nearest =
+                            legal
+                                .map(
+                                  (token) => (
+                                    token,
+                                    (_LudoGeometry.tokenCenter(
+                                              playerIndex: activePlayer,
+                                              tokenIndex: token,
+                                              progress: controller
+                                                  .displayProgress[activePlayer][token],
+                                              boardSize: boardSize,
+                                            ) -
+                                            details.localPosition)
+                                        .distance,
+                                  ),
+                                )
+                                .where((entry) => entry.$2 <= cellSize * 1.05)
+                                .toList()
+                              ..sort(
+                                (left, right) => left.$2.compareTo(right.$2),
+                              );
+                        if (nearest.isNotEmpty) {
+                          controller.chooseToken(nearest.first.$1);
+                        }
+                      },
+                child: Stack(
+                  key: const ValueKey('ludo-board'),
+                  children: [
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _LudoBoardPainter(
+                          participantColors: [
+                            for (final participant in options.participants)
+                              _participantColor(participant.color),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  for (
-                    var player = 0;
-                    player < options.participants.length;
-                    player++
-                  )
                     for (
-                      var token = 0;
-                      token < LudoModel.tokensPerPlayer;
-                      token++
+                      var player = 0;
+                      player < options.participants.length;
+                      player++
                     )
-                      _PositionedToken(
-                        key: ValueKey('ludo-token-$player-$token'),
-                        playerIndex: player,
-                        tokenIndex: token,
-                        progress: controller.displayProgress[player][token],
-                        participant: options.participants[player],
-                        boardSize: boardSize,
-                        tokenSize: tokenSize,
-                        selectable:
-                            player == activePlayer && legal.contains(token),
-                        animationDuration:
-                            controller.movementStepDuration == Duration.zero
-                            ? Duration.zero
-                            : Duration(
-                                milliseconds: math.max(
-                                  100,
-                                  (controller
-                                              .movementStepDuration
-                                              .inMilliseconds *
-                                          .86)
-                                      .round(),
+                      for (
+                        var token = 0;
+                        token < LudoModel.tokensPerPlayer;
+                        token++
+                      )
+                        _PositionedToken(
+                          key: ValueKey('ludo-token-$player-$token'),
+                          playerIndex: player,
+                          tokenIndex: token,
+                          progress: controller.displayProgress[player][token],
+                          participant: options.participants[player],
+                          boardSize: boardSize,
+                          tokenSize: tokenSize,
+                          selectable:
+                              player == activePlayer && legal.contains(token),
+                          animationDuration:
+                              controller.movementStepDuration == Duration.zero
+                              ? Duration.zero
+                              : Duration(
+                                  milliseconds: math.max(
+                                    100,
+                                    (controller
+                                                .movementStepDuration
+                                                .inMilliseconds *
+                                            .86)
+                                        .round(),
+                                  ),
                                 ),
-                              ),
-                        onTap: () => controller.chooseToken(token),
-                      ),
-                ],
+                          onTap: () => controller.chooseToken(token),
+                        ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -372,13 +403,14 @@ class _PositionedToken extends StatelessWidget {
         '${participant.displayName}, token ${tokenIndex + 1}, $location'
         '${selectable ? ', available to move' : ''}';
 
+    final hitSize = math.max(44.0, tokenSize);
     return AnimatedPositioned(
       duration: animationDuration,
       curve: Curves.easeInOut,
-      left: center.dx - tokenSize / 2,
-      top: center.dy - tokenSize / 2,
-      width: tokenSize,
-      height: tokenSize,
+      left: center.dx - hitSize / 2,
+      top: center.dy - hitSize / 2,
+      width: hitSize,
+      height: hitSize,
       child: IgnorePointer(
         ignoring: !selectable,
         child: Semantics(
@@ -388,13 +420,15 @@ class _PositionedToken extends StatelessWidget {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: selectable ? onTap : null,
-            child: AnimatedScale(
-              duration: const Duration(milliseconds: 130),
-              scale: selectable ? 1.12 : 1,
-              child: _LudoToken(
-                participant: participant,
-                size: tokenSize,
-                highlighted: selectable,
+            child: Center(
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 130),
+                scale: selectable ? 1.12 : 1,
+                child: _LudoToken(
+                  participant: participant,
+                  size: tokenSize,
+                  highlighted: selectable,
+                ),
               ),
             ),
           ),

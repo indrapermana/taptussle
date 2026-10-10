@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/mini_game.dart';
 import '../core/match_options.dart';
@@ -12,18 +13,28 @@ import '../games/memory_match/memory_match_view.dart';
 import '../games/rock_paper_scissors/rock_paper_scissors_view.dart';
 import '../games/snakes_and_ladders/snakes_and_ladders_view.dart';
 import '../games/sudoku/sudoku_view.dart';
+import '../games/sudoku/sudoku_model.dart';
+import '../games/sudoku/sudoku_progress_repository.dart';
 import '../games/checkers/checkers_view.dart';
 import '../games/mancala/mancala_view.dart';
 import '../games/slither_snakes/slither_records.dart';
 import '../games/slither_snakes/slither_snakes_view.dart';
 import '../games/water_sort/water_sort_records.dart';
 import '../games/water_sort/water_sort_view.dart';
+import '../games/water_sort/water_sort_levels.dart';
+import '../games/water_sort/water_sort_progress_repository.dart';
 import '../games/nuts_and_bolts/nuts_and_bolts_records.dart';
 import '../games/nuts_and_bolts/nuts_and_bolts_view.dart';
+import '../games/nuts_and_bolts/nuts_and_bolts_levels.dart';
+import '../games/nuts_and_bolts/nuts_and_bolts_progress_repository.dart';
 import '../games/solitaire/solitaire_records.dart';
 import '../games/solitaire/solitaire_view.dart';
+import '../games/solitaire/solitaire_model.dart';
+import '../games/solitaire/solitaire_progress_repository.dart';
 import '../games/ludo/ludo_view.dart';
+import '../games/ludo/ludo_progress_repository.dart';
 import '../games/cangkulan/cangkulan_view.dart';
+import '../games/cangkulan/cangkulan_progress_repository.dart';
 import '../games/chess/chess_view.dart';
 
 // Composition root: the only shared file that imports individual game modules.
@@ -53,6 +64,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         '${options.difficulty.label.toUpperCase()} • CLEAR THE DECK',
     build: (session, options) =>
         SolitaireView(session: session, options: options),
+    onAbandonMatch: (options) async {
+      final preferences = await SharedPreferences.getInstance();
+      await SolitaireProgressRepository(
+        preferences,
+      ).clearActive(SolitaireDifficulty.values[options.difficulty.index]);
+    },
   ),
   MiniGame(
     id: 'nuts-and-bolts',
@@ -78,6 +95,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         '${options.difficulty.label.toUpperCase()} • LEVELS 1–60',
     build: (session, options) =>
         NutsAndBoltsView(session: session, options: options),
+    onAbandonMatch: (options) async {
+      final preferences = await SharedPreferences.getInstance();
+      await NutsAndBoltsProgressRepository(
+        preferences,
+      ).clearActive(NutsAndBoltsDifficulty.values[options.difficulty.index]);
+    },
   ),
   MiniGame(
     id: 'slither-style-snakes',
@@ -128,6 +151,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
         '${options.difficulty.label.toUpperCase()} • LEVELS 1–60',
     build: (session, options) =>
         WaterSortView(session: session, options: options),
+    onAbandonMatch: (options) async {
+      final preferences = await SharedPreferences.getInstance();
+      await WaterSortProgressRepository(
+        preferences,
+      ).clearActive(WaterSortDifficulty.values[options.difficulty.index]);
+    },
   ),
   MiniGame(
     id: 'sudoku',
@@ -180,6 +209,12 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (options) =>
         '${options.difficulty.label.toUpperCase()} • LEVELS 1–60',
     build: (session, options) => SudokuView(session: session, options: options),
+    onAbandonMatch: (options) async {
+      final preferences = await SharedPreferences.getInstance();
+      await SudokuProgressRepository(
+        preferences,
+      ).clear(SudokuDifficulty.values[options.difficulty.index]);
+    },
   ),
   MiniGame(
     id: 'memory-match',
@@ -382,6 +417,10 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     },
     matchLabel: (_) => 'BRING ALL 4 HOME',
     build: (session, options) => LudoView(session: session, options: options),
+    onAbandonMatch: (options) async {
+      final preferences = await SharedPreferences.getInstance();
+      await LudoProgressRepository(preferences).clear(options);
+    },
   ),
   MiniGame(
     id: 'snakes-and-ladders',
@@ -474,6 +513,10 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     matchLabel: (_) => 'EMPTY YOUR HAND',
     build: (session, options) =>
         CangkulanView(session: session, options: options),
+    onAbandonMatch: (options) async {
+      final preferences = await SharedPreferences.getInstance();
+      await CangkulanProgressRepository(preferences).clear(options);
+    },
   ),
   MiniGame(
     id: 'mancala',

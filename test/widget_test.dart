@@ -160,6 +160,55 @@ void main() {
     expect(find.byKey(const ValueKey('result-score-card-1')), findsOneWidget);
   });
 
+  testWidgets(
+    'leaving a paused match abandons it but lifecycle pause does not',
+    (tester) async {
+      var abandonCount = 0;
+      final definition = MiniGame(
+        id: 'saved-game',
+        title: 'Saved game',
+        subtitle: 'Test',
+        instructions: 'Test saved progress',
+        icon: Icons.save_rounded,
+        build: (_, _) => const SizedBox.expand(),
+        onAbandonMatch: (_) async => abandonCount++,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MatchScreen(
+                    game: definition,
+                    options: MatchOptions.friend(),
+                  ),
+                ),
+              ),
+              child: const Text('Open game'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open game'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start match'));
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      expect(find.text('Resume match'), findsOneWidget);
+      expect(abandonCount, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      await tester.tap(find.byKey(const ValueKey('change-options')));
+      await tester.pumpAndSettle();
+      expect(find.text('Open game'), findsOneWidget);
+      expect(abandonCount, 1);
+    },
+  );
+
   testWidgets('small phone home and instructions do not overflow', (
     tester,
   ) async {

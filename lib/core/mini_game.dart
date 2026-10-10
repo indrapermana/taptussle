@@ -19,6 +19,7 @@ typedef MiniGamePresentationBuilder =
 typedef RecordVariantBuilder = String Function(GamePreferences preferences);
 typedef DifficultyDescriptionBuilder =
     String Function(BotDifficulty difficulty);
+typedef AbandonMatchCallback = Future<void> Function(MatchOptions options);
 
 enum PlayerCount {
   one(1),
@@ -53,6 +54,7 @@ class MiniGame {
     this.recordDefinition,
     this.recordVariant,
     this.difficultyDescription,
+    this.onAbandonMatch,
   }) : assert(supportedModes.isNotEmpty),
        assert(supportedPlayerCounts.isNotEmpty),
        supportedModes = Set.unmodifiable(supportedModes),
@@ -69,6 +71,7 @@ class MiniGame {
   final GameRecordDefinition? recordDefinition;
   final RecordVariantBuilder? recordVariant;
   final DifficultyDescriptionBuilder? difficultyDescription;
+  final AbandonMatchCallback? onAbandonMatch;
 
   String recordVariantFor(GamePreferences preferences) =>
       recordVariant?.call(preferences) ??
