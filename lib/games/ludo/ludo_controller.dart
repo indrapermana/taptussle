@@ -18,6 +18,8 @@ class LudoController extends ChangeNotifier {
     LudoDiceRoller? diceRoller,
     LudoModel? model,
     Duration movementStepDuration = const Duration(milliseconds: 150),
+    Duration diceRollDuration = Duration.zero,
+    Duration diceFrameDuration = const Duration(milliseconds: 90),
     Duration? botRollDelay,
     Duration? botMoveDelay,
     Random? random,
@@ -36,6 +38,8 @@ class LudoController extends ChangeNotifier {
       playerCount: playerCount,
       model: resolvedModel,
       movementStepDuration: movementStepDuration,
+      diceRollDuration: diceRollDuration,
+      diceFrameDuration: diceFrameDuration,
       participants: participants ?? session?.options.participants,
       botRollDelay: botRollDelay,
       botMoveDelay: botMoveDelay,
@@ -50,6 +54,8 @@ class LudoController extends ChangeNotifier {
     required int playerCount,
     required this.model,
     required this.movementStepDuration,
+    required this.diceRollDuration,
+    required this.diceFrameDuration,
     required List<MatchParticipant>? participants,
     required this.botRollDelay,
     required this.botMoveDelay,
@@ -91,6 +97,8 @@ class LudoController extends ChangeNotifier {
 
   final LudoModel model;
   final Duration movementStepDuration;
+  final Duration diceRollDuration;
+  final Duration diceFrameDuration;
   final Duration? botRollDelay;
   final Duration? botMoveDelay;
   final List<List<int>> _displayProgress;
@@ -105,6 +113,8 @@ class LudoController extends ChangeNotifier {
   );
 
   bool get isAnimating => _movementTimer != null || _pendingProgress.isNotEmpty;
+  bool get isRollingDice => _diceTimer != null || _diceSettleTimer != null;
+  int? get displayDieValue => _displayDieValue ?? model.lastRoll?.value;
   bool get isBotTurn =>
       !model.isFinished && (_participants[model.currentPlayer]?.isBot ?? false);
   bool get isBotThinking => _botTimer?.isActive ?? false;
@@ -113,6 +123,7 @@ class LudoController extends ChangeNotifier {
       !_disposed &&
       _acceptsTurns &&
       !isAnimating &&
+      !isRollingDice &&
       !isBotTurn &&
       !isBotThinking &&
       model.phase == LudoTurnPhase.awaitingRoll;
@@ -120,6 +131,7 @@ class LudoController extends ChangeNotifier {
       !_disposed &&
       _acceptsTurns &&
       !isAnimating &&
+      !isRollingDice &&
       !isBotTurn &&
       !isBotThinking &&
       model.phase == LudoTurnPhase.awaitingMove;
@@ -132,6 +144,10 @@ class LudoController extends ChangeNotifier {
   int? get animationToken => _animationToken;
   final List<int> _pendingProgress = [];
   Timer? _movementTimer;
+  Timer? _diceTimer;
+  Timer? _diceSettleTimer;
+  int? _displayDieValue;
+  bool _awaitingDiceSettle = false;
   Timer? _botTimer;
   LudoBotAction? _pendingBotAction;
   int _observedRound = 0;
@@ -150,9 +166,37 @@ class LudoController extends ChangeNotifier {
   LudoRoll _performRoll() {
     final result = model.rollDice();
     _saveProgress();
-    notifyListeners();
-    if (isBotTurn) _scheduleBotAction();
+    _awaitingDiceSettle = true;
+    _beginDicePresentation();
     return result;
+  }
+
+  void _beginDicePresentation() {
+    _cancelDicePresentation();
+    if (diceRollDuration == Duration.zero) {
+      _awaitingDiceSettle = false;
+      _displayDieValue = model.lastRoll?.value;
+      notifyListeners();
+      if (isBotTurn) _scheduleBotAction();
+      return;
+    }
+    _displayDieValue = _random.nextInt(6) + 1;
+    notifyListeners();
+    _diceTimer = Timer.periodic(diceFrameDuration, (_) {
+      if (_disposed || !_acceptsTurns) return;
+      var next = _random.nextInt(6) + 1;
+      if (next == _displayDieValue) next = next % 6 + 1;
+      _displayDieValue = next;
+      notifyListeners();
+    });
+    _diceSettleTimer = Timer(diceRollDuration, () {
+      _cancelDicePresentation();
+      if (_disposed || !_acceptsTurns) return;
+      _awaitingDiceSettle = false;
+      _displayDieValue = model.lastRoll?.value;
+      notifyListeners();
+      if (isBotTurn) _scheduleBotAction();
+    });
   }
 
   LudoMoveResult chooseToken(int tokenIndex) {
@@ -238,6 +282,7 @@ class LudoController extends ChangeNotifier {
         !_acceptsTurns ||
         model.isFinished ||
         isAnimating ||
+        isRollingDice ||
         !isBotTurn ||
         _botTimer != null) {
       return;
@@ -284,6 +329,8 @@ class LudoController extends ChangeNotifier {
         _cancelTimers(clearMovement: true);
         model.reset();
         _syncDisplayToModel();
+        _displayDieValue = null;
+        _awaitingDiceSettle = false;
         final storage = repository;
         if (storage != null) unawaited(storage.clear(session!.options));
       } else {
@@ -294,12 +341,15 @@ class LudoController extends ChangeNotifier {
     final phaseChanged = session!.phase != _observedPhase;
     _observedPhase = session!.phase;
     if (!_acceptsTurns) {
+      _cancelDicePresentation();
       _movementTimer?.cancel();
       _movementTimer = null;
       _cancelBotAction();
       _saveProgress();
     } else if (roundChanged || phaseChanged) {
-      if (_pendingProgress.isNotEmpty) {
+      if (_awaitingDiceSettle) {
+        _beginDicePresentation();
+      } else if (_pendingProgress.isNotEmpty) {
         _scheduleNextStep();
       } else {
         _scheduleBotAction();
@@ -356,13 +406,22 @@ class LudoController extends ChangeNotifier {
     _pendingBotAction = null;
   }
 
+  void _cancelDicePresentation() {
+    _diceTimer?.cancel();
+    _diceTimer = null;
+    _diceSettleTimer?.cancel();
+    _diceSettleTimer = null;
+  }
+
   void _cancelTimers({required bool clearMovement}) {
     _movementTimer?.cancel();
     _movementTimer = null;
+    _cancelDicePresentation();
     if (clearMovement) {
       _pendingProgress.clear();
       _animationPlayer = null;
       _animationToken = null;
+      _awaitingDiceSettle = false;
     }
     _cancelBotAction();
   }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
@@ -6,6 +8,48 @@ import 'package:tap_tussle/games/ludo/ludo_controller.dart';
 import 'package:tap_tussle/games/ludo/ludo_model.dart';
 
 void main() {
+  testWidgets('dice presentation locks token choice and settles fairly', (
+    tester,
+  ) async {
+    var diceCalls = 0;
+    final model = LudoModel.fromState(
+      playerCount: 2,
+      diceRoller: () {
+        diceCalls++;
+        return 3;
+      },
+      tokenProgress: const [
+        [0, -1, -1, -1],
+        [-1, -1, -1, -1],
+      ],
+    );
+    final controller = LudoController(
+      playerCount: 2,
+      model: model,
+      diceRollDuration: const Duration(milliseconds: 200),
+      diceFrameDuration: const Duration(milliseconds: 40),
+      movementStepDuration: Duration.zero,
+      random: Random(8),
+    );
+    addTearDown(controller.dispose);
+
+    controller.roll();
+    expect(diceCalls, 1);
+    expect(controller.isRollingDice, isTrue);
+    expect(controller.canChooseToken, isFalse);
+    final firstFace = controller.displayDieValue;
+
+    await tester.pump(const Duration(milliseconds: 45));
+    expect(controller.displayDieValue, isNot(firstFace));
+    expect(diceCalls, 1);
+
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(controller.isRollingDice, isFalse);
+    expect(controller.displayDieValue, 3);
+    expect(controller.canChooseToken, isTrue);
+    expect(diceCalls, 1);
+  });
+
   testWidgets('animates a chosen token one board space at a time', (
     tester,
   ) async {

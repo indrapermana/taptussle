@@ -926,6 +926,20 @@ tokens ignore pointer input so a legal human token remains tappable underneath
 other participants' tokens. The user confirmed the corrected goal bonus rule,
 direct home-column entry, and final physical-device pass. M18 is complete.
 
+### M18 child-first presentation refresh
+
+- [x] LUDO1 Review the supplied asset pack and retain programmatic board and
+  token rendering where it provides cleaner scaling, correct configured token
+  shapes, and reliable transparency.
+- [x] LUDO2 Brighten the board and center all four token slots inside every home
+  base while keeping selectable-token and shared-square behavior intact.
+- [x] LUDO3 Add a lifecycle-safe animated dice presentation above the board that
+  locks input and settles on the authoritative fair model roll.
+- [x] LUDO4 Slow each movement step and lengthen the between-square token tween
+  so the full path remains easy for young children to follow.
+- [ ] LUDO5 Verify board size, home alignment, dice timing, token pacing, and
+  two-to-four-participant layouts on physical iPhone and Android devices.
+
 ## M19 — Nuts and Bolts
 
 Confirmed concept: separate mixed colored nuts from their bolts and move them so

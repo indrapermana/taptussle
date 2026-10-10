@@ -19,7 +19,8 @@ class LudoView extends StatefulWidget {
     this.repository,
     this.controller,
     this.diceRoller,
-    this.movementStepDuration = const Duration(milliseconds: 150),
+    this.movementStepDuration = const Duration(milliseconds: 220),
+    this.diceRollDuration = const Duration(milliseconds: 650),
     this.botRollDelay,
     this.botMoveDelay,
     super.key,
@@ -31,6 +32,7 @@ class LudoView extends StatefulWidget {
   final LudoController? controller;
   final LudoDiceRoller? diceRoller;
   final Duration movementStepDuration;
+  final Duration diceRollDuration;
   final Duration? botRollDelay;
   final Duration? botMoveDelay;
 
@@ -77,6 +79,7 @@ class _LudoViewState extends State<LudoView> {
         diceRoller: diceRoller,
         model: restored,
         movementStepDuration: widget.movementStepDuration,
+        diceRollDuration: widget.diceRollDuration,
         botRollDelay: widget.botRollDelay,
         botMoveDelay: widget.botMoveDelay,
         session: widget.session,
@@ -165,7 +168,9 @@ class LudoBoard extends StatelessWidget {
                 child: Column(
                   children: [
                     _TurnBanner(controller: controller, options: options),
-                    SizedBox(height: compact ? 7 : 10),
+                    SizedBox(height: compact ? 4 : 7),
+                    _DiceTray(controller: controller),
+                    SizedBox(height: compact ? 4 : 7),
                     Expanded(
                       child: Center(
                         child: AspectRatio(
@@ -177,7 +182,7 @@ class LudoBoard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: compact ? 7 : 10),
+                    SizedBox(height: compact ? 5 : 7),
                     _MatchControls(controller: controller, options: options),
                   ],
                 ),
@@ -203,6 +208,8 @@ class _TurnBanner extends StatelessWidget {
     final participant = options.participants[activePlayer];
     final status = model.isFinished
         ? 'FINAL STANDINGS'
+        : controller.isRollingDice
+        ? '${participant.displayName.toUpperCase()} IS ROLLING…'
         : controller.isAnimating
         ? '${participant.displayName.toUpperCase()} IS MOVING'
         : controller.pendingBotAction == LudoBotAction.rolling
@@ -234,8 +241,6 @@ class _TurnBanner extends StatelessWidget {
               ),
             ),
           ),
-          if (model.lastRoll case final lastRoll?)
-            _DiceFace(value: lastRoll.value),
         ],
       ),
     );
@@ -310,11 +315,11 @@ class _LudoGameBoard extends StatelessWidget {
                             ? Duration.zero
                             : Duration(
                                 milliseconds: math.max(
-                                  70,
+                                  100,
                                   (controller
                                               .movementStepDuration
                                               .inMilliseconds *
-                                          .72)
+                                          .86)
                                       .round(),
                                 ),
                               ),
@@ -418,45 +423,72 @@ class _MatchControls extends StatelessWidget {
   final MatchOptions options;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
+  Widget build(BuildContext context) => Wrap(
+    alignment: WrapAlignment.center,
+    spacing: 6,
+    runSpacing: 5,
     children: [
-      Expanded(
-        child: Wrap(
-          spacing: 6,
-          runSpacing: 5,
-          children: [
-            for (final entry in options.participants.indexed)
-              _PlayerBadge(
-                participant: entry.$2,
-                homeCount: controller.model.tokenProgress[entry.$1]
-                    .where((progress) => progress == LudoModel.finishProgress)
-                    .length,
-                active:
-                    !controller.model.isFinished &&
-                    controller.model.currentPlayer == entry.$1,
-                placement: controller.model.standings.indexOf(entry.$1),
-              ),
-          ],
+      for (final entry in options.participants.indexed)
+        _PlayerBadge(
+          participant: entry.$2,
+          homeCount: controller.model.tokenProgress[entry.$1]
+              .where((progress) => progress == LudoModel.finishProgress)
+              .length,
+          active:
+              !controller.model.isFinished &&
+              controller.model.currentPlayer == entry.$1,
+          placement: controller.model.standings.indexOf(entry.$1),
         ),
-      ),
-      const SizedBox(width: 8),
-      FilledButton.icon(
-        key: const ValueKey('ludo-roll'),
-        onPressed: controller.canRoll ? controller.roll : null,
-        icon: const Icon(Icons.casino_rounded),
-        label: Text(
-          controller.isBotTurn || controller.isBotThinking
-              ? 'WAIT'
-              : controller.model.phase == LudoTurnPhase.awaitingMove
-              ? 'PICK'
-              : controller.isAnimating
-              ? 'MOVING'
-              : 'ROLL',
-        ),
-      ),
     ],
   );
+}
+
+class _DiceTray extends StatelessWidget {
+  const _DiceTray({required this.controller});
+
+  final LudoController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = controller.displayDieValue ?? 1;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Semantics(
+          key: const ValueKey('ludo-die'),
+          label: 'Last roll $value',
+          child: SizedBox.square(
+            dimension: 54,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 85),
+              transitionBuilder: (child, animation) => RotationTransition(
+                turns: Tween<double>(begin: -.16, end: 0).animate(animation),
+                child: ScaleTransition(scale: animation, child: child),
+              ),
+              child: _DiceFace(key: ValueKey('ludo-die-$value'), value: value),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        FilledButton.icon(
+          key: const ValueKey('ludo-roll'),
+          onPressed: controller.canRoll ? controller.roll : null,
+          icon: const Icon(Icons.casino_rounded),
+          label: Text(
+            controller.isRollingDice
+                ? 'ROLLING…'
+                : controller.isBotTurn || controller.isBotThinking
+                ? 'WAIT'
+                : controller.model.phase == LudoTurnPhase.awaitingMove
+                ? 'PICK A TOKEN'
+                : controller.isAnimating
+                ? 'MOVING'
+                : 'ROLL DICE',
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _PlayerBadge extends StatelessWidget {
@@ -506,33 +538,71 @@ class _PlayerBadge extends StatelessWidget {
 }
 
 class _DiceFace extends StatelessWidget {
-  const _DiceFace({required this.value});
+  const _DiceFace({required this.value, super.key});
 
   final int value;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'Last roll $value',
-    child: Container(
-      key: const ValueKey('ludo-die'),
-      width: 34,
-      height: 34,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
-      ),
-      child: Text(
-        '$value',
-        style: const TextStyle(
-          color: TapTussleColors.midnight,
-          fontFamily: 'Lilita One',
-          fontSize: 20,
+  Widget build(BuildContext context) {
+    final pips = switch (value) {
+      1 => const [Alignment.center],
+      2 => const [Alignment.topLeft, Alignment.bottomRight],
+      3 => const [Alignment.topLeft, Alignment.center, Alignment.bottomRight],
+      4 => const [
+        Alignment.topLeft,
+        Alignment.topRight,
+        Alignment.bottomLeft,
+        Alignment.bottomRight,
+      ],
+      5 => const [
+        Alignment.topLeft,
+        Alignment.topRight,
+        Alignment.center,
+        Alignment.bottomLeft,
+        Alignment.bottomRight,
+      ],
+      _ => const [
+        Alignment.topLeft,
+        Alignment.centerLeft,
+        Alignment.bottomLeft,
+        Alignment.topRight,
+        Alignment.centerRight,
+        Alignment.bottomRight,
+      ],
+    };
+    return Semantics(
+      label: controllerLabel(value),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: TapTussleColors.gold, width: 3),
+          boxShadow: const [BoxShadow(color: Color(0x6600D9FF), blurRadius: 8)],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Stack(
+            children: [
+              for (final alignment in pips)
+                Align(
+                  alignment: alignment,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: TapTussleColors.midnight,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
+
+  String controllerLabel(int value) => 'Last roll $value';
 }
 
 class _LudoToken extends StatelessWidget {
@@ -614,6 +684,22 @@ class _LudoBoardPainter extends CustomPainter {
         ),
         Paint()..color = Colors.white.withValues(alpha: .82),
       );
+      for (final slot in _LudoGeometry.boxSlots[player]) {
+        final center = Offset((slot.$2 + .5) * cell, (slot.$1 + .5) * cell);
+        canvas.drawCircle(
+          center,
+          cell * .47,
+          Paint()..color = color.withValues(alpha: .16),
+        );
+        canvas.drawCircle(
+          center,
+          cell * .47,
+          Paint()
+            ..color = color.withValues(alpha: .7)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = cell * .07,
+        );
+      }
     }
 
     for (final position in _LudoGeometry.track) {
@@ -788,10 +874,10 @@ abstract final class _LudoGeometry {
   ];
 
   static const List<List<(double, double)>> boxSlots = [
-    [(2.0, 2.0), (2.0, 4.0), (4.0, 2.0), (4.0, 4.0)],
-    [(2.0, 10.0), (2.0, 12.0), (4.0, 10.0), (4.0, 12.0)],
-    [(10.0, 10.0), (10.0, 12.0), (12.0, 10.0), (12.0, 12.0)],
-    [(10.0, 2.0), (10.0, 4.0), (12.0, 2.0), (12.0, 4.0)],
+    [(1.75, 1.75), (1.75, 3.25), (3.25, 1.75), (3.25, 3.25)],
+    [(1.75, 10.75), (1.75, 12.25), (3.25, 10.75), (3.25, 12.25)],
+    [(10.75, 10.75), (10.75, 12.25), (12.25, 10.75), (12.25, 12.25)],
+    [(10.75, 1.75), (10.75, 3.25), (12.25, 1.75), (12.25, 3.25)],
   ];
 
   static Offset tokenCenter({
