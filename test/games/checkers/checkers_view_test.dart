@@ -63,6 +63,21 @@ void main() {
     expect(tapped, 33);
   });
 
+  testWidgets('legal-target arrows point toward their destination', (
+    tester,
+  ) async {
+    final model = CheckersModel.fromBoard(
+      board: {
+        39: const CheckersPiece(player: 0),
+        1: const CheckersPiece(player: 1),
+      },
+    );
+    await tester.pumpWidget(board(model, selectedSquare: 39));
+
+    expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_forward_rounded), findsNothing);
+  });
+
   testWidgets('shows mandatory capture and capture-chain states', (
     tester,
   ) async {

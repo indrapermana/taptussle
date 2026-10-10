@@ -461,7 +461,12 @@ class _BoardSquare extends StatelessWidget {
               if (piece case final piece?)
                 _Piece(piece: piece, selected: selected),
               if (target != null)
-                _MoveTargetIndicator(isCapture: target!.isCapture),
+                _MoveTargetIndicator(
+                  isCapture: target!.isCapture,
+                  pointsLeft:
+                      CheckersModel.columnOf(target!.to) <
+                      CheckersModel.columnOf(target!.from),
+                ),
             ],
           ),
         ),
@@ -471,9 +476,13 @@ class _BoardSquare extends StatelessWidget {
 }
 
 class _MoveTargetIndicator extends StatelessWidget {
-  const _MoveTargetIndicator({required this.isCapture});
+  const _MoveTargetIndicator({
+    required this.isCapture,
+    required this.pointsLeft,
+  });
 
   final bool isCapture;
+  final bool pointsLeft;
 
   @override
   Widget build(BuildContext context) {
@@ -491,7 +500,11 @@ class _MoveTargetIndicator extends StatelessWidget {
           ),
           child: Center(
             child: Icon(
-              isCapture ? Icons.bolt_rounded : Icons.arrow_forward_rounded,
+              isCapture
+                  ? Icons.bolt_rounded
+                  : pointsLeft
+                  ? Icons.arrow_back_rounded
+                  : Icons.arrow_forward_rounded,
               color: color.withValues(alpha: .9),
               size: 20,
             ),
