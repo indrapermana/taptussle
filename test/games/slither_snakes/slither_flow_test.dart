@@ -84,7 +84,7 @@ void main() {
 
       expect(find.byType(SlitherSnakesView), findsOneWidget);
       final game = _gameFrom(tester);
-      expect(game.config.aiCount, 6);
+      expect(game.config.aiCount, 26);
 
       final binding = TestWidgetsFlutterBinding.ensureInitialized();
       binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
@@ -123,7 +123,7 @@ void main() {
       expect(game.session.phase, MatchPhase.playing);
       expect(game.simulation.score, 0);
       expect(game.simulation.isGameOver, isFalse);
-      expect(game.simulation.opponents, hasLength(6));
+      expect(game.simulation.opponents, hasLength(26));
     },
   );
 

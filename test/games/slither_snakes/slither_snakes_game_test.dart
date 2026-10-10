@@ -19,8 +19,13 @@ void main() {
         const world = SlitherPoint(560, 720);
         final screen = game.worldToScreen(world);
 
-        expect(screen, const Offset(220, 310));
-        expect(game.screenToWorld(screen), world);
+        expect(screen.dx, closeTo(209.2, 1e-9));
+        expect(screen.dy, closeTo(297.4, 1e-9));
+        final restored = game.screenToWorld(screen);
+        expect(restored.x, closeTo(world.x, 1e-9));
+        expect(restored.y, closeTo(world.y, 1e-9));
+        expect(game.visibleWorldBounds.width, closeTo(320 / .82, 1e-9));
+        expect(game.visibleWorldBounds.height, closeTo(480 / .82, 1e-9));
       },
     );
 
@@ -29,7 +34,13 @@ void main() {
 
       game.onGameResize(Vector2(320, 480));
 
-      expect(game.cameraCenter, const SlitherPoint(160, 240));
+      expect(game.cameraCenter.x, closeTo(195.1219512195122, 1e-9));
+      expect(game.cameraCenter.y, closeTo(292.6829268292683, 1e-9));
+      expect(
+        game.nearbyArenaEdges,
+        containsAll([SlitherArenaEdge.left, SlitherArenaEdge.top]),
+      );
+      expect(game.minimapRect, const Rect.fromLTWH(228, 398, 80, 60));
     });
 
     test('session pause freezes simulation and steering is safely cleared', () {
@@ -41,6 +52,7 @@ void main() {
       game.onGameResize(Vector2(320, 480));
       game.steerFromScreen(const Offset(250, 380));
       expect(game.simulation.steeringTarget, isNotNull);
+      expect(game.simulation.steeringHeading, isNotNull);
 
       game.update(.25);
       final runningTime = game.simulation.survivalTime;
@@ -50,6 +62,7 @@ void main() {
 
       expect(game.simulation.survivalTime, runningTime);
       expect(game.simulation.steeringTarget, isNull);
+      expect(game.simulation.steeringHeading, isNull);
       session.resume();
       game.update(.25);
       expect(game.simulation.survivalTime, greaterThan(runningTime));

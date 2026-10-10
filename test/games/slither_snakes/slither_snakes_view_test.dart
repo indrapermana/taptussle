@@ -28,14 +28,14 @@ void main() {
       await tester.pump();
       final game = _gameFrom(tester);
       final aiCount = switch (difficulty) {
-        BotDifficulty.easy => 2,
-        BotDifficulty.normal => 4,
-        BotDifficulty.hard => 6,
+        BotDifficulty.easy => 10,
+        BotDifficulty.normal => 18,
+        BotDifficulty.hard => 26,
       };
       final foodCount = switch (difficulty) {
-        BotDifficulty.easy => 64,
-        BotDifficulty.normal => 45,
-        BotDifficulty.hard => 30,
+        BotDifficulty.easy => 280,
+        BotDifficulty.normal => 220,
+        BotDifficulty.hard => 180,
       };
 
       expect(game.simulation.opponents, hasLength(aiCount));
@@ -49,7 +49,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('only a lower-half drag steers and release clears the target', (
+  testWidgets('the whole arena steers and release clears the target', (
     tester,
   ) async {
     final session = MatchSession(options: MatchOptions.solo())..start();
@@ -57,9 +57,11 @@ void main() {
     final game = _gameFrom(tester);
 
     final upper = await tester.startGesture(const Offset(160, 120));
+    expect(game.simulation.steeringTarget, isNotNull);
     await upper.moveTo(const Offset(230, 150));
-    expect(game.simulation.steeringTarget, isNull);
+    expect(game.simulation.steeringTarget, isNotNull);
     await upper.up();
+    expect(game.simulation.steeringTarget, isNull);
 
     final lower = await tester.startGesture(const Offset(160, 390));
     expect(game.simulation.steeringTarget, isNotNull);
@@ -100,16 +102,25 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final session = MatchSession(options: MatchOptions.solo())..start();
 
-      await _pumpView(tester, session);
+      await _pumpView(tester, session, textScaler: const TextScaler.linear(2));
 
-      expect(find.text('DRAG HERE TO STEER'), findsOneWidget);
+      expect(find.text('DRAG ANYWHERE TO STEER'), findsOneWidget);
+      expect(find.bySemanticsLabel('Slither snake arena'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('slither-steering-instruction')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
   );
 }
 
-Future<void> _pumpView(WidgetTester tester, MatchSession session) async {
+Future<void> _pumpView(
+  WidgetTester tester,
+  MatchSession session, {
+  TextScaler textScaler = TextScaler.noScaling,
+}) async {
   const config = SlitherSimulationConfig(aiCount: 0, foodTarget: 0);
   final simulation = SlitherSimulation.custom(
     seed: 10,
@@ -125,11 +136,14 @@ Future<void> _pumpView(WidgetTester tester, MatchSession session) async {
   );
   await tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(
-        body: SlitherSnakesView(
-          session: session,
-          options: session.options,
-          initialSimulation: simulation,
+      home: MediaQuery(
+        data: MediaQueryData(textScaler: textScaler),
+        child: Scaffold(
+          body: SlitherSnakesView(
+            session: session,
+            options: session.options,
+            initialSimulation: simulation,
+          ),
         ),
       ),
     ),

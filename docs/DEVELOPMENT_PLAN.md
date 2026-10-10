@@ -854,6 +854,35 @@ control, collision, and difficulty rules are confirmed.
   deterministic simulation tests, performance profiling, and physical devices.
   Implementation, automated coverage, and physical-device verification are complete.
 
+### Slither-style Snakes child-friendly arena refresh
+
+The existing fixed-step simulation remains the authoritative rules layer. The
+refresh expands it around mass, food tiers, persistent rivals, and rankings before
+changing artwork, so visuals and collisions continue to describe the same state.
+
+- [x] SS1 — Flexible steering and body motion: replace point-to-point body drawing
+  with distance-resampled trails and smooth curves; tune turn acceleration and
+  heading interpolation so tight turns remain responsive without angular joints.
+  Preserve deterministic fixed-step results and touch steering semantics.
+- [x] SS2 — Food ecosystem: add small, medium, and large food with distinct radius,
+  mass, growth, and score values; distribute a dense seeded field with varied colors
+  and pulses. Correct the duplicate `foodEaten` increment and verify exact scoring.
+- [x] SS3 — Living NPC arena: increase difficulty-scaled rival populations, give
+  rivals food, avoidance, and opportunistic movement goals, respawn defeated rivals
+  outside the camera after a delay, and keep every decision deterministic.
+- [x] SS4 — Mass, size, and leaderboard: start every snake short and narrow, grow
+  radius plus length from collected mass, track a score for every snake, show the
+  top ten and player rank, and award a visible crown to the current leader.
+- [x] SS5 — Larger performant world: expand the arena and camera view, add spatial
+  lookup for food/collision queries plus viewport culling, and retain stable 30/60
+  FPS behavior on compact phones while supporting the denser population.
+- [ ] SS6 — Child-first presentation and verification: refresh snake faces, body
+  patterns, tiered food, crown, minimap/edge guidance, and compact HUD; cover pause,
+  rematch, records, deterministic seeds, accessibility, performance, and physical
+  iPhone/Android play-throughs.
+  Implementation and automated coverage are complete; physical iPhone and Android
+  play-throughs remain pending.
+
 ## M17 — Water Sort Puzzle
 
 Confirmed launch content: 60 levels per difficulty, for 180 Water Sort levels.

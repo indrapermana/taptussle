@@ -66,10 +66,7 @@ class _SlitherSnakesViewState extends State<SlitherSnakesView> {
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      bool isSteeringArea(Offset position) =>
-          position.dy >= constraints.maxHeight / 2;
-
+    builder: (context, _) {
       void steer(PointerEvent event) {
         if (!_steeringPointers.contains(event.pointer) ||
             widget.session.phase != MatchPhase.playing) {
@@ -82,41 +79,50 @@ class _SlitherSnakesViewState extends State<SlitherSnakesView> {
         fit: StackFit.expand,
         children: [
           GameWidget(game: game),
-          Listener(
-            key: const ValueKey('slither-steering-surface'),
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (event) {
-              if (widget.session.phase != MatchPhase.playing ||
-                  !isSteeringArea(event.localPosition)) {
-                return;
-              }
-              _steeringPointers.add(event.pointer);
-              steer(event);
-            },
-            onPointerMove: steer,
-            onPointerUp: (event) {
-              _steeringPointers.remove(event.pointer);
-              if (_steeringPointers.isEmpty) game.clearSteering();
-            },
-            onPointerCancel: (event) {
-              _steeringPointers.remove(event.pointer);
-              if (_steeringPointers.isEmpty) game.clearSteering();
-            },
-            child: const SizedBox.expand(),
+          Semantics(
+            container: true,
+            label: 'Slither snake arena',
+            hint: 'Drag anywhere on the arena to steer your snake',
+            child: Listener(
+              key: const ValueKey('slither-steering-surface'),
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (event) {
+                if (widget.session.phase != MatchPhase.playing) return;
+                _steeringPointers.add(event.pointer);
+                steer(event);
+              },
+              onPointerMove: steer,
+              onPointerUp: (event) {
+                _steeringPointers.remove(event.pointer);
+                if (_steeringPointers.isEmpty) game.clearSteering();
+              },
+              onPointerCancel: (event) {
+                _steeringPointers.remove(event.pointer);
+                if (_steeringPointers.isEmpty) game.clearSteering();
+              },
+              child: const SizedBox.expand(),
+            ),
           ),
           const Positioned(
             left: 0,
             right: 0,
             bottom: 8,
             child: IgnorePointer(
-              child: Text(
-                'DRAG HERE TO STEER',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0x99FFFFFF),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 72),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'DRAG ANYWHERE TO STEER',
+                    key: ValueKey('slither-steering-instruction'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0x99FFFFFF),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ),
               ),
             ),

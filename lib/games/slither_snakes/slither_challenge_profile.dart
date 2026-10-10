@@ -24,8 +24,8 @@ class SlitherChallengeProfile {
   static const easy = SlitherChallengeProfile._(
     difficulty: BotDifficulty.easy,
     config: SlitherSimulationConfig(
-      aiCount: 2,
-      foodTarget: 64,
+      aiCount: 10,
+      foodTarget: 280,
       aiBaseSpeed: 125,
       aiMaximumSpeed: 175,
       aiSpeedPerFood: 1.5,
@@ -36,8 +36,8 @@ class SlitherChallengeProfile {
   static const normal = SlitherChallengeProfile._(
     difficulty: BotDifficulty.normal,
     config: SlitherSimulationConfig(
-      aiCount: 4,
-      foodTarget: 45,
+      aiCount: 18,
+      foodTarget: 220,
       aiBaseSpeed: 142,
       aiMaximumSpeed: 220,
       aiSpeedPerFood: 2.5,
@@ -48,8 +48,8 @@ class SlitherChallengeProfile {
   static const hard = SlitherChallengeProfile._(
     difficulty: BotDifficulty.hard,
     config: SlitherSimulationConfig(
-      aiCount: 6,
-      foodTarget: 30,
+      aiCount: 26,
+      foodTarget: 180,
       aiBaseSpeed: 160,
       aiMaximumSpeed: 245,
       aiSpeedPerFood: 3.25,

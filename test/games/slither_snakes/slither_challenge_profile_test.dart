@@ -85,7 +85,7 @@ void main() {
         SlitherChallengeProfile.hard,
       ]) {
         final simulation = SlitherSimulation(seed: 44, config: profile.config);
-        simulation.opponents.first.foodEaten = 8;
+        simulation.opponents.first.foodMass = 8;
         speeds.add(simulation.speedFor(simulation.opponents.first));
       }
 
