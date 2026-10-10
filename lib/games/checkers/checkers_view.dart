@@ -151,7 +151,7 @@ class CheckersBoard extends StatelessWidget {
           builder: (context, constraints) {
             final compact = constraints.maxHeight < 620;
             return Padding(
-              padding: EdgeInsets.fromLTRB(16, compact ? 10 : 18, 16, 16),
+              padding: EdgeInsets.fromLTRB(6, compact ? 6 : 10, 6, 8),
               child: Column(
                 children: [
                   Row(
@@ -159,16 +159,18 @@ class CheckersBoard extends StatelessWidget {
                       Expanded(
                         child: _PlayerBadge(
                           label: playerLabels[0],
+                          player: 0,
                           color: playerOneColor,
                           pieces: model.pieceCount(0),
                           active: !model.isFinished && model.currentPlayer == 0,
                           winner: winner == 0,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: _PlayerBadge(
                           label: playerLabels[1],
+                          player: 1,
                           color: playerTwoColor,
                           pieces: model.pieceCount(1),
                           active: !model.isFinished && model.currentPlayer == 1,
@@ -177,7 +179,7 @@ class CheckersBoard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: compact ? 8 : 14),
+                  SizedBox(height: compact ? 5 : 8),
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 180),
                     child: Text(
@@ -187,20 +189,21 @@ class CheckersBoard extends StatelessWidget {
                       maxLines: 2,
                       style: TextStyle(
                         color: _statusColor(model),
-                        fontSize: compact ? 15 : 18,
+                        fontSize: compact ? 14 : 17,
                         fontWeight: FontWeight.w900,
                         letterSpacing: .8,
                       ),
                     ),
                   ),
-                  SizedBox(height: compact ? 8 : 14),
+                  SizedBox(height: compact ? 5 : 8),
                   Expanded(
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 560),
+                        constraints: const BoxConstraints(maxWidth: 600),
                         child: AspectRatio(
                           aspectRatio: 1,
                           child: DecoratedBox(
+                            key: const ValueKey('checkers-board'),
                             decoration: BoxDecoration(
                               color: _boardFrame,
                               borderRadius: BorderRadius.circular(16),
@@ -301,11 +304,12 @@ class CheckersBoard extends StatelessWidget {
       return '${labels[winner].toUpperCase()} WINS';
     }
     if (model.forcedCaptureSquare != null) {
-      return '${labels[model.currentPlayer].toUpperCase()} • CONTINUE CAPTURING';
+      return '${labels[model.currentPlayer].toUpperCase()}: KEEP JUMPING!';
     }
     final captureRequired = model.legalMoves.any((move) => move.isCapture);
-    return '${labels[model.currentPlayer].toUpperCase()}\'S TURN'
-        '${captureRequired ? ' • CAPTURE REQUIRED' : ''}';
+    return captureRequired
+        ? '${labels[model.currentPlayer].toUpperCase()}: JUMP A PIECE!'
+        : '${labels[model.currentPlayer].toUpperCase()}: PICK A PIECE';
   }
 
   static Color _statusColor(CheckersModel model) {
@@ -318,6 +322,7 @@ class CheckersBoard extends StatelessWidget {
 class _PlayerBadge extends StatelessWidget {
   const _PlayerBadge({
     required this.label,
+    required this.player,
     required this.color,
     required this.pieces,
     required this.active,
@@ -325,6 +330,7 @@ class _PlayerBadge extends StatelessWidget {
   });
 
   final String label;
+  final int player;
   final Color color;
   final int pieces;
   final bool active;
@@ -333,7 +339,7 @@ class _PlayerBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AnimatedContainer(
     duration: const Duration(milliseconds: 180),
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
     decoration: BoxDecoration(
       color: active || winner
           ? color.withValues(alpha: .15)
@@ -346,15 +352,7 @@ class _PlayerBadge extends StatelessWidget {
     ),
     child: Row(
       children: [
-        Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-            border: Border.all(color: Colors.white70),
-          ),
-        ),
+        _PieceMark(color: color, player: player),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -368,7 +366,7 @@ class _PlayerBadge extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               Text(
-                '$pieces PIECES',
+                '$pieces LEFT',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: .7),
                   fontSize: 11,
@@ -449,33 +447,21 @@ class _BoardSquare extends StatelessWidget {
                 ),
               if (movable && !selected && target == null)
                 Container(
-                  width: 10,
-                  height: 10,
+                  width: 14,
+                  height: 14,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .55),
+                    color: CheckersBoard._selected,
                     shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black38, blurRadius: 4),
+                    ],
                   ),
                 ),
-              if (piece case final piece?) _Piece(piece: piece),
+              if (piece case final piece?)
+                _Piece(piece: piece, selected: selected),
               if (target != null)
-                FractionallySizedBox(
-                  widthFactor: target!.isCapture ? .62 : .34,
-                  heightFactor: target!.isCapture ? .62 : .34,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: target!.isCapture
-                          ? Colors.transparent
-                          : CheckersBoard._legalTarget,
-                      border: target!.isCapture
-                          ? Border.all(
-                              color: CheckersBoard._legalTarget,
-                              width: 4,
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
+                _MoveTargetIndicator(isCapture: target!.isCapture),
             ],
           ),
         ),
@@ -484,51 +470,129 @@ class _BoardSquare extends StatelessWidget {
   }
 }
 
+class _MoveTargetIndicator extends StatelessWidget {
+  const _MoveTargetIndicator({required this.isCapture});
+
+  final bool isCapture;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isCapture
+        ? CheckersBoard._selected
+        : CheckersBoard._legalTarget;
+    return Positioned.fill(
+      child: Padding(
+        padding: const EdgeInsets.all(5),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .13),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: .78), width: 2),
+          ),
+          child: Center(
+            child: Icon(
+              isCapture ? Icons.bolt_rounded : Icons.arrow_forward_rounded,
+              color: color.withValues(alpha: .9),
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Piece extends StatelessWidget {
-  const _Piece({required this.piece});
+  const _Piece({required this.piece, required this.selected});
 
   final CheckersPiece piece;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final color = piece.player == 0
         ? CheckersBoard.playerOneColor
         : CheckersBoard.playerTwoColor;
-    return FractionallySizedBox(
-      widthFactor: .72,
-      heightFactor: .72,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            center: const Alignment(-.35, -.45),
-            colors: [Color.lerp(color, Colors.white, .32)!, color],
-          ),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: .75),
-            width: 2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 4,
-              offset: Offset(0, 3),
+    return AnimatedScale(
+      scale: selected ? 1.1 : 1,
+      duration: const Duration(milliseconds: 160),
+      child: FractionallySizedBox(
+        widthFactor: .82,
+        heightFactor: .82,
+        child: Material(
+          elevation: 5,
+          shadowColor: Colors.black87,
+          color: color,
+          shape: BeveledRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(
+              color: Colors.white.withValues(alpha: .9),
+              width: 2,
             ),
-          ],
-        ),
-        child: piece.isKing
-            ? const FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: EdgeInsets.all(5),
-                  child: Icon(
-                    Icons.workspace_premium_rounded,
-                    color: Colors.white,
+          ),
+          child: Ink(
+            decoration: ShapeDecoration(
+              shape: BeveledRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(color, Colors.white, .42)!,
+                  color,
+                  Color.lerp(color, Colors.black, .22)!,
+                ],
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                piece.isKing
+                    ? Icons.workspace_premium_rounded
+                    : piece.player == 0
+                    ? Icons.local_fire_department_rounded
+                    : Icons.auto_awesome_rounded,
+                color: Colors.white,
+                size: piece.isKing ? 27 : 23,
+                shadows: const [
+                  Shadow(
+                    color: Colors.black45,
+                    blurRadius: 3,
+                    offset: Offset(0, 2),
                   ),
-                ),
-              )
-            : null,
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
+}
+
+class _PieceMark extends StatelessWidget {
+  const _PieceMark({required this.color, required this.player});
+
+  final Color color;
+  final int player;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 22,
+    height: 22,
+    child: Material(
+      color: color,
+      shape: BeveledRectangleBorder(
+        borderRadius: BorderRadius.circular(5),
+        side: const BorderSide(color: Colors.white70),
+      ),
+      child: Icon(
+        player == 0
+            ? Icons.local_fire_department_rounded
+            : Icons.auto_awesome_rounded,
+        color: Colors.white,
+        size: 14,
+      ),
+    ),
+  );
 }

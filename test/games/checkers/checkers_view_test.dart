@@ -28,8 +28,10 @@ void main() {
     expect(find.byKey(const ValueKey('checkers-square-63')), findsOneWidget);
     expect(find.text('Player 1'), findsOneWidget);
     expect(find.text('Player 2'), findsOneWidget);
-    expect(find.text('12 PIECES'), findsNWidgets(2));
-    expect(find.text("PLAYER 1'S TURN"), findsOneWidget);
+    expect(find.text('12 LEFT'), findsNWidgets(2));
+    expect(find.text('PLAYER 1: PICK A PIECE'), findsOneWidget);
+    expect(find.byIcon(Icons.local_fire_department_rounded), findsWidgets);
+    expect(find.byIcon(Icons.auto_awesome_rounded), findsWidgets);
     expect(
       find.bySemanticsLabel('Row 6, column 1, Player 1, piece, movable'),
       findsOneWidget,
@@ -56,6 +58,7 @@ void main() {
       find.bySemanticsLabel('Row 5, column 2, empty, legal target'),
       findsOneWidget,
     );
+    expect(find.byIcon(Icons.arrow_forward_rounded), findsWidgets);
     await tester.tap(find.byKey(const ValueKey('checkers-square-33')));
     expect(tapped, 33);
   });
@@ -73,15 +76,16 @@ void main() {
     );
     await tester.pumpWidget(board(model, selectedSquare: 56));
 
-    expect(find.text("PLAYER 1'S TURN • CAPTURE REQUIRED"), findsOneWidget);
+    expect(find.text('PLAYER 1: JUMP A PIECE!'), findsOneWidget);
     expect(
       find.bySemanticsLabel('Row 6, column 3, empty, capture target'),
       findsOneWidget,
     );
+    expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
 
     model.play(0, const CheckersMove(from: 56, to: 42));
     await tester.pumpWidget(board(model, selectedSquare: 42));
-    expect(find.text('PLAYER 1 • CONTINUE CAPTURING'), findsOneWidget);
+    expect(find.text('PLAYER 1: KEEP JUMPING!'), findsOneWidget);
     expect(
       find.bySemanticsLabel('Row 4, column 5, empty, capture target'),
       findsOneWidget,
@@ -125,6 +129,27 @@ void main() {
     await tester.pumpWidget(board(CheckersModel()));
 
     expect(find.byType(CheckersBoard), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('checkers-board'))).width,
+      greaterThanOrEqualTo(300),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('supports enlarged text without shrinking the board away', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await tester.pumpWidget(board(CheckersModel()));
+
+    expect(
+      tester.getSize(find.byKey(const ValueKey('checkers-board'))).width,
+      greaterThanOrEqualTo(360),
+    );
     expect(tester.takeException(), isNull);
   });
 
