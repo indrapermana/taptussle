@@ -61,7 +61,7 @@ void main() {
         26: 10,
         37: 24,
         50: 34,
-        62: 45,
+        61: 45,
       });
     });
 
@@ -113,7 +113,7 @@ void main() {
       expect(descended.transitionType, BoardTransitionType.snake);
     });
 
-    test('rolling six does not grant an extra turn', () {
+    test('rolling six grants an extra turn', () {
       final dice = _DiceSequence([6]);
       final model = SnakesAndLaddersModel(
         playerCount: 3,
@@ -122,8 +122,30 @@ void main() {
 
       final turn = model.rollTurn();
 
-      expect(turn.nextPlayerIndex, 1);
-      expect(model.currentPlayer, 1);
+      expect(turn.nextPlayerIndex, 0);
+      expect(model.currentPlayer, 0);
+    });
+
+    test('landing on square 61 descends the final snake', () {
+      final values = <int>[
+        for (var round = 0; round < 12; round++) ...[5, 1],
+        1,
+      ];
+      final model = SnakesAndLaddersModel(
+        playerCount: 2,
+        diceRoller: _DiceSequence(values).roll,
+        transitions: const {61: 45},
+      );
+
+      for (var turn = 0; turn < values.length - 1; turn++) {
+        model.rollTurn();
+      }
+      final descended = model.rollTurn();
+
+      expect(descended.playerIndex, 0);
+      expect(descended.attemptedSquare, 61);
+      expect(descended.endSquare, 45);
+      expect(descended.transitionType, BoardTransitionType.snake);
     });
 
     test('players may share a square without collision or capture', () {

@@ -391,7 +391,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     instructions:
         'Choose two to four players and take turns rolling the dice. Ladders '
         'move your token upward and snakes send it downward. Players may share '
-        'a square. Rolling six does not grant another turn, and you must roll '
+        'a square. Rolling six grants another turn, and you must roll '
         'the exact number needed to reach square 64.',
     botInstructions:
         'Choose two to four participants and assign any non-first seat as a '

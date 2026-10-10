@@ -703,13 +703,13 @@ Rock Paper Scissors child-first visual review:
 ## M12 — Snakes & Ladders
 
 Confirmed board: 8×8 with squares 1–64 and square 64 as the finish. An **extra
-turn** would mean rolling again after a configured event such as rolling a six.
+turn** means rolling again after rolling a six.
 A **token collision** rule decides whether landing on another token shares the
 square, sends that token back, or blocks the move. Confirmed TapTussle rules are:
-no extra turns, multiple tokens may share a square without capture, and reaching
+an extra turn on six, multiple tokens may share a square without capture, and reaching
 64 requires an exact roll; an oversized roll leaves the token in place.
 
-- [x] M12.1 Freeze snake/ladder positions and confirm exact-roll finish, no extra
+- [x] M12.1 Freeze snake/ladder positions and confirm exact-roll finish, extra
   turns, and shared squares without collision. Implement the 1–64 path,
   deterministic dice injection, transitions, and movement tests before UI work.
 - [x] M12.2 Build a readable board and animated token path for two to four local
@@ -720,6 +720,20 @@ no extra turns, multiple tokens may share a square without capture, and reaching
 - [x] M12.4 Verify participant setup, interruption, rematch, favourites, filters,
   effects, and physical devices. Automated coverage and the focused physical
   iPhone journey pass; the user manually confirmed all functionality on Android.
+
+### M12 child-first presentation refresh
+
+- [x] SNL1 Review the supplied visual pack, replace its background-contaminated
+  pieces with native dice, finish, and configured-token visuals, and draw
+  proportion-safe child-friendly snakes and ladders directly on the board.
+- [x] SNL2 Redesign the board with brighter tiles and long illustrated snakes and
+  ladders that connect their exact start and destination squares.
+- [x] SNL3 Add a visible rolling-dice sequence that locks input and settles on the
+  authoritative model roll before movement starts.
+- [x] SNL4 Slow the square-by-square path and animate each token between board
+  cells, including shared-square offsets and lifecycle-safe interruption.
+- [ ] SNL5 Verify board readability, dice timing, token speed, and shared-square
+  presentation on physical iPhone and Android devices.
 
 ## M13 — Sudoku
 
@@ -2038,10 +2052,10 @@ acceptance work is complete.
 
 2026-09-29 — Completed M12.1. Added a pure Dart Snakes & Ladders model with a
 fixed serpentine 1–64 path and five frozen ladders (3→16, 8→30, 20→39, 27→48,
-41→60) plus five frozen snakes (18→6, 26→10, 37→24, 50→34, 62→45). The model
+41→60) plus five snakes (18→6, 26→10, 37→24, 50→34, 61→45). The model
 supports two to four participants, injected deterministic dice, immutable token
 positions and transitions, one snake or ladder transition per roll, shared
-squares without collision, no extra turn after six, exact-roll victory, and
+squares without collision, an extra turn after six, exact-roll victory, and
 oversized rolls that leave the token in place before advancing the turn. Ten
 focused tests cover the board, transitions, movement, turn rotation, finish,
 reset, immutability, and invalid configuration. All 193 host tests pass,

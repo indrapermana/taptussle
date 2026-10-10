@@ -178,6 +178,7 @@ void main() {
       ),
     );
     await tester.tap(find.byKey(const ValueKey('snakes-roll')));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     expect(sounds.played, contains(SoundEffect.diceRoll));

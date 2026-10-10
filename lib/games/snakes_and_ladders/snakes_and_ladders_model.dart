@@ -67,7 +67,7 @@ class SnakesAndLaddersModel {
     26: 10,
     37: 24,
     50: 34,
-    62: 45,
+    61: 45,
   };
 
   /// Rows in visual bottom-to-top order, alternating direction.
@@ -130,7 +130,7 @@ class SnakesAndLaddersModel {
     final won = end == finishSquare;
     if (won) {
       _winner = player;
-    } else {
+    } else if (roll != 6) {
       _currentPlayer = (player + 1) % playerCount;
     }
 

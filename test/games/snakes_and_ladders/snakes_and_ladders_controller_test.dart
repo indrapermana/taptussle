@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tap_tussle/core/match_options.dart';
 import 'package:tap_tussle/core/match_session.dart';
@@ -58,6 +60,42 @@ class _Dice {
 }
 
 void main() {
+  testWidgets('shows a fair dice animation before movement and locks input', (
+    tester,
+  ) async {
+    final session = MatchSession(options: _options(2))..start();
+    final dice = _Dice([2]);
+    final controller = SnakesAndLaddersController(
+      session: session,
+      diceRoller: dice.roll,
+      transitions: const {},
+      diceRollDuration: const Duration(milliseconds: 200),
+      diceFrameDuration: const Duration(milliseconds: 40),
+      movementStepDuration: const Duration(milliseconds: 10),
+      random: Random(7),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+
+    controller.roll();
+    expect(dice.index, 1);
+    expect(controller.isRollingDice, isTrue);
+    expect(controller.canRoll, isFalse);
+    expect(controller.displayPositions, [0, 0]);
+
+    final firstFace = controller.displayDieValue;
+    await tester.pump(const Duration(milliseconds: 45));
+    expect(controller.displayDieValue, isNot(firstFace));
+    expect(controller.displayPositions, [0, 0]);
+
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(controller.isRollingDice, isFalse);
+    expect(controller.displayDieValue, 2);
+    await tester.pumpAndSettle();
+    expect(controller.displayPositions, [2, 0]);
+    expect(dice.index, 1);
+  });
+
   testWidgets('animates each square and locks rolling until movement ends', (
     tester,
   ) async {
@@ -113,7 +151,7 @@ void main() {
     tester,
   ) async {
     final rolls = <int>[
-      for (var round = 0; round < 10; round++) ...[6, 5, 4, 3],
+      for (var round = 0; round < 12; round++) ...[5, 5, 4, 3],
       4,
     ];
     final dice = _Dice(rolls);
@@ -134,7 +172,7 @@ void main() {
 
     expect(session.phase, MatchPhase.finished);
     expect(session.winner, 0);
-    expect(session.scores, [64, 50, 40, 30]);
+    expect(session.scores, [64, 60, 48, 36]);
     expect(session.standings, [0, 1, 2, 3]);
     expect(session.resultDetails, 'One reached square 64 first.');
 

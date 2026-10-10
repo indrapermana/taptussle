@@ -12,6 +12,8 @@ class SnakesAndLaddersController extends ChangeNotifier {
     DiceRoller? diceRoller,
     Map<int, int> transitions = SnakesAndLaddersModel.standardTransitions,
     this.movementStepDuration = const Duration(milliseconds: 110),
+    this.diceRollDuration = Duration.zero,
+    this.diceFrameDuration = const Duration(milliseconds: 90),
     this.botRollDelay,
     Random? random,
   }) : model = SnakesAndLaddersModel(
@@ -27,13 +29,16 @@ class SnakesAndLaddersController extends ChangeNotifier {
 
   final MatchSession session;
   final Duration movementStepDuration;
+  final Duration diceRollDuration;
+  final Duration diceFrameDuration;
   final Duration? botRollDelay;
   final SnakesAndLaddersModel model;
   final List<int> _displayPositions;
   final Random _random;
 
   List<int> get displayPositions => List.unmodifiable(_displayPositions);
-  bool get isAnimating => _animationPlayer != null;
+  bool get isRollingDice => _diceTimer != null || _diceSettleTimer != null;
+  bool get isAnimating => _animationPlayer != null || isRollingDice;
   bool get isBotTurn =>
       !model.isFinished &&
       session.options.participants[model.currentPlayer].isBot;
@@ -49,13 +54,18 @@ class SnakesAndLaddersController extends ChangeNotifier {
 
   int? _lastRoll;
   int? get lastRoll => _lastRoll;
+  int? _displayDieValue;
+  int? get displayDieValue => _displayDieValue ?? _lastRoll;
 
   SnakesAndLaddersTurn? _animatingTurn;
   SnakesAndLaddersTurn? get animatingTurn => _animatingTurn;
   int? _animationPlayer;
   final List<int> _pendingSquares = [];
   Timer? _movementTimer;
+  Timer? _diceTimer;
+  Timer? _diceSettleTimer;
   Timer? _botTimer;
+  bool _awaitingDiceSettle = false;
   int _observedRound = 0;
   MatchPhase _observedPhase = MatchPhase.ready;
   bool _disposed = false;
@@ -73,14 +83,45 @@ class SnakesAndLaddersController extends ChangeNotifier {
     _pendingSquares
       ..clear()
       ..addAll(_movementPath(turn));
-    notifyListeners();
+    _awaitingDiceSettle = true;
+    _beginDicePresentation();
+    return turn;
+  }
 
+  void _beginDicePresentation() {
+    _cancelDicePresentation();
+    if (diceRollDuration == Duration.zero) {
+      _awaitingDiceSettle = false;
+      _displayDieValue = _lastRoll;
+      notifyListeners();
+      _beginMovement();
+      return;
+    }
+    _displayDieValue = _random.nextInt(6) + 1;
+    notifyListeners();
+    _diceTimer = Timer.periodic(diceFrameDuration, (_) {
+      if (_disposed || session.phase != MatchPhase.playing) return;
+      _awaitingDiceSettle = false;
+      var next = _random.nextInt(6) + 1;
+      if (next == _displayDieValue) next = next % 6 + 1;
+      _displayDieValue = next;
+      notifyListeners();
+    });
+    _diceSettleTimer = Timer(diceRollDuration, () {
+      _cancelDicePresentation();
+      if (_disposed || session.phase != MatchPhase.playing) return;
+      _displayDieValue = _lastRoll;
+      notifyListeners();
+      _beginMovement();
+    });
+  }
+
+  void _beginMovement() {
     if (_pendingSquares.isEmpty) {
       _finishMovement();
     } else {
       _scheduleNextStep();
     }
-    return turn;
   }
 
   List<int> _movementPath(SnakesAndLaddersTurn turn) {
@@ -167,7 +208,8 @@ class SnakesAndLaddersController extends ChangeNotifier {
       winner: winner,
       scores: model.positions,
       standings: standings,
-      details: '${session.options.playerLabel(winner)} reached square 64 first.',
+      details:
+          '${session.options.playerLabel(winner)} reached square 64 first.',
     );
   }
 
@@ -176,21 +218,27 @@ class SnakesAndLaddersController extends ChangeNotifier {
     final roundChanged = session.round != _observedRound;
     if (roundChanged) {
       _cancelMovement(clearPath: true);
+      _cancelDicePresentation();
       _cancelBotRoll();
       _observedRound = session.round;
       model.reset();
       _displayPositions.fillRange(0, _displayPositions.length, 0);
       _lastRoll = null;
+      _displayDieValue = null;
+      _awaitingDiceSettle = false;
     }
 
     final phaseChanged = session.phase != _observedPhase;
     _observedPhase = session.phase;
     if (session.phase != MatchPhase.playing) {
+      _cancelDicePresentation();
       _movementTimer?.cancel();
       _movementTimer = null;
       _cancelBotRoll();
     } else if (phaseChanged || roundChanged) {
-      if (_pendingSquares.isNotEmpty) {
+      if (_awaitingDiceSettle) {
+        _beginDicePresentation();
+      } else if (_pendingSquares.isNotEmpty) {
         _scheduleNextStep();
       } else {
         _scheduleBotRoll();
@@ -206,11 +254,19 @@ class SnakesAndLaddersController extends ChangeNotifier {
     _pendingSquares.clear();
     _animationPlayer = null;
     _animatingTurn = null;
+    _awaitingDiceSettle = false;
   }
 
   void _cancelBotRoll() {
     _botTimer?.cancel();
     _botTimer = null;
+  }
+
+  void _cancelDicePresentation() {
+    _diceTimer?.cancel();
+    _diceTimer = null;
+    _diceSettleTimer?.cancel();
+    _diceSettleTimer = null;
   }
 
   @override
@@ -219,6 +275,7 @@ class SnakesAndLaddersController extends ChangeNotifier {
     _disposed = true;
     session.removeListener(_syncSession);
     _cancelMovement(clearPath: true);
+    _cancelDicePresentation();
     _cancelBotRoll();
     super.dispose();
   }
