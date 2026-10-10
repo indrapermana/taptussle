@@ -239,6 +239,7 @@ void main() {
       ]),
     );
     expect(haptics.light, 2);
+    await tester.pump(const Duration(milliseconds: 1200));
   });
 }
 

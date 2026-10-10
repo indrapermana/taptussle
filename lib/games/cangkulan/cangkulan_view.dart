@@ -132,23 +132,27 @@ class CangkulanBoard extends StatelessWidget {
     listenable: controller,
     builder: (context, _) => TapTussleBackdrop(
       child: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
-          child: controller.phase == CangkulanViewPhase.handoff
-              ? _HandoffPanel(
-                  key: const ValueKey('cangkulan-handoff'),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _TurnPanel(
+              controller: controller,
+              playerLabels: playerLabels,
+              showHand: controller.phase == CangkulanViewPhase.turn,
+            ),
+            if (controller.phase == CangkulanViewPhase.handoff &&
+                !controller.isBotTurn)
+              ColoredBox(
+                key: const ValueKey('cangkulan-handoff'),
+                color: const Color(0xC2071324),
+                child: _HandoffPanel(
                   playerLabel: playerLabels[controller.activePlayer],
                   lastAction: controller.lastAction,
                   playerLabels: playerLabels,
                   onReveal: controller.revealHand,
-                  isBotTurn: controller.isBotTurn,
-                  isBotThinking: controller.isBotThinking,
-                )
-              : _TurnPanel(
-                  key: const ValueKey('cangkulan-turn'),
-                  controller: controller,
-                  playerLabels: playerLabels,
                 ),
+              ),
+          ],
         ),
       ),
     ),
@@ -161,78 +165,59 @@ class _HandoffPanel extends StatelessWidget {
     required this.lastAction,
     required this.playerLabels,
     required this.onReveal,
-    required this.isBotTurn,
-    required this.isBotThinking,
-    super.key,
   });
 
   final String playerLabel;
   final CangkulanTurnAction? lastAction;
   final List<String> playerLabels;
   final VoidCallback onReveal;
-  final bool isBotTurn;
-  final bool isBotThinking;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 430),
-        child: ArcadePanel(
-          accent: TapTussleColors.gold,
-          padding: const EdgeInsets.all(26),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isBotTurn
-                    ? Icons.smart_toy_rounded
-                    : Icons.visibility_off_rounded,
-                color: TapTussleColors.gold,
-                size: 48,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                isBotTurn ? 'BOT IS THINKING' : 'HAND HIDDEN',
-                key: isBotTurn
-                    ? const ValueKey('cangkulan-bot-thinking')
-                    : null,
-                style: TextStyle(
-                  fontFamily: 'Lilita One',
-                  fontSize: 29,
-                  color: TapTussleColors.text,
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 430),
+          child: ArcadePanel(
+            accent: TapTussleColors.gold,
+            padding: const EdgeInsets.all(26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.visibility_off_rounded,
+                  color: TapTussleColors.gold,
+                  size: 48,
                 ),
-              ),
-              if (lastAction != null) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
-                  _safeActionSummary(lastAction!, playerLabels),
-                  key: const ValueKey('cangkulan-last-action'),
+                  'HAND HIDDEN',
+                  style: TextStyle(
+                    fontFamily: 'Lilita One',
+                    fontSize: 29,
+                    color: TapTussleColors.text,
+                  ),
+                ),
+                if (lastAction != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _safeActionSummary(lastAction!, playerLabels),
+                    key: const ValueKey('cangkulan-last-action'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: TapTussleColors.mutedText),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Text(
+                  'Pass the device to $playerLabel. Keep the screen hidden until they are ready.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: TapTussleColors.mutedText),
+                  style: const TextStyle(
+                    color: TapTussleColors.mutedText,
+                    height: 1.4,
+                  ),
                 ),
-              ],
-              const SizedBox(height: 20),
-              Text(
-                isBotTurn
-                    ? '$playerLabel is choosing a legal move from its own hand.'
-                    : 'Pass the device to $playerLabel. Keep the screen hidden until they are ready.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: TapTussleColors.mutedText,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (isBotTurn)
-                Semantics(
-                  label: 'Bot thinking',
-                  child: isBotThinking
-                      ? const CircularProgressIndicator()
-                      : const Icon(Icons.smart_toy_rounded),
-                )
-              else
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -242,42 +227,51 @@ class _HandoffPanel extends StatelessWidget {
                     label: Text("I'M ${playerLabel.toUpperCase()}"),
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _TurnPanel extends StatelessWidget {
   const _TurnPanel({
     required this.controller,
     required this.playerLabels,
-    super.key,
+    required this.showHand,
   });
 
   final CangkulanController controller;
   final List<String> playerLabels;
+  final bool showHand;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final compact = constraints.maxHeight < 650;
       return Padding(
-        padding: EdgeInsets.fromLTRB(12, compact ? 8 : 14, 12, 10),
+        key: const ValueKey('cangkulan-turn'),
+        padding: EdgeInsets.fromLTRB(8, compact ? 5 : 8, 8, 7),
         child: Column(
           children: [
             _StatusPanel(controller: controller, labels: playerLabels),
-            SizedBox(height: compact ? 7 : 12),
-            _PublicTable(controller: controller, labels: playerLabels),
-            SizedBox(height: compact ? 7 : 12),
+            SizedBox(height: compact ? 5 : 8),
             Expanded(
-              child: _HandGrid(
-                controller: controller,
-                compact: compact,
-                maxWidth: constraints.maxWidth,
-              ),
+              flex: 7,
+              child: _PublicTable(controller: controller, labels: playerLabels),
+            ),
+            SizedBox(height: compact ? 5 : 8),
+            Expanded(
+              flex: 5,
+              child: showHand
+                  ? _HandGrid(
+                      controller: controller,
+                      compact: compact,
+                      maxWidth: constraints.maxWidth,
+                    )
+                  : const SizedBox.expand(),
             ),
           ],
         ),
@@ -345,43 +339,282 @@ class _PublicTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = controller.model;
+    final completedTrick = controller.lastAction?.completedTrick;
+    final displayedPlays = model.trickPlays.isNotEmpty
+        ? model.trickPlays
+        : completedTrick?.plays ?? const <CangkulanTrickPlay>[];
     return Semantics(
       label:
-          'Draw pile, ${model.drawPile.length} cards. Current trick, ${model.trickPlays.length} cards.',
+          'Draw pile, ${model.drawPile.length} cards. Current trick, ${displayedPlays.length} cards.',
       container: true,
-      child: ArcadePanel(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        child: Row(
+      explicitChildNodes: true,
+      child: Container(
+        key: const ValueKey('cangkulan-card-table'),
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+        decoration: BoxDecoration(
+          gradient: const RadialGradient(
+            colors: [Color(0xFF19755F), Color(0xFF0B463E)],
+            radius: 1.15,
+          ),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: const Color(0xFFC58B42), width: 5),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 12,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
           children: [
-            _PileBack(count: model.drawPile.length),
-            const SizedBox(width: 12),
+            if (controller.isBotTurn)
+              _BotThinkingSeat(
+                label: labels[controller.activePlayer],
+                count: model.hands[controller.activePlayer].length,
+                thinking: controller.isBotThinking,
+              ),
+            _OpponentSeats(
+              model: model,
+              labels: labels,
+              activePlayer: controller.activePlayer,
+            ),
+            const SizedBox(height: 5),
             Expanded(
-              child: model.trickPlays.isEmpty
-                  ? const Text(
-                      'No cards played yet',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: TapTussleColors.mutedText),
-                    )
-                  : SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final play in model.trickPlays) ...[
-                            _MiniPlayedCard(
-                              play: play,
-                              label: labels[play.player],
+              child: Stack(
+                children: [
+                  Row(
+                    children: [
+                      _PileBack(count: model.drawPile.length),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          key: const ValueKey('cangkulan-trick-area'),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: .12),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: .22),
                             ),
-                            const SizedBox(width: 7),
-                          ],
-                        ],
+                          ),
+                          child: displayedPlays.isEmpty
+                              ? const Text(
+                                  'PLAY A CARD HERE',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: .7,
+                                  ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (completedTrick != null) ...[
+                                      Text(
+                                        '${labels[completedTrick.winner].toUpperCase()} WINS THE TRICK!',
+                                        key: const ValueKey(
+                                          'cangkulan-trick-winner',
+                                        ),
+                                        style: const TextStyle(
+                                          color: TapTussleColors.gold,
+                                          fontFamily: 'Lilita One',
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            for (final play
+                                                in displayedPlays) ...[
+                                              _MiniPlayedCard(
+                                                play: play,
+                                                label: labels[play.player],
+                                                fromTop: controller
+                                                    .session
+                                                    .options
+                                                    .participants[play.player]
+                                                    .isBot,
+                                                winner:
+                                                    completedTrick?.winner ==
+                                                    play.player,
+                                              ),
+                                              const SizedBox(width: 5),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (controller.lastAction?.drawnCards.isNotEmpty ?? false)
+                    Positioned.fill(
+                      child: _DrawFlight(
+                        key: ObjectKey(controller.lastAction),
+                        count: controller.lastAction!.drawnCards.length,
                       ),
                     ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class _BotThinkingSeat extends StatelessWidget {
+  const _BotThinkingSeat({
+    required this.label,
+    required this.count,
+    required this.thinking,
+  });
+
+  final String label;
+  final int count;
+  final bool thinking;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    key: const ValueKey('cangkulan-bot-thinking'),
+    label: '$label is choosing a card',
+    liveRegion: true,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _CardBack(count: count, width: 38, height: 51),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            Text(
+              thinking ? 'CHOOSING A CARD…' : 'READY',
+              style: const TextStyle(
+                color: TapTussleColors.gold,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _DrawFlight extends StatelessWidget {
+  const _DrawFlight({required this.count, super.key});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    key: const ValueKey('cangkulan-draw-flight'),
+    tween: Tween(begin: 0, end: 1),
+    duration: Duration(milliseconds: 420 + (count.clamp(1, 4) * 80)),
+    curve: Curves.easeInOutCubic,
+    builder: (context, value, child) => IgnorePointer(
+      child: Align(
+        alignment: Alignment.lerp(
+          const Alignment(-.92, -.45),
+          const Alignment(.15, .92),
+          value,
+        )!,
+        child: Opacity(
+          opacity: value > .92 ? (1 - value) / .08 : 1,
+          child: Transform.rotate(
+            angle: value * .18,
+            child: Transform.scale(scale: .82 + value * .18, child: child),
+          ),
+        ),
+      ),
+    ),
+    child: _CardBack(count: count, width: 48, height: 64),
+  );
+}
+
+class _OpponentSeats extends StatelessWidget {
+  const _OpponentSeats({
+    required this.model,
+    required this.labels,
+    required this.activePlayer,
+  });
+
+  final CangkulanModel model;
+  final List<String> labels;
+  final int activePlayer;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
+      for (var offset = 1; offset < model.participantCount; offset++)
+        Flexible(
+          child: _OpponentSeat(
+            player: (activePlayer + offset) % model.participantCount,
+            label: labels[(activePlayer + offset) % model.participantCount],
+            count: model
+                .hands[(activePlayer + offset) % model.participantCount]
+                .length,
+          ),
+        ),
+    ],
+  );
+}
+
+class _OpponentSeat extends StatelessWidget {
+  const _OpponentSeat({
+    required this.player,
+    required this.label,
+    required this.count,
+  });
+
+  final int player;
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: '$label has $count cards face down',
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _CardBack(count: count, width: 38, height: 51),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _HandGrid extends StatelessWidget {
@@ -422,8 +655,12 @@ class _HandGrid extends StatelessWidget {
               FilledButton.icon(
                 key: const ValueKey('cangkulan-cangkul'),
                 onPressed: controller.cangkul,
-                icon: const Icon(Icons.download_rounded),
-                label: const Text('CANGKUL'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: TapTussleColors.gold,
+                  foregroundColor: const Color(0xFF14213D),
+                ),
+                icon: const Icon(Icons.front_hand_rounded),
+                label: const Text('CANGKUL • DRAW'),
               ),
           ],
         ),
@@ -441,11 +678,15 @@ class _HandGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               final card = hand[index];
               final legal = legalCards.contains(card);
-              return _HandCard(
-                key: ValueKey('cangkulan-hand-$index'),
-                card: card,
-                enabled: legal,
-                onTap: () => controller.playCard(card),
+              return AnimatedScale(
+                scale: legal ? 1 : .93,
+                duration: const Duration(milliseconds: 180),
+                child: _HandCard(
+                  key: ValueKey('cangkulan-hand-$index'),
+                  card: card,
+                  enabled: legal,
+                  onTap: () => controller.playCard(card),
+                ),
               );
             },
           ),
@@ -481,20 +722,20 @@ class _HandCard extends StatelessWidget {
         child: FilledButton(
           onPressed: enabled ? onTap : null,
           style: FilledButton.styleFrom(
-            padding: const EdgeInsets.all(5),
+            padding: const EdgeInsets.all(4),
             backgroundColor: const Color(0xFFFFFCF2),
             foregroundColor: red
                 ? const Color(0xFFC62828)
                 : const Color(0xFF14213D),
-            disabledBackgroundColor: const Color(0xFF697386),
-            disabledForegroundColor: const Color(0xFFD2D8E1),
+            disabledBackgroundColor: const Color(0xFFEEE8D8),
+            disabledForegroundColor: const Color(0xFF8B8B8B),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
               side: BorderSide(
                 color: enabled
                     ? TapTussleColors.gold
                     : TapTussleColors.panelBorder,
-                width: enabled ? 2 : 1,
+                width: enabled ? 3 : 1,
               ),
             ),
           ),
@@ -531,74 +772,162 @@ class _PileBack extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     label: 'Draw pile, $count cards',
-    child: Container(
+    child: SizedBox(
       key: const ValueKey('cangkulan-draw-pile'),
-      width: 48,
-      height: 64,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [TapTussleColors.rivalRed, TapTussleColors.electricBlue],
-        ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white70, width: 2),
-      ),
-      child: Text(
-        '$count',
-        style: const TextStyle(
-          fontFamily: 'Lilita One',
-          fontSize: 18,
-          color: Colors.white,
+      width: 56,
+      height: 78,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _CardBack(count: count, width: 48, height: 64),
+            const SizedBox(height: 2),
+            const Text(
+              'DRAW',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
         ),
       ),
     ),
   );
 }
 
+class _CardBack extends StatelessWidget {
+  const _CardBack({
+    required this.count,
+    required this.width,
+    required this.height,
+  });
+
+  final int count;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: width + 8,
+    height: height + 4,
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (count > 1)
+          Positioned(left: 5, top: 2, child: _cardBackImage(width, height)),
+        _cardBackImage(width, height),
+        Positioned(
+          right: -2,
+          bottom: -2,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 23, minHeight: 23),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            decoration: BoxDecoration(
+              color: TapTussleColors.gold,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: Text(
+              '$count',
+              style: const TextStyle(
+                color: Color(0xFF14213D),
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _cardBackImage(double width, double height) => ClipRRect(
+    borderRadius: BorderRadius.circular(7),
+    child: Image.asset(
+      'assets/games/cangkulan/card_back.png',
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+    ),
+  );
+}
+
 class _MiniPlayedCard extends StatelessWidget {
-  const _MiniPlayedCard({required this.play, required this.label});
+  const _MiniPlayedCard({
+    required this.play,
+    required this.label,
+    required this.fromTop,
+    required this.winner,
+  });
 
   final CangkulanTrickPlay play;
   final String label;
+  final bool fromTop;
+  final bool winner;
 
   @override
   Widget build(BuildContext context) => Semantics(
     label:
         '$label played ${_rankName(play.card.rank)} of ${_suitName(play.card.suit)}',
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 38,
-          height: 49,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFCF2),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            '${_rankSymbol(play.card.rank)}${_suitSymbol(play.card.suit)}',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color:
-                  play.card.suit == CangkulanSuit.hearts ||
-                      play.card.suit == CangkulanSuit.diamonds
-                  ? const Color(0xFFC62828)
-                  : const Color(0xFF14213D),
+    child: TweenAnimationBuilder<double>(
+      key: ValueKey('cangkulan-played-card-${play.player}'),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 340),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) => Transform.translate(
+        offset: Offset(0, (1 - value) * (fromTop ? -42 : 42)),
+        child: Transform.scale(
+          scale: (.75 + value * .25) * (winner ? 1.08 : 1),
+          child: child,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 54,
+            height: 72,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFCF2),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: winner ? TapTussleColors.gold : Colors.white,
+                width: winner ? 4 : 2,
+              ),
+              boxShadow: const [
+                BoxShadow(color: Colors.black38, blurRadius: 4),
+              ],
+            ),
+            child: Text(
+              '${_rankSymbol(play.card.rank)}${_suitSymbol(play.card.suit)}',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color:
+                    play.card.suit == CangkulanSuit.hearts ||
+                        play.card.suit == CangkulanSuit.diamonds
+                    ? const Color(0xFFC62828)
+                    : const Color(0xFF14213D),
+              ),
             ),
           ),
-        ),
-        SizedBox(
-          width: 52,
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 9),
+          SizedBox(
+            width: 56,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 9),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }

@@ -17,6 +17,8 @@ void main() {
     await _pumpBoard(tester, fixture.controller, const Size(390, 700));
 
     expect(find.byKey(const ValueKey('cangkulan-handoff')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cangkulan-card-table')), findsOneWidget);
+    expect(_semanticsWidget('Player 2 has 2 cards face down'), findsOneWidget);
     expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsNothing);
     expect(find.bySemanticsLabel('7 of hearts, playable'), findsNothing);
     expect(find.bySemanticsLabel('8 of hearts, playable'), findsNothing);
@@ -28,6 +30,11 @@ void main() {
     expect(find.bySemanticsLabel('8 of hearts, playable'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('cangkulan-hand-0')));
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('cangkulan-played-card-0')),
+      findsOneWidget,
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('cangkulan-handoff')), findsOneWidget);
     expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsNothing);
@@ -100,11 +107,13 @@ void main() {
     expect(find.byKey(const ValueKey('cangkulan-cangkul')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r'Draw pile, 2 cards')), findsWidgets);
     await tester.tap(find.byKey(const ValueKey('cangkulan-cangkul')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('cangkulan-draw-flight')), findsOneWidget);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsNothing);
     expect(find.text('Player 1 drew 2 cards.'), findsOneWidget);
-    expect(find.textContaining('9♥'), findsNothing);
+    expect(find.textContaining('9♥'), findsOneWidget);
     expect(find.textContaining('2♠'), findsNothing);
   });
 
@@ -130,7 +139,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('bot turn stays concealed and shows thinking feedback', (
+  testWidgets('card table remains readable with enlarged text', (tester) async {
+    final fixture = _fixture([
+      [_heart(7), _club(2)],
+      [_heart(8), _club(3)],
+      [_spade(2), _club(4)],
+      [_heart(9), _club(5)],
+    ]);
+    addTearDown(fixture.dispose);
+    tester.platformDispatcher.textScaleFactorTestValue = 1.4;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await _pumpBoard(tester, fixture.controller, const Size(390, 700));
+    await tester.tap(find.byKey(const ValueKey('cangkulan-reveal-hand')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('cangkulan-card-table')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsOneWidget);
+    expect(_semanticsWidget('Player 4 has 2 cards face down'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('bot turn stays on the table without a handoff dialog', (
     tester,
   ) async {
     final options = MatchOptions.bot(difficulty: BotDifficulty.normal);
@@ -150,16 +180,84 @@ void main() {
     addTearDown(session.dispose);
     await _pumpBoard(tester, controller, const Size(390, 700));
 
+    final botTableSize = tester.getSize(
+      find.byKey(const ValueKey('cangkulan-card-table')),
+    );
+    expect(find.byKey(const ValueKey('cangkulan-handoff')), findsNothing);
+    expect(find.byKey(const ValueKey('cangkulan-card-table')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('cangkulan-bot-thinking')),
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('cangkulan-reveal-hand')), findsNothing);
     expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsNothing);
-    expect(find.bySemanticsLabel('Bot thinking'), findsOneWidget);
+    final botStatus = tester.widget<Semantics>(
+      find.byKey(const ValueKey('cangkulan-bot-thinking')),
+    );
+    expect(botStatus.properties.label, 'Player 2 is choosing a card');
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+
+    expect(controller.activePlayer, 0);
+    expect(find.byKey(const ValueKey('cangkulan-handoff')), findsNothing);
+    expect(find.byKey(const ValueKey('cangkulan-hand-grid')), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('cangkulan-card-table'))),
+      botTableSize,
+    );
     session.pause();
   });
+
+  testWidgets('completed trick remains visible before the human handoff', (
+    tester,
+  ) async {
+    final fixture = _fixtureFrom(
+      CangkulanModel.fromState(
+        hands: [
+          [_club(2), _club(4)],
+          [_heart(8), _club(3)],
+        ],
+        currentPlayer: 1,
+        trickLeader: 0,
+        currentTrickTurns: [
+          CangkulanTrickTurn(player: 0, playedCard: _heart(10)),
+        ],
+      ),
+    );
+    addTearDown(fixture.dispose);
+    await _pumpBoard(tester, fixture.controller, const Size(390, 700));
+    await tester.tap(find.byKey(const ValueKey('cangkulan-reveal-hand')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('cangkulan-hand-0')));
+    await tester.pump();
+
+    expect(fixture.controller.phase, CangkulanViewPhase.trickResult);
+    expect(find.byKey(const ValueKey('cangkulan-handoff')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('cangkulan-trick-winner')),
+      findsOneWidget,
+    );
+    expect(find.text('PLAYER 1 WINS THE TRICK!'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('cangkulan-played-card-0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('cangkulan-played-card-1')),
+      findsOneWidget,
+    );
+
+    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('cangkulan-handoff')), findsOneWidget);
+  });
 }
+
+Finder _semanticsWidget(String label) => find.byWidgetPredicate(
+  (widget) => widget is Semantics && widget.properties.label == label,
+);
 
 class _Fixture {
   const _Fixture(this.session, this.controller);

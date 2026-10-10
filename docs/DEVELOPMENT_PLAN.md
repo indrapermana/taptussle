@@ -1173,6 +1173,24 @@ was detected, but Flutter's iOS debug transport rejected the integration run and
 recommended an unavailable `--publish-port` test option, so manual physical-device
 confirmation was completed by the user on 2026-10-07, closing M21.
 
+### Cangkulan child-friendly table refresh
+
+- [x] CK1 Replace the panel layout with a responsive felt card table, active-seat
+  positioning, public trick area, and face-down opponent hands.
+- [x] CK2 Present the active hand as large readable cards with clear legal-card
+  emphasis and a child-friendly Cangkul control.
+- [x] CK3 Keep the table visible behind a privacy curtain during every human
+  handoff and preserve concealed mixed human/bot turns for two to four players.
+- [x] CK4 Animate played cards, bot plays, draws, and completed-trick feedback
+  without delaying or exposing private game state.
+- [x] CK5 Integrate the generated card-back asset, accessibility semantics,
+  compact/enlarged-text coverage, lifecycle behavior, and regression checks.
+- [x] CK6 Keep bot turns on the public table, reserve privacy handoffs for
+  incoming human players, enlarge the table cards, and animate draws and plays.
+- [x] CK7 Remove handoffs from single-human bot matches, keep the table at a
+  stable turn size, and show each completed trick with its winning card before
+  advancing to the next turn.
+
 ## M22 — Chess
 
 Use standard over-the-board rules without clocks, an online engine, or a network

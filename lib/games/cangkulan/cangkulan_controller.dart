@@ -9,7 +9,7 @@ import 'cangkulan_bot.dart';
 import 'cangkulan_model.dart';
 import 'cangkulan_progress_repository.dart';
 
-enum CangkulanViewPhase { handoff, turn }
+enum CangkulanViewPhase { handoff, turn, trickResult }
 
 enum CangkulanInteractionResult {
   accepted,
@@ -42,6 +42,7 @@ class CangkulanController extends ChangeNotifier {
     session.addListener(_syncSession);
     _observedRound = session.round;
     _observedSessionPhase = session.phase;
+    _prepareActiveTurn();
     _scheduleBotTurn();
   }
 
@@ -61,12 +62,19 @@ class CangkulanController extends ChangeNotifier {
   bool _hasStarted = false;
   bool _disposed = false;
   Timer? _botTimer;
+  Timer? _trickResultTimer;
 
   int get activePlayer => model.currentPlayer;
   MatchParticipant get activeParticipant =>
       session.options.participants[activePlayer];
   bool get isBotTurn => !model.isFinished && activeParticipant.isBot;
   bool get isBotThinking => _botTimer?.isActive ?? false;
+  bool get needsPrivacyHandoff =>
+      !isBotTurn &&
+      session.options.participants
+              .where((participant) => !participant.isBot)
+              .length >
+          1;
   bool get isHandVisible =>
       !_disposed &&
       session.phase == MatchPhase.playing &&
@@ -109,7 +117,7 @@ class CangkulanController extends ChangeNotifier {
     if (!result.accepted) return CangkulanInteractionResult.illegalAction;
     model = result.model;
     _lastAction = result.action;
-    _phase = CangkulanViewPhase.handoff;
+    _prepareActiveTurn();
     if (model.isFinished) {
       final storage = repository;
       if (storage != null) unawaited(storage.clear(session.options));
@@ -145,6 +153,16 @@ class CangkulanController extends ChangeNotifier {
       notifyListeners();
       return CangkulanInteractionResult.matchFinished;
     }
+    if (result.action?.completedTrick != null) {
+      _phase = CangkulanViewPhase.trickResult;
+      _saveProgress();
+      notifyListeners();
+      _trickResultTimer = Timer(
+        const Duration(milliseconds: 1200),
+        _finishTrickResult,
+      );
+      return CangkulanInteractionResult.accepted;
+    }
     _saveProgress();
     notifyListeners();
     _scheduleBotTurn();
@@ -161,6 +179,12 @@ class CangkulanController extends ChangeNotifier {
     _phase = CangkulanViewPhase.handoff;
     _botTimer = Timer(botThinkDelay ?? _naturalThinkDelay(), _performBotTurn);
     notifyListeners();
+  }
+
+  void _prepareActiveTurn() {
+    _phase = isBotTurn || needsPrivacyHandoff
+        ? CangkulanViewPhase.handoff
+        : CangkulanViewPhase.turn;
   }
 
   Duration _naturalThinkDelay() {
@@ -192,11 +216,27 @@ class CangkulanController extends ChangeNotifier {
     _botTimer = null;
   }
 
+  void _finishTrickResult() {
+    _trickResultTimer = null;
+    if (_disposed || session.phase != MatchPhase.playing || model.isFinished) {
+      return;
+    }
+    _prepareActiveTurn();
+    notifyListeners();
+    _scheduleBotTurn();
+  }
+
+  void _cancelTrickResult() {
+    _trickResultTimer?.cancel();
+    _trickResultTimer = null;
+  }
+
   void _syncSession() {
     if (_disposed) return;
     final roundChanged = session.round != _observedRound;
     if (roundChanged && session.round > 0) {
       _cancelBotTurn();
+      _cancelTrickResult();
       if (_hasStarted) {
         final storage = repository;
         if (storage != null) unawaited(storage.clear(session.options));
@@ -206,18 +246,20 @@ class CangkulanController extends ChangeNotifier {
         _hasStarted = true;
       }
       _lastAction = null;
-      _phase = CangkulanViewPhase.handoff;
+      _prepareActiveTurn();
     }
 
     final phaseChanged = session.phase != _observedSessionPhase;
     if (phaseChanged && session.phase != MatchPhase.playing) {
       _cancelBotTurn();
+      _cancelTrickResult();
       _phase = CangkulanViewPhase.handoff;
       _saveProgress();
     }
     _observedRound = session.round;
     _observedSessionPhase = session.phase;
     if (roundChanged || phaseChanged) {
+      if (session.phase == MatchPhase.playing) _prepareActiveTurn();
       notifyListeners();
       if (session.phase == MatchPhase.playing) _scheduleBotTurn();
     }
@@ -242,6 +284,7 @@ class CangkulanController extends ChangeNotifier {
     _disposed = true;
     session.removeListener(_syncSession);
     _cancelBotTurn();
+    _cancelTrickResult();
     super.dispose();
   }
 }
