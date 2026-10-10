@@ -133,7 +133,6 @@ class ChessBoard extends StatelessWidget {
   static const _lightSquare = Color(0xFFE9D8B4);
   static const _darkSquare = Color(0xFF42627A);
   static const _selected = Color(0xFFFFD54F);
-  static const _legal = Color(0xFF70E0A0);
   static const _lastMove = Color(0xFFB7E55C);
   static const _check = Color(0xFFFF5252);
 
@@ -161,7 +160,7 @@ class ChessBoard extends StatelessWidget {
           builder: (context, constraints) {
             final compact = constraints.maxHeight < 650;
             return Padding(
-              padding: EdgeInsets.fromLTRB(12, compact ? 6 : 12, 12, 10),
+              padding: EdgeInsets.fromLTRB(5, compact ? 4 : 8, 5, 6),
               child: Column(
                 children: [
                   _Header(
@@ -171,7 +170,7 @@ class ChessBoard extends StatelessWidget {
                     onFlipBoard: onFlipBoard,
                     compact: compact,
                   ),
-                  SizedBox(height: compact ? 5 : 9),
+                  SizedBox(height: compact ? 3 : 6),
                   Text(
                     statusOverride ?? _statusText(model, playerLabels),
                     key: const ValueKey('chess-status'),
@@ -184,20 +183,21 @@ class ChessBoard extends StatelessWidget {
                       letterSpacing: .7,
                     ),
                   ),
-                  SizedBox(height: compact ? 5 : 9),
+                  SizedBox(height: compact ? 3 : 6),
                   Expanded(
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
+                        constraints: const BoxConstraints(maxWidth: 900),
                         child: AspectRatio(
                           aspectRatio: 1,
                           child: DecoratedBox(
+                            key: const ValueKey('chess-play-board'),
                             decoration: BoxDecoration(
                               color: const Color(0xFF101A27),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white24,
-                                width: 4,
+                                color: const Color(0xFFFFC857),
+                                width: 3,
                               ),
                               boxShadow: const [
                                 BoxShadow(
@@ -208,7 +208,7 @@ class ChessBoard extends StatelessWidget {
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(9),
+                              borderRadius: BorderRadius.circular(8),
                               child: Column(
                                 children: [
                                   for (
@@ -283,7 +283,7 @@ class ChessBoard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: compact ? 5 : 8),
+                  SizedBox(height: compact ? 3 : 5),
                   if (pendingPromotionMoves.isNotEmpty)
                     _PromotionPicker(
                       color: model.sideToMove,
@@ -522,45 +522,59 @@ class _Square extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              if (piece case final value?)
-                FittedBox(
-                  child: Padding(
-                    padding: const EdgeInsets.all(3),
-                    child: Text(
-                      _pieceSymbol(value),
-                      style: TextStyle(
-                        fontSize: 48,
-                        height: 1,
-                        color: value.color == ChessColor.white
-                            ? const Color(0xFFFFF7E3)
-                            : const Color(0xFF111A27),
-                        shadows: const [
-                          Shadow(color: Colors.black54, blurRadius: 2),
+              if (legalTarget)
+                IgnorePointer(
+                  child: FractionallySizedBox(
+                    widthFactor: .84,
+                    heightFactor: .84,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFFFD54F),
+                          width: 3,
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x99FFD54F),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              if (legalTarget)
-                IgnorePointer(
-                  child: Container(
-                    width: piece == null ? 13 : null,
-                    height: piece == null ? 13 : null,
-                    decoration: BoxDecoration(
-                      color: piece == null
-                          ? ChessBoard._legal.withValues(alpha: .9)
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: piece == null
-                          ? null
-                          : Border.all(color: ChessBoard._legal, width: 4),
-                    ),
-                  ),
+              if (piece case final value?)
+                FractionallySizedBox(
+                  widthFactor: .94,
+                  heightFactor: .94,
+                  child: _ChessPieceSprite(piece: value),
                 ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ChessPieceSprite extends StatelessWidget {
+  const _ChessPieceSprite({required this.piece});
+
+  final ChessPiece piece;
+
+  @override
+  Widget build(BuildContext context) {
+    final asset =
+        'assets/games/chess/${piece.color.name}_${piece.type.name}.png';
+    return Image.asset(
+      asset,
+      key: ValueKey('chess-piece-${piece.color.name}-${piece.type.name}'),
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      filterQuality: FilterQuality.medium,
     );
   }
 }
@@ -605,9 +619,9 @@ class _PromotionPicker extends StatelessWidget {
                 key: ValueKey('chess-promote-${type.name}'),
                 tooltip: 'Promote to ${type.name}',
                 onPressed: onSelected == null ? null : () => onSelected!(type),
-                icon: Text(
-                  _pieceSymbol(ChessPiece(color, type)),
-                  style: const TextStyle(fontSize: 28),
+                icon: SizedBox.square(
+                  dimension: 34,
+                  child: _ChessPieceSprite(piece: ChessPiece(color, type)),
                 ),
               ),
             IconButton(

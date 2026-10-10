@@ -1279,6 +1279,15 @@ response guard. All 56 focused Chess tests and all 592 host tests pass with redu
 concurrency; `flutter analyze` is clean. The user confirmed successful
 physical-device verification on 2026-10-07, completing M22.
 
+### Chess child-friendly visual refresh
+
+- [x] CH1 Enlarge the responsive board, simplify surrounding spacing, and add a
+  bright toy-like frame without changing Chess rules or interaction states.
+- [x] CH2 Replace board and promotion glyphs with recognizable child characters
+  for king, queen, bishop, knight, rook, and pawn in two distinct teams.
+- [ ] CH3 Verify piece clarity, touch comfort, selection, legal targets, check,
+  promotion, compact layouts, and results on physical iPhone and Android devices.
+
 ## Pre-M23 Game Setup UX review
 
 Complete this focused child-friendly setup refresh before starting M23. Preserve

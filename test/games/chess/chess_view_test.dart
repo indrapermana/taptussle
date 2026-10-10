@@ -29,6 +29,14 @@ void main() {
     expect(find.text('PLAYER 1 • WHITE TO MOVE'), findsOneWidget);
     expect(find.bySemanticsLabel('e2, white pawn'), findsOneWidget);
     expect(find.bySemanticsLabel('e4, empty'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('chess-piece-white-pawn')),
+      findsNWidgets(8),
+    );
+    expect(
+      find.byKey(const ValueKey('chess-piece-black-knight')),
+      findsNWidgets(2),
+    );
     expect(find.text('NO MOVES YET'), findsOneWidget);
   });
 
@@ -135,6 +143,20 @@ void main() {
       expect(tester.takeException(), isNull, reason: 'Failed at $size');
     }
     await tester.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('uses nearly the full compact-phone width for the board', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(game());
+
+    final boardSize = tester.getSize(
+      find.byKey(const ValueKey('chess-play-board')),
+    );
+    expect(boardSize.width, greaterThan(375));
+    expect(boardSize.height, boardSize.width);
   });
 
   testWidgets('bot thinking is visible and locks board interaction', (
