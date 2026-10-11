@@ -66,8 +66,8 @@ class WaterSortProgressRepository {
   ) => _readProfile(difficulty).bests[level];
 
   WaterSortProgressSnapshot? loadActive(WaterSortDifficulty difficulty) {
-    final encoded = _preferences.getString(_activeKey(difficulty));
-    if (encoded == null) return null;
+    final encoded = _preferences.get(_activeKey(difficulty));
+    if (encoded is! String) return null;
     try {
       final data = jsonDecode(encoded);
       if (data is! Map<String, dynamic> ||
@@ -214,8 +214,8 @@ class WaterSortProgressRepository {
 
   _WaterSortProfile _readProfile(WaterSortDifficulty difficulty) {
     final fallback = _WaterSortProfile();
-    final encoded = _preferences.getString(_profileKey(difficulty));
-    if (encoded == null) return fallback;
+    final encoded = _preferences.get(_profileKey(difficulty));
+    if (encoded is! String) return fallback;
     try {
       final data = jsonDecode(encoded);
       if (data is! Map<String, dynamic> ||

@@ -1695,6 +1695,14 @@ Shared-screen audit:
 - [ ] M23.4 Test fully offline install/launch and matches, audio focus, vibration,
   background/resume, calls/interruptions, persistence and migration from existing
   installs, malformed saved data, safe defaults, and long sessions.
+  - [x] Automated resilience audit: all 670 host tests pass. Global settings and
+    every resumable-game repository now reject wrong stored value types safely;
+    lifecycle, abandon/reset, persistence, bundled audio, haptic gating, and
+    offline release-manifest behavior are covered. Evidence and the manual
+    device procedure are recorded in `M23_RUNTIME_RESILIENCE_RESULTS.md`.
+  - [ ] Complete the short physical iPhone checklist for airplane-mode launch,
+    silent mode, audio interruption, vibration, background/lock, saved settings,
+    intended puzzle restoration, abandoned-match reset, and a 20-minute session.
 - [ ] M23.5 Audit player-tab discoverability, setup consistency, record accuracy,
   enlarged text, screen-reader labels, contrast, safe areas, compact/tablet layouts,
   and privacy between same-device card players.

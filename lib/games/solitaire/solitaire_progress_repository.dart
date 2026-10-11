@@ -44,8 +44,8 @@ class SolitaireProgressRepository {
       'solitaire.stats.${difficulty.name}.v1';
 
   SolitaireProgressSnapshot? loadActive(SolitaireDifficulty difficulty) {
-    final encoded = _preferences.getString(_activeKey(difficulty));
-    if (encoded == null) return null;
+    final encoded = _preferences.get(_activeKey(difficulty));
+    if (encoded is! String) return null;
     try {
       final data = jsonDecode(encoded);
       if (data is! Map<String, dynamic> ||
@@ -99,8 +99,8 @@ class SolitaireProgressRepository {
       });
 
   SolitaireStats stats(SolitaireDifficulty difficulty) {
-    final encoded = _preferences.getString(_statsKey(difficulty));
-    if (encoded == null) return const SolitaireStats();
+    final encoded = _preferences.get(_statsKey(difficulty));
+    if (encoded is! String) return const SolitaireStats();
     try {
       final data = jsonDecode(encoded);
       if (data is! Map<String, dynamic> ||

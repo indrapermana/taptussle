@@ -49,4 +49,30 @@ void main() {
 
     expect(settings.catalogPlayerFilter, CatalogPlayerFilter.twoPlayers);
   });
+
+  test(
+    'wrong stored types cannot prevent startup and use safe defaults',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'winningScore': 'seven',
+        'favouriteGameIds': 4,
+        'effectsVolume': 'loud',
+        'vibrationEnabled': 'yes',
+        'resolutionPreset': 100,
+        'frameRatePreset': false,
+        'catalogPlayerFilter': <String>['twoPlayers'],
+      });
+
+      final settings = AppSettings(await SharedPreferences.getInstance());
+      addTearDown(settings.dispose);
+
+      expect(settings.winningScore, 7);
+      expect(settings.favouriteIds, isEmpty);
+      expect(settings.effectsVolume, .7);
+      expect(settings.vibrationEnabled, isTrue);
+      expect(settings.resolution, ResolutionPreset.native);
+      expect(settings.frameRate, FrameRatePreset.fps60);
+      expect(settings.catalogPlayerFilter, CatalogPlayerFilter.twoPlayers);
+    },
+  );
 }

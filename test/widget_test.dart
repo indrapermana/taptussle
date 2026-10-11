@@ -27,7 +27,7 @@ void main() {
       expect(find.text('Paddle Duel'), findsOneWidget);
       await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
-      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('Grown-up Settings'), findsOneWidget);
       final fivePoints = find.text('5');
       await tester.scrollUntilVisible(fivePoints, 350);
       await tester.ensureVisible(fivePoints);

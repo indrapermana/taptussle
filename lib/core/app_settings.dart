@@ -46,17 +46,21 @@ class AppSettings extends ChangeNotifier {
     _effectsVolume = savedVolume is num && savedVolume >= 0 && savedVolume <= 1
         ? savedVolume.toDouble()
         : .7;
-    _vibrationEnabled = _preferences.getBool('vibrationEnabled') ?? true;
+    final savedVibration = _preferences.get('vibrationEnabled');
+    _vibrationEnabled = savedVibration is bool ? savedVibration : true;
+    final savedResolution = _preferences.get('resolutionPreset');
     _resolution = ResolutionPreset.values.firstWhere(
-      (value) => value.name == _preferences.getString('resolutionPreset'),
+      (value) => value.name == savedResolution,
       orElse: () => ResolutionPreset.native,
     );
+    final savedFrameRate = _preferences.get('frameRatePreset');
     _frameRate = FrameRatePreset.values.firstWhere(
-      (value) => value.name == _preferences.getString('frameRatePreset'),
+      (value) => value.name == savedFrameRate,
       orElse: () => FrameRatePreset.fps60,
     );
+    final savedCatalogFilter = _preferences.get('catalogPlayerFilter');
     _catalogPlayerFilter = CatalogPlayerFilter.values.firstWhere(
-      (value) => value.name == _preferences.getString('catalogPlayerFilter'),
+      (value) => value.name == savedCatalogFilter,
       orElse: () => CatalogPlayerFilter.twoPlayers,
     );
   }

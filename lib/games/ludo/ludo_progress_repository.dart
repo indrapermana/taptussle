@@ -38,8 +38,8 @@ class LudoProgressRepository {
   Future<void> _pendingWrite = Future.value();
 
   LudoProgressSnapshot? load(MatchOptions options) {
-    final encoded = _preferences.getString(_key(options));
-    if (encoded == null) return null;
+    final encoded = _preferences.get(_key(options));
+    if (encoded is! String) return null;
     try {
       final data = jsonDecode(encoded);
       if (data is! Map<String, dynamic> ||

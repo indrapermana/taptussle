@@ -48,8 +48,8 @@ class SudokuProgressRepository {
       'sudoku.unlockedLevel.${difficulty.name}';
 
   int unlockedLevel(SudokuDifficulty difficulty) {
-    final saved = _preferences.getInt(_levelKey(difficulty));
-    return saved == null ||
+    final saved = _preferences.get(_levelKey(difficulty));
+    return saved is! int ||
             saved < 1 ||
             saved > SudokuCatalog.levelsPerDifficulty
         ? 1
@@ -67,8 +67,8 @@ class SudokuProgressRepository {
   }
 
   SudokuProgressSnapshot? load(SudokuDifficulty difficulty) {
-    final encoded = _preferences.getString(_key(difficulty));
-    if (encoded == null) return null;
+    final encoded = _preferences.get(_key(difficulty));
+    if (encoded is! String) return null;
     try {
       final data = jsonDecode(encoded);
       if (data is! Map<String, dynamic> ||
