@@ -1,18 +1,16 @@
 # TapTussle
 
-Offline, same-device mini-games for two players, built with Flutter and Flame.
-The current catalog includes **Paddle Duel**, **Reaction Duel**, **Air Hockey**,
-**Lane Dash**, and **Tic-Tac-Toe**, with friend and local-bot modes. Android and
-iOS are the mobile targets; web is included for quick desktop previews.
+Offline, same-device mini-games for one to four players, built with Flutter and
+Flame. The current catalog contains 18 arcade, board, card, and puzzle games with
+solo, friend, and local-bot modes according to each game's rules. Android and iOS
+are the mobile targets; web is included for quick desktop previews.
 
 ## Development roadmap
 
 See [the development plan](docs/DEVELOPMENT_PLAN.md) for milestone checklists,
-remaining games, friend/bot modes, favourites, difficulty, expanded settings,
-and the live resolution/FPS comparison preview. The current five-game foundation
-has completed its branding and automated-regression checkpoint. The planned first
-public release expands the catalog to all 18 currently selected games, adds solo
-and up-to-four-player support, and runs final release validation in M23.
+release validation, friend/bot modes, favourites, difficulty, expanded settings,
+and the live resolution/FPS comparison preview. The 18-game catalog has completed
+its automated and compact-iPhone functional passes and is in M23 store preparation.
 
 ## Run
 
@@ -31,8 +29,11 @@ flutter build web --release --no-web-resources-cdn
 Mobile gameplay requires no network, account, server, or downloaded assets.
 Dependencies/toolchains require an internet connection during initial setup.
 The web preview is not an offline-installed PWA; the offline product target is
-the installed mobile application. Release signing and store assets are not set up.
-The package namespace is `com.indesyakaryadigital.tap_tussle`.
+the installed mobile application. Android release signing uses a private
+`android/key.properties`; copy `android/key.properties.example` and never commit
+the keystore or credentials. Store submission metadata and signing status are
+tracked in `docs/M23_RELEASE_BUILD_RESULTS.md`. The Android package namespace is
+`com.indesyakaryadigital.tap_tussle`.
 
 The native mobile launch experience uses the branded Tap Tussle artwork on iOS
 and supported Android versions. Android 12 and newer use the TT app icon on a

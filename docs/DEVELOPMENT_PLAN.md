@@ -1720,6 +1720,22 @@ Shared-screen audit:
 - [ ] M23.6 Produce signed local iOS and Android release builds and resolve toolchain
   or signing blockers. Finalize privacy and terms content, store text/screenshots,
   age/content declarations, attributions, support links, and game instructions.
+  - [x] Android release-mode APK compiled, installed, and launched on the
+    connected Android 15 device without a startup runtime error. Release Gradle
+    configuration is hardened so it can no longer use the debug signing key.
+  - [x] iOS release compilation completed and produced `Runner.app`.
+  - [x] Draft store copy, screenshot plan, privacy/content declarations, and
+    consolidated attribution record are captured in `STORE_LISTING_DRAFT.md`
+    and `ATTRIBUTIONS.md`.
+  - [ ] Create and back up the Android upload key, configure private
+    `android/key.properties`, and produce the signed App Bundle.
+  - [ ] Restore a trusted Apple signing identity/profile and repeat the physical
+    iPhone release launch; a paid developer account is required for distribution.
+  - [x] Replace the in-app legal placeholder with the confirmed publisher,
+    PT INDESYA KARYA DIGITAL, and support@indesyakaryadigital.com.
+  - [ ] Supply final public support/privacy URLs and capture final signed-build
+    screenshots. Detailed build evidence and blockers are in
+    `M23_RELEASE_BUILD_RESULTS.md`.
 - [ ] M23.7 Choose the release semantic version, increment the build number in
   `pubspec.yaml`, produce final store artifacts, and attach automated, build,
   profile, and device evidence. Do not complete M23 while any game has a known

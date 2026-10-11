@@ -47,6 +47,9 @@ migrate_working_dir/
 *.dSYM.zip
 *.p12
 *.mobileprovision
+key.properties
+*.jks
+*.keystore
 
 # Keep pubspec.lock and .metadata versioned for reproducible app builds
 # and Flutter project/tooling metadata.

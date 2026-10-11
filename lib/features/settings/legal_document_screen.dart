@@ -73,6 +73,11 @@ class LegalDocumentScreen extends StatelessWidget {
                       body:
                           'If a future version adds features that handle personal data, this policy will be updated before those features are released.',
                     ),
+                    _LegalSection(
+                      title: 'Contact',
+                      body:
+                          'TapTussle is published by PT INDESYA KARYA DIGITAL. Privacy questions can be sent to support@indesyakaryadigital.com.',
+                    ),
                   ] else ...const [
                     _LegalSection(
                       title: 'Using TapTussle',
@@ -87,7 +92,7 @@ class LegalDocumentScreen extends StatelessWidget {
                     _LegalSection(
                       title: 'Contact',
                       body:
-                          'Before public release, this section will be updated with a support contact and the final publisher details.',
+                          'TapTussle is published by PT INDESYA KARYA DIGITAL. For support, contact support@indesyakaryadigital.com.',
                     ),
                   ],
                 ],
