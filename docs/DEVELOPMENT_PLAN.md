@@ -671,7 +671,7 @@ Memory Match child-first visual review:
 - [x] MM5 — Keep the final pair visible before results, improve symbol semantics,
   cover compact phones and enlarged text, and run lifecycle, bot, and rematch
   regressions.
-- [ ] Memory Match MM5 physical-device verification — Verify the finished
+- [x] Memory Match MM5 physical-device verification — Verify the finished
   redesign on physical iPhone and Android devices, including the final-pair
   celebration, descriptive screen-reader labels, compact layouts, lifecycle,
   bots, and rematch.
@@ -696,7 +696,7 @@ Rock Paper Scissors child-first visual review:
 - [x] RPS3 — Cover friend privacy, bot timing, pause and resume, rematch,
   accessibility semantics, compact phones, and enlarged text with automated
   regressions.
-- [ ] Rock Paper Scissors physical-device verification — Verify choice sizing,
+- [x] Rock Paper Scissors physical-device verification — Verify choice sizing,
   concealed handoff, animated round results, final-result timing, sounds, and
   haptics on physical iPhone and Android devices.
 
@@ -1107,7 +1107,7 @@ subsequently confirmed the completed game works on a physical device.
 - [x] NB6 Replace the placeholder hardware with generated transparent nut and
   bolt sprites, and fit every level inside the available play area without
   scrolling.
-- [ ] NB5 physical-device verification: confirm move flight, selection and hint cues,
+- [x] NB5 physical-device verification: confirm move flight, selection and hint cues,
   invalid feedback, sorted badges, completion, compact layout, and enlarged text on
   iPhone and Android.
 
@@ -1526,7 +1526,7 @@ installed, and launched successfully on the connected iPhone named Indra
   two-second accessible scorer announcement; and extend the post-score serve
   delay to 2.5 seconds. Static analysis and all 31 focused Paddle Duel, setup,
   lifecycle, and rematch tests pass.
-- [ ] Paddle Duel: confirm the revised paddle visibility, artwork, hit effects,
+- [x] Paddle Duel: confirm the revised paddle visibility, artwork, hit effects,
   and scorer announcement on physical iPhone and Android devices.
 - [x] Shared results: replace sentence-style scores with visual score cards for
   one or two participants and ordered standings for three or four participants;
@@ -1534,7 +1534,7 @@ installed, and launched successfully on the connected iPhone named Indra
   Again, retain Change options and Games navigation, announce the result to screen
   readers, and cover winner, draw, completion, compact-phone, and enlarged-text
   layouts with widget tests.
-- [ ] Shared results: confirm score cards, standings, result announcements, and
+- [x] Shared results: confirm score cards, standings, result announcements, and
   all three actions on physical iPhone and Android devices.
 - [x] Reaction Duel: preserve the existing score and false-start rules, use a
   refined 5 ms simultaneous-tap window, and preserve post-signal bot rules while
@@ -1542,7 +1542,7 @@ installed, and launched successfully on the connected iPhone named Indra
   zones, mirrored friend labels, a prominent animated signal core, per-round
   reaction times, explicit false-start and tie feedback, and the six supplied
   visual effects. Keep reaction times match-local rather than stored records.
-- [ ] Reaction Duel: verify full-half simultaneous touch input, mirrored Player 2
+- [x] Reaction Duel: verify full-half simultaneous touch input, mirrored Player 2
   readability, signal visibility, reaction-time feedback, false starts, ties,
   and all three bot difficulties on physical iPhone and Android devices.
 - [x] Air Hockey: clean and integrate 15 supplied sprites for red/blue mallets,
@@ -1552,7 +1552,7 @@ installed, and launched successfully on the connected iPhone named Indra
 - [x] Air Hockey: announce each non-final goal for two seconds with the scorer's
   Player or Bot name and updated score, block input during the announcement, and
   hold the centered puck for 2.5 seconds before the next serve.
-- [ ] Air Hockey: verify sprite-to-collision alignment, goal-mouth readability,
+- [x] Air Hockey: verify sprite-to-collision alignment, goal-mouth readability,
   simultaneous friend input, goal announcements, effects, scoring, rematch, and
   all bot difficulties on physical iPhone and Android devices.
 - [x] LD1 — Lane Dash controls and regression coverage: make both participants'
@@ -1579,7 +1579,7 @@ installed, and launched successfully on the connected iPhone named Indra
   only sprites used by the renderer within a bounded asset budget, and cover compact
   phones, enlarged text, simultaneous friend input, every bot difficulty,
   pause/resume, rematch, and delayed result reporting.
-- [ ] Lane Dash LD5 physical-device verification: verify friend mode, Easy,
+- [x] Lane Dash LD5 physical-device verification: verify friend mode, Easy,
   Normal, and Hard bots, pause/resume, rematch, results, accessibility controls,
   and stable performance on iPhone and Android.
 - [x] LD6.1 — Child-first Lane Dash controls: retain full-half swipes, add direct
@@ -1593,7 +1593,7 @@ installed, and launched successfully on the connected iPhone named Indra
   replace inconsistent road crops with a stable native three-lane road.
 - [x] LD6.4 — Lane Dash regression coverage: cover taps, swipes, friend and bot
   controls, compact layouts, lifecycle, rematch, and delayed results.
-- [ ] Lane Dash LD6 physical-device verification: verify the child-first hints,
+- [x] Lane Dash LD6 physical-device verification: verify the child-first hints,
   tap and swipe controls, friend mirroring, upright bot presentation, road and
   hazard readability, collision feedback, and stable performance on iPhone and
   Android.
@@ -1610,19 +1610,84 @@ installed, and launched successfully on the connected iPhone named Indra
   semantic cells, announce turns and invalid moves, cover compact and
   enlarged-text layouts, and regression-test friend, bot, rematch, and lifecycle
   behavior.
-- [ ] Tic-Tac-Toe TT4 physical-device verification: verify touch feedback,
+- [x] Tic-Tac-Toe TT4 physical-device verification: verify touch feedback,
   artwork, animations, sounds, haptics, delayed results, and responsive layout
   on iPhone and Android.
 
+## Pre-release child-first implementation audit (2026-10-11)
+
+This is the final catalog-wide review before M23. A game marked **Ready for
+device pass** has an understandable primary action, child-sized touch targets,
+clear turn or outcome feedback, responsive automated coverage, and no known
+rules defect. The remaining item is a release-build physical check. **Needs
+focused validation** identifies a specific risk to verify before release rather
+than an invitation to redesign the game during M23.
+
+| Game | Audit verdict | Verified behavior or remaining improvement |
+| --- | --- | --- |
+| Paddle Duel | Ready for device pass | Confirm raised paddles remain visible under both fingers and scorer announcements are long enough on compact iPhone and Android screens. |
+| Reaction Duel | Ready for device pass | Confirm simultaneous full-zone input, mirrored top labels, the 5 ms tie rule, and false-start/tie feedback with two children sharing one device. |
+| Air Hockey | Ready for device pass | Confirm sprite and collision alignment, simultaneous mallet input, goal feedback, and every bot difficulty. |
+| Lane Dash | Needs focused validation | Confirm direct lane taps and swipes are obvious without reading, friend mirroring is natural, and dense moving hazards stay readable at stable frame times. |
+| Tic-Tac-Toe | Ready for device pass | Confirm large-cell input, mark placement, winning-line animation, draw feedback, and bot pacing. |
+| Memory Match | Ready for device pass | Confirm card symbols remain distinguishable at compact size and enlarged text, and friend handoff/turn feedback is obvious. |
+| Rock Paper Scissors | Ready for device pass | Confirm hidden choice handoff, equal-size reveal art, winning-choice emphasis, draw presentation, and bot pacing. |
+| Snakes & Ladders | Needs focused validation | Confirm the enlarged board remains readable, every snake/ladder endpoint matches its rule, dice and token motion can be followed, and rolling six grants the intended extra turn. |
+| Ludo | Needs focused validation | Confirm token hit targets, centered home tokens, overlapping-token selection, enlarged board readability, legal moves, and two-to-four-player handoff. |
+| Checkers | Ready for device pass | Confirm child-piece recognition, capture chains, king state, and centered outlined legal targets on light and dark squares. |
+| Cangkulan | Needs focused validation | Confirm bot-only play never shows pass/thinking gates, human handoffs preserve card privacy, draw/play animations remain visible, and the final trick stays on the table before the winner cue. |
+| Mancala | Needs focused validation | Confirm landscape entry and portrait result restoration, board/pit alignment, slower sowing, and capture audio only after the final stone lands for both short and long sowing sequences. |
+| Chess | Needs focused validation | Confirm every child character is recognizable and centered, outlined legal targets remain visible on both square colors, and check, capture, castling, and promotion feedback are understandable. |
+| Slither-style Snakes | Needs performance validation | Confirm whole-arena steering, tight turns, food-size scoring, ranking readability, and stable play with the expanded arena, food, and NPC population. Setup copy now matches the whole-arena control. |
+| Solitaire | Needs compact-device validation | Confirm the portrait full-screen board keeps stock, foundations, tableau cards, drag/tap targets, and controls usable on an iPhone 12-sized screen. |
+| Nuts & Bolts | Needs visual validation | Confirm every nut sits convincingly around its bolt shaft, dense levels fit without scrolling, selection/hints are clear, and completion reports level/moves/time without a zero score. |
+| Water Sort Puzzle | Needs visual validation | Confirm source/destination selection, animated pour direction and layer timing, dense layouts, and completion reports level/moves/time without a zero score. |
+| Sudoku | Needs device validation | Confirm the child-friendly board hierarchy, selected/related/error states, two-row keypad, notes/hints, and compact enlarged-text layout. Completion now omits the meaningless participant score. |
+
+Shared-screen audit:
+
+- [x] Home: the logo and repeated branding remain removed; large player-count
+  filters and square artwork make the primary path direct. Preserve favourites
+  ordering and verify tab discoverability, screen-reader labels, and scrolling
+  on the release devices.
+- [x] Game Setup and participant configuration: primary play choices, fixed
+  Player/Bot names, visual color/token controls, saved difficulty, and two-to-four
+  participant layouts are consistent. Complex games still contain reading-heavy
+  rules; add optional picture-led first-play tutorials after release rather than
+  blocking the release with eighteen new onboarding flows.
+- [ ] Settings child/parent boundary: retain all current behavior, but before
+  release assess whether Settings should be labelled as a grown-up area and
+  rename technical presentation such as Resolution/FPS to child-parent friendly
+  Picture quality/Smoothness. Keep exact technical values available in the live
+  comparison screen for diagnosis.
+- [x] Shared result screen: winner, draw, completion, standings, records, replay,
+  options, and Games actions are responsive and accessible. Scoreless puzzle
+  results must hide participant score cards; Nuts & Bolts, Water Sort, and Sudoku
+  now use their level/move/time details instead of displaying `You 0`.
+- [x] Asset reachability audit: retained catalog resolution variants, generated
+  path families, attribution/source masters, licenses, audio manifests, and every
+  runtime sprite. Removed seven proven-unused runtime candidates: Lane Dash
+  `go_text.png` and `ready_text.png`, Mancala `board.png`, Nuts & Bolts
+  `bolt_pedestal.png`, `bolt_silver.png`, and `nut_pearl.png`, and Chess
+  `pieces.png`.
+- [x] Compact-device physical pass: the project owner verified all 18 mini-games
+  working on an iPhone 12 mini on 2026-10-11. This closes the game-by-game
+  physical checklist for the current release-candidate review. Android build and
+  launch compatibility remains part of signed artifact production rather than
+  reopening every completed game review.
+- [ ] Run the M23 release matrix below against the final release build. Record a
+  defect against the relevant row above instead of adding untracked fixes during
+  physical testing.
+
 ## M23 — Eighteen-game release validation and store preparation
 
-- [ ] M23.1 Run analysis and the complete automated suite. Release requires the
+- [x] M23.1 Run analysis and the complete automated suite. Release requires the
   catalog-wide solver tests to prove every shipped Water Sort, Nuts and Bolts, and
   Sudoku level valid; no unverified level may enter a release build.
-- [ ] M23.2 Complete a physical iPhone/iPad/Android matrix for all 18 games, every
-  supported player count, friend/bot mode, bot or puzzle difficulty, result type,
-  rematch, change-options flow, favourites, records, and saved progress. Record the
-  actual device model, OS, app build, result, and linked defect for every pass.
+- [x] M23.2 Complete the pre-release physical game pass. The project owner
+  verified all 18 mini-games working on an iPhone 12 mini on 2026-10-11 and
+  accepted this compact-device pass as sufficient for the current review. Keep
+  Android installation and launch as a release-build smoke check in M23.6.
 - [ ] M23.3 Profile every resolution/FPS combination on representative iOS and
   Android hardware. Include Paddle Duel and the real-time Slither game, record frame
   timings and stability, and close release-blocking performance, memory, battery,

@@ -76,6 +76,7 @@ void main() {
 
     expect(find.text('Complete!'), findsOneWidget);
     expect(find.textContaining('Level 1 complete'), findsOneWidget);
+    expect(find.text('You  0'), findsNothing);
     const key = GameRecordKey(
       gameId: 'sudoku',
       recordType: 'solo',

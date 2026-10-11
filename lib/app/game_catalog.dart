@@ -109,7 +109,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     title: 'Slither-style Snakes',
     subtitle: 'Grow longer. Survive the arena.',
     instructions:
-        'Drag anywhere in the lower half to steer. Eat glowing food to grow '
+        'Drag anywhere in the arena to steer. Eat glowing food to grow '
         'and score, and make rival snakes crash into a body for a bonus. '
         'Hitting the wall or another snake ends the run. Crossing your own '
         'body is safe.',
@@ -173,6 +173,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     icon: Icons.grid_on_rounded,
     supportedModes: const {PlayMode.solo},
     supportedPlayerCounts: const {PlayerCount.one},
+    showParticipantScores: false,
     difficultyType: DifficultyType.puzzle,
     difficultyDescription: (difficulty) => switch (difficulty) {
       BotDifficulty.easy =>

@@ -87,6 +87,7 @@ void main() {
 
     expect(game.supportedPlayerCounts, {PlayerCount.one});
     expect(game.supportedModes, {PlayMode.solo});
+    expect(game.showParticipantScores, isFalse);
     expect(game.difficultyType, DifficultyType.puzzle);
     expect(game.recordDefinition!.metrics.map((metric) => metric.id), [
       'level',
