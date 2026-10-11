@@ -910,6 +910,8 @@ changing artwork, so visuals and collisions continue to describe the same state.
   state, and hint state using responsive native Flutter rendering.
 - [x] Show each accepted move as a slower source tilt, curved colored pour
   stream, travelling droplet, and receiving-tube response while input is locked.
+- [x] Hide the shared participant score from the live HUD and completion screen;
+  Water Sort results use level, moves, and time instead of points.
 - [ ] Confirm tube sizing, pour readability, sound timing, and tap comfort on a
   compact physical iPhone and Android phone.
 

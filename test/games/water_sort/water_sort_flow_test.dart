@@ -27,6 +27,7 @@ void main() {
       final game = gameCatalog.singleWhere(
         (game) => game.id == 'water-sort-puzzle',
       );
+      expect(game.showParticipantScores, isFalse);
 
       await tester.pumpWidget(TapTussleApp(settings: settings, games: [game]));
       await tester.pumpAndSettle();
@@ -91,6 +92,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Complete!'), findsOneWidget);
+      expect(find.text('You 0'), findsNothing);
       expect(find.textContaining('Level 1 complete'), findsOneWidget);
       expect(find.byKey(const ValueKey('record-result-panel')), findsOneWidget);
       const recordKey = GameRecordKey(
