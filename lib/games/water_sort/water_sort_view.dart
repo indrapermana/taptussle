@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -124,21 +126,10 @@ class WaterSortBoard extends StatelessWidget {
                   _Header(controller: controller, compact: compact),
                   SizedBox(height: compact ? 6 : 12),
                   Expanded(
-                    child: GridView.builder(
-                      key: const ValueKey('water-sort-board'),
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: columns,
-                        childAspectRatio: compact ? .48 : .43,
-                        crossAxisSpacing: compact ? 6 : 10,
-                        mainAxisSpacing: compact ? 8 : 12,
-                      ),
-                      itemCount: controller.model.tubeCount,
-                      itemBuilder: (context, tube) => _Tube(
-                        index: tube,
-                        controller: controller,
-                        compact: compact,
-                      ),
+                    child: _TubeArena(
+                      controller: controller,
+                      preferredColumns: columns,
+                      compact: compact,
                     ),
                   ),
                   SizedBox(height: compact ? 5 : 10),
@@ -151,6 +142,172 @@ class WaterSortBoard extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _TubeArena extends StatelessWidget {
+  const _TubeArena({
+    required this.controller,
+    required this.preferredColumns,
+    required this.compact,
+  });
+
+  final WaterSortController controller;
+  final int preferredColumns;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final count = controller.model.tubeCount;
+      final columns = preferredColumns.clamp(1, count);
+      final rows = (count / columns).ceil();
+      final gap = compact ? 6.0 : 10.0;
+      final slotWidth = (constraints.maxWidth - gap * (columns - 1)) / columns;
+      final slotHeight = (constraints.maxHeight - gap * (rows - 1)) / rows;
+      final tubeWidth = (slotWidth * .9).clamp(44.0, 112.0);
+      final tubeHeight = min(
+        slotHeight,
+        max(72.0, tubeWidth / (compact ? .48 : .43)),
+      );
+      final usedWidth = columns * slotWidth + gap * (columns - 1);
+      final usedHeight = rows * slotHeight + gap * (rows - 1);
+      final leftInset = (constraints.maxWidth - usedWidth) / 2;
+      final topInset = (constraints.maxHeight - usedHeight) / 2;
+      final rects = <Rect>[];
+      for (var index = 0; index < count; index++) {
+        final row = index ~/ columns;
+        final column = index % columns;
+        final slotLeft = leftInset + column * (slotWidth + gap);
+        final slotTop = topInset + row * (slotHeight + gap);
+        rects.add(
+          Rect.fromLTWH(
+            slotLeft + (slotWidth - tubeWidth) / 2,
+            slotTop + (slotHeight - tubeHeight) / 2,
+            tubeWidth,
+            tubeHeight,
+          ),
+        );
+      }
+      final move = controller.animatingMove;
+      return Stack(
+        key: const ValueKey('water-sort-board'),
+        clipBehavior: Clip.none,
+        children: [
+          for (var index = 0; index < count; index++)
+            Positioned.fromRect(
+              rect: rects[index],
+              child: _Tube(
+                index: index,
+                controller: controller,
+                compact: compact,
+                pourDirection: move == null || move.source != index
+                    ? 0
+                    : rects[move.destination].center.dx < rects[index].center.dx
+                    ? -1
+                    : 1,
+              ),
+            ),
+          if (move != null)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey(
+                    'water-sort-pour-${controller.model.moveCount}-'
+                    '${move.source}-${move.destination}',
+                  ),
+                  duration: controller.animationDuration,
+                  curve: Curves.easeInOutCubic,
+                  tween: Tween(begin: 0, end: 1),
+                  builder: (context, progress, _) => CustomPaint(
+                    key: const ValueKey('water-sort-pour-stream'),
+                    painter: _PourStreamPainter(
+                      start:
+                          rects[move.source].topCenter +
+                          Offset(0, rects[move.source].height * .12),
+                      end:
+                          rects[move.destination].topCenter +
+                          Offset(0, rects[move.destination].height * .14),
+                      color: _liquidColors[move.color % _liquidColors.length],
+                      progress: progress,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    },
+  );
+}
+
+class _PourStreamPainter extends CustomPainter {
+  const _PourStreamPainter({
+    required this.start,
+    required this.end,
+    required this.color,
+    required this.progress,
+  });
+
+  final Offset start;
+  final Offset end;
+  final Color color;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0 || progress >= 1) return;
+    final horizontal = end.dx - start.dx;
+    final lift = 30.0 + horizontal.abs() * .16;
+    final control = Offset(
+      (start.dx + end.dx) / 2,
+      min(start.dy, end.dy) - lift,
+    );
+    final path = Path()
+      ..moveTo(start.dx, start.dy)
+      ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
+    final metric = path.computeMetrics().first;
+    final head = Curves.easeOut.transform((progress * 1.8).clamp(0, 1));
+    final tail = Curves.easeIn.transform(((progress - .42) * 1.75).clamp(0, 1));
+    if (head <= tail) return;
+    final visible = metric.extractPath(
+      metric.length * tail,
+      metric.length * head,
+    );
+    canvas.drawPath(
+      visible,
+      Paint()
+        ..color = color.withValues(alpha: .28)
+        ..strokeWidth = 12
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.drawPath(
+      visible,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [color.withValues(alpha: .75), color, Colors.white],
+        ).createShader(Rect.fromPoints(start, end))
+        ..strokeWidth = 5.5
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke,
+    );
+    final headTangent = metric.getTangentForOffset(metric.length * head);
+    if (headTangent != null) {
+      canvas.drawCircle(
+        headTangent.position,
+        6,
+        Paint()..color = Colors.white.withValues(alpha: .9),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PourStreamPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.start != start ||
+      oldDelegate.end != end ||
+      oldDelegate.color != color;
 }
 
 class _Header extends StatelessWidget {
@@ -252,11 +409,13 @@ class _Tube extends StatelessWidget {
     required this.index,
     required this.controller,
     required this.compact,
+    required this.pourDirection,
   });
 
   final int index;
   final WaterSortController controller;
   final bool compact;
+  final int pourDirection;
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +470,7 @@ class _Tube extends StatelessWidget {
                 }
               : null,
           child: AnimatedRotation(
-            turns: sourceAnimating ? .045 : 0,
+            turns: sourceAnimating ? .065 * pourDirection : 0,
             duration: controller.animationDuration,
             curve: Curves.easeInOut,
             child: AnimatedScale(
@@ -336,36 +495,22 @@ class _Tube extends StatelessWidget {
                       duration: const Duration(milliseconds: 160),
                       padding: const EdgeInsets.fromLTRB(5, 10, 5, 5),
                       decoration: BoxDecoration(
-                        color: const Color(0x6610294A),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0x553C78A0), Color(0x8810294A)],
+                        ),
                         borderRadius: const BorderRadius.vertical(
                           bottom: Radius.circular(20),
                           top: Radius.circular(8),
                         ),
-                        border: Border(
-                          left: BorderSide(
-                            color: _borderColor(
-                              selected,
-                              hintSource,
-                              hintDestination,
-                            ),
-                            width: selected ? 4 : 2.5,
+                        border: Border.all(
+                          color: _borderColor(
+                            selected,
+                            hintSource,
+                            hintDestination,
                           ),
-                          right: BorderSide(
-                            color: _borderColor(
-                              selected,
-                              hintSource,
-                              hintDestination,
-                            ),
-                            width: selected ? 4 : 2.5,
-                          ),
-                          bottom: BorderSide(
-                            color: _borderColor(
-                              selected,
-                              hintSource,
-                              hintDestination,
-                            ),
-                            width: selected ? 4 : 2.5,
-                          ),
+                          width: selected ? 4 : 2.5,
                         ),
                         boxShadow: selected || hintSource || hintDestination
                             ? [
@@ -420,20 +565,54 @@ class _LiquidLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
-      color: _liquidColors[colorId % _liquidColors.length],
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color.lerp(
+            _liquidColors[colorId % _liquidColors.length],
+            Colors.white,
+            .24,
+          )!,
+          _liquidColors[colorId % _liquidColors.length],
+          Color.lerp(
+            _liquidColors[colorId % _liquidColors.length],
+            Colors.black,
+            .18,
+          )!,
+        ],
+      ),
       border: Border.all(color: Colors.white.withValues(alpha: .24), width: .5),
+      borderRadius: BorderRadius.circular(5),
     ),
-    child: Center(
-      child: FittedBox(
-        child: Text(
-          _liquidSymbols[colorId % _liquidSymbols.length],
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned(
+          left: 4,
+          top: 3,
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .55),
+              shape: BoxShape.circle,
+            ),
           ),
         ),
-      ),
+        Center(
+          child: FittedBox(
+            child: Text(
+              _liquidSymbols[colorId % _liquidSymbols.length],
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                shadows: [Shadow(color: Colors.black87, blurRadius: 3)],
+              ),
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }

@@ -885,6 +885,19 @@ changing artwork, so visuals and collisions continue to describe the same state.
 
 ## M17 — Water Sort Puzzle
 
+### Child-friendly visual refresh (2026-10-11)
+
+- [x] Keep the existing level rules, hints, undo, restart, saved progress, and
+  completion flow unchanged.
+- [x] Fit every tube inside the available play area so young players do not
+  need to scroll to find a source or destination.
+- [x] Strengthen the glass, liquid depth, highlights, bubbles, symbols, selected
+  state, and hint state using responsive native Flutter rendering.
+- [x] Show each accepted move as a slower source tilt, curved colored pour
+  stream, travelling droplet, and receiving-tube response while input is locked.
+- [ ] Confirm tube sizing, pour readability, sound timing, and tap comfort on a
+  compact physical iPhone and Android phone.
+
 Confirmed launch content: 60 levels per difficulty, for 180 Water Sort levels.
 Progress is independent within Easy, Normal, and Hard. Completing level `n` unlocks level
 `n + 1` in that difficulty; players may replay any completed level. Store compact,
@@ -1065,6 +1078,62 @@ All 33 focused Nuts and Bolts tests and all 445 host tests pass, with clean stat
 analysis. The focused native journey also built, installed, launched, solved Level
 1, recorded the result, and advanced to Level 2 on a physical iPhone. The user
 subsequently confirmed the completed game works on a physical device.
+
+### Nuts and Bolts child-friendly refresh
+
+- [x] NB1 Replace the technical rack presentation with a larger, playful workshop
+  board, chunkier patterned nuts, clearer metallic bolts, and child-facing prompts.
+- [x] NB2 Animate the actual top nut from its source bolt to its destination.
+- [x] NB3 Improve selection, invalid-move, sorted-bolt, hint, and completion feedback.
+- [x] NB4 Verify responsive sizing, enlarged text, semantics, and dense levels.
+- [x] NB5 Run lifecycle, restart, performance-risk, and complete regression checks.
+- [x] NB6 Replace the placeholder hardware with generated transparent nut and
+  bolt sprites, and fit every level inside the available play area without
+  scrolling.
+- [ ] NB5 physical-device verification: confirm move flight, selection and hint cues,
+  invalid feedback, sorted badges, completion, compact layout, and enlarged text on
+  iPhone and Android.
+
+NB1 keeps the scalable native Flutter pieces and existing color-pattern pairing,
+while phone layouts use three wider columns, a warm workshop surface, stronger nut
+depth, larger center holes, and shorter instructions aimed at early readers.
+
+NB2 lifts the selected top nut from its original slot, carries it along a curved
+path, and lowers it into the destination stack. The destination copy stays hidden
+until landing, input remains locked throughout the move, and metal audio plus
+haptic feedback now occur at landing instead of at the initial tap.
+
+NB3 makes each interaction readable without relying on color alone: selection and
+hinted bolts grow slightly, hints label the source as PICK and destination as PUT,
+completed stacks receive a check badge, and invalid taps briefly shrink and turn
+red with a plain-language message. Finishing the puzzle adds an accessible gold
+celebration before the shared result flow takes over.
+
+NB4 reflows the header and action controls when system text reaches 140 percent,
+keeps every action at least 48 logical pixels tall, and constrains decorative bolt
+labels while retaining full semantic descriptions. Bolt semantics now announce
+selected, legal, hinted, sorted, and invalid states, with compact-phone coverage at
+200 percent text plus dense hard-level scrolling.
+
+NB5 automated validation completed on 2026-10-11. All 34 focused Nuts and Bolts
+tests and all 667 host tests pass, including pause/save/resume, abandoning a paused
+match, restart, deterministic solution replay for every level, animation input
+locking, result records, and clean next-level rematches. Project-wide static
+analysis and `git diff --check` are clean. A signed debug build completed, installed,
+and launched on the connected iPhone `Indra` (iOS 26.6.2), but Flutter did not
+discover the Dart VM service, so the focused native integration journey could not
+attach and reported `No tests ran`. No Android device was connected; the hands-on
+cross-platform visual and performance check remains open above.
+
+NB6 uses a coordinated toy-hardware sprite pack generated specifically for the
+child-friendly game presentation: twelve individually colored, low-profile nuts
+share one camera and lighting setup with a silver threaded post on a circular
+pedestal. The pedestal and shaft render as independently scaled layers behind a
+tightly overlapping nut stack, keeping the threaded post continuous through every
+transparent opening. A single native shape symbol sits directly on each front face
+for non-color identification. The workshop calculates its column count
+and cell proportions from the available width, height, and number of bolts; even
+the densest level is fully visible with board scrolling disabled.
 
 ## M20 — Solitaire
 

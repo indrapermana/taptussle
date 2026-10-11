@@ -55,6 +55,7 @@ class MiniGame {
     this.recordVariant,
     this.difficultyDescription,
     this.onAbandonMatch,
+    this.showParticipantScores = true,
   }) : assert(supportedModes.isNotEmpty),
        assert(supportedPlayerCounts.isNotEmpty),
        supportedModes = Set.unmodifiable(supportedModes),
@@ -72,6 +73,7 @@ class MiniGame {
   final RecordVariantBuilder? recordVariant;
   final DifficultyDescriptionBuilder? difficultyDescription;
   final AbandonMatchCallback? onAbandonMatch;
+  final bool showParticipantScores;
 
   String recordVariantFor(GamePreferences preferences) =>
       recordVariant?.call(preferences) ??

@@ -226,6 +226,8 @@ class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
                       _ScoreHud(
                         options: widget.options,
                         scores: session.scores,
+                        showParticipantScores:
+                            widget.game.showParticipantScores,
                         matchLabel:
                             widget.game.matchLabel?.call(widget.options) ??
                             '${widget.options.participants.length} ${widget.options.participants.length == 1 ? 'PLAYER' : 'PLAYERS'}',
@@ -285,11 +287,13 @@ class _ScoreHud extends StatelessWidget {
     required this.options,
     required this.scores,
     required this.matchLabel,
+    required this.showParticipantScores,
   });
 
   final MatchOptions options;
   final List<int> scores;
   final String matchLabel;
+  final bool showParticipantScores;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -297,7 +301,9 @@ class _ScoreHud extends StatelessWidget {
     child: ArcadePanel(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
       borderRadius: 18,
-      child: options.participants.length == 2
+      child: !showParticipantScores
+          ? _MatchLabel(label: matchLabel)
+          : options.participants.length == 2
           ? _twoPlayerHud()
           : _flexibleParticipantHud(),
     ),
@@ -550,7 +556,8 @@ class _MatchOverlay extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (phase == MatchPhase.finished) ...[
+                if (phase == MatchPhase.finished &&
+                    game.showParticipantScores) ...[
                   const SizedBox(height: 16),
                   _FinishedResultSummary(
                     options: options,

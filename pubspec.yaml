@@ -79,6 +79,7 @@ flutter:
     - assets/games/mancala/
     - assets/games/chess/
     - assets/games/solitaire/
+    - assets/games/nuts_and_bolts/
     - assets/fonts/lilita_one/OFL.txt
 
   fonts:

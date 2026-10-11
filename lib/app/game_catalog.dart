@@ -84,6 +84,7 @@ final gameCatalog = List<MiniGame>.unmodifiable([
     icon: Icons.hardware_rounded,
     supportedModes: const {PlayMode.solo},
     supportedPlayerCounts: const {PlayerCount.one},
+    showParticipantScores: false,
     difficultyType: DifficultyType.puzzle,
     difficultyDescription: (difficulty) => switch (difficulty) {
       BotDifficulty.easy => '3–5 colors and two helper bolts.',

@@ -44,7 +44,16 @@ void main() {
 
     await _pumpBoard(tester, controller, const Size(340, 600));
     expect(find.byKey(const ValueKey('nuts-bolts-board')), findsOneWidget);
+    expect(find.byKey(const ValueKey('nuts-bolts-workshop')), findsOneWidget);
     expect(find.byKey(const ValueKey('nuts-bolts-bolt-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('nuts-bolts-sprite-0')), findsOneWidget);
+    final boltCellSize = tester.getSize(
+      find.byKey(const ValueKey('nuts-bolts-bolt-0')),
+    );
+    final standSize = tester.getSize(
+      find.byKey(const ValueKey('nuts-bolts-sprite-0')),
+    );
+    expect(standSize.width, greaterThanOrEqualTo(boltCellSize.width * .75));
     expect(
       find.byKey(ValueKey('nuts-bolts-bolt-${level.bolts.length - 1}')),
       findsOneWidget,
@@ -76,16 +85,28 @@ void main() {
     addTearDown(controller.dispose);
     await _pumpBoard(tester, controller, const Size(430, 760));
 
+    expect(
+      tester.getSize(find.byKey(const ValueKey('nuts-bolts-bolt-0'))).width,
+      greaterThan(110),
+    );
+
+    final emptyBolt = controller.model.bolts.indexWhere((bolt) => bolt.isEmpty);
+    await tester.tap(find.byKey(ValueKey('nuts-bolts-bolt-$emptyBolt')));
+    await tester.pump();
+    expect(find.text("THAT NUT DOESN'T FIT"), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('does not fit')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 850));
+
     await tester.tap(find.byKey(const ValueKey('nuts-bolts-hint')));
     await tester.pump();
     final hint = controller.hintMove!;
-    expect(find.textContaining('HINT: BOLT'), findsOneWidget);
+    expect(find.textContaining('TRY '), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('hint source')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('hint destination')), findsOneWidget);
 
     await tester.tap(find.byKey(ValueKey('nuts-bolts-bolt-${hint.source}')));
     await tester.pump();
-    expect(find.text('CHOOSE A GLOWING BOLT'), findsOneWidget);
+    expect(find.text('PUT IT ON A GLOWING BOLT'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('selected')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('legal destination')), findsWidgets);
 
@@ -93,10 +114,18 @@ void main() {
       find.byKey(ValueKey('nuts-bolts-bolt-${hint.destination}')),
     );
     await tester.pump();
-    expect(find.text('MOVING NUT…'), findsOneWidget);
+    final flyingNut = find.byKey(
+      ValueKey('nuts-bolts-flying-${hint.source}-${hint.destination}'),
+    );
+    expect(find.text('NUT ON THE MOVE!'), findsOneWidget);
     expect(find.text('1 MOVES'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(flyingNut, findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('CHOOSE A TOP NUT'), findsOneWidget);
+    expect(flyingNut, findsNothing);
+    expect(find.text('NICE MOVE!'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 750));
+    expect(find.text('PICK A TOP NUT'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('nuts-bolts-undo')));
     await tester.pump();
@@ -122,23 +151,60 @@ void main() {
     addTearDown(controller.dispose);
 
     await _pumpBoard(tester, controller, const Size(340, 600));
-    await tester.scrollUntilVisible(
-      find.byKey(ValueKey('nuts-bolts-bolt-${level.bolts.length - 1}')),
-      180,
-      scrollable: find.byType(Scrollable),
-    );
     expect(
       find.byKey(ValueKey('nuts-bolts-bolt-${level.bolts.length - 1}')),
       findsOneWidget,
     );
+    _expectBoardDoesNotScroll(tester);
     expect(tester.takeException(), isNull);
 
     await _pumpBoard(tester, controller, const Size(1024, 768));
-    await tester.scrollUntilVisible(
+    expect(
       find.byKey(ValueKey('nuts-bolts-bolt-${level.bolts.length - 1}')),
-      180,
-      scrollable: find.byType(Scrollable),
+      findsOneWidget,
     );
+    _expectBoardDoesNotScroll(tester);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('compact phone reflows controls for enlarged text', (
+    tester,
+  ) async {
+    final level = NutsAndBoltsLevelCatalog.level(
+      NutsAndBoltsDifficulty.hard,
+      60,
+    );
+    final controller = NutsAndBoltsController(level: level);
+    addTearDown(controller.dispose);
+
+    await _pumpBoard(
+      tester,
+      controller,
+      const Size(320, 568),
+      textScaler: const TextScaler.linear(2),
+    );
+
+    expect(
+      find.byKey(const ValueKey('nuts-bolts-controls-stacked')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('nuts-bolts-undo')), findsOneWidget);
+    expect(find.byKey(const ValueKey('nuts-bolts-restart')), findsOneWidget);
+    expect(find.byKey(const ValueKey('nuts-bolts-hint')), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('nuts-bolts-hint'))).height,
+      greaterThanOrEqualTo(48),
+    );
+    final firstBoltSize = tester.getSize(
+      find.byKey(const ValueKey('nuts-bolts-bolt-0')),
+    );
+    expect(firstBoltSize.width, greaterThanOrEqualTo(40));
+    expect(firstBoltSize.height, greaterThanOrEqualTo(40));
+    expect(
+      find.byKey(ValueKey('nuts-bolts-bolt-${level.bolts.length - 1}')),
+      findsOneWidget,
+    );
+    _expectBoardDoesNotScroll(tester);
     expect(tester.takeException(), isNull);
   });
 
@@ -194,22 +260,44 @@ void main() {
     );
     expect(haptics.lightImpacts, 1);
     expect(haptics.mediumImpacts, 1);
+    expect(
+      find.byKey(const ValueKey('nuts-bolts-complete-celebration')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('nuts-bolts-sorted-badge')), findsWidgets);
+    expect(find.bySemanticsLabel(RegExp('sorted')), findsWidgets);
   });
+}
+
+void _expectBoardDoesNotScroll(WidgetTester tester) {
+  final board = find.byKey(const ValueKey('nuts-bolts-board'));
+  final grid = tester.widget<GridView>(board);
+  expect(grid.physics, isA<NeverScrollableScrollPhysics>());
+  final scrollable = find.descendant(
+    of: board,
+    matching: find.byType(Scrollable),
+  );
+  final state = tester.state<ScrollableState>(scrollable);
+  expect(state.position.maxScrollExtent, 0);
 }
 
 Future<void> _pumpBoard(
   WidgetTester tester,
   NutsAndBoltsController controller,
-  Size size,
-) async {
+  Size size, {
+  TextScaler textScaler = TextScaler.noScaling,
+}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: buildTapTussleTheme(),
-      home: Scaffold(body: NutsAndBoltsBoard(controller: controller)),
+    MediaQuery(
+      data: MediaQueryData(textScaler: textScaler),
+      child: MaterialApp(
+        theme: buildTapTussleTheme(),
+        home: Scaffold(body: NutsAndBoltsBoard(controller: controller)),
+      ),
     ),
   );
   await tester.pump();

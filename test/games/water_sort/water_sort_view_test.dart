@@ -53,6 +53,7 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('empty')), findsNWidgets(2));
     expect(find.text('●'), findsWidgets);
     expect(find.text('▲'), findsWidgets);
+    expect(find.byType(GridView), findsNothing);
     expect(find.byKey(const ValueKey('water-sort-undo')), findsOneWidget);
     expect(find.byKey(const ValueKey('water-sort-restart')), findsOneWidget);
     expect(find.byKey(const ValueKey('water-sort-hint')), findsOneWidget);
@@ -88,6 +89,10 @@ void main() {
       );
       await tester.pump();
       expect(find.text('POURING…'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('water-sort-pour-stream')),
+        findsOneWidget,
+      );
       expect(find.text('1 MOVES'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.text('CHOOSE A TUBE'), findsOneWidget);

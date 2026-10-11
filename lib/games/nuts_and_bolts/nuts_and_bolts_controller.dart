@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/haptic_service.dart';
 import '../../core/match_session.dart';
+import '../../core/sound_service.dart';
 import 'nuts_and_bolts_levels.dart';
 import 'nuts_and_bolts_model.dart';
 import 'nuts_and_bolts_progress_repository.dart';
@@ -26,7 +28,7 @@ class NutsAndBoltsController extends ChangeNotifier {
     NutsAndBoltsProgressSnapshot? restoredProgress,
     DateTime Function()? now,
     this.clockTick = const Duration(seconds: 1),
-    this.animationDuration = const Duration(milliseconds: 300),
+    this.animationDuration = const Duration(milliseconds: 600),
   }) : model =
            restoredProgress?.restoreModel() ??
            initialModel ??
@@ -172,7 +174,14 @@ class NutsAndBoltsController extends ChangeNotifier {
     if (_disposed) return;
     _animationTimer = null;
     _animatingMove = null;
-    if (model.isComplete) _completePuzzle();
+    SoundEffects.play(SoundEffect.metalSlide);
+    if (model.isComplete) {
+      SoundEffects.play(SoundEffect.puzzleComplete);
+      HapticEffects.paddleHit();
+      _completePuzzle();
+    } else {
+      HapticEffects.preview();
+    }
     notifyListeners();
   }
 

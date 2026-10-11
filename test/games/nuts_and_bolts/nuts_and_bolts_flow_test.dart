@@ -32,6 +32,7 @@ void main() {
       expect(game.artworkAsset, contains('nuts_and_bolts.png'));
       expect(game.supportedModes, {PlayMode.solo});
       expect(game.supportedPlayerCounts, {PlayerCount.one});
+      expect(game.showParticipantScores, isFalse);
 
       await tester.pumpWidget(TapTussleApp(settings: settings, games: [game]));
       await tester.pumpAndSettle();
@@ -59,6 +60,7 @@ void main() {
       expect(find.text('3–5 colors and two helper bolts.'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('start-bot-match')));
       await _pumpUntilFound(tester, find.byType(NutsAndBoltsBoard));
+      expect(find.text('You  0'), findsNothing);
 
       final board = tester.widget<NutsAndBoltsBoard>(
         find.byType(NutsAndBoltsBoard),
@@ -98,6 +100,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Complete!'), findsOneWidget);
+      expect(find.byKey(const ValueKey('result-score-cards')), findsNothing);
       expect(find.textContaining('Level 1 complete'), findsOneWidget);
       expect(find.byKey(const ValueKey('record-result-panel')), findsOneWidget);
       const recordKey = GameRecordKey(

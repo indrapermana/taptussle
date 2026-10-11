@@ -28,7 +28,7 @@ class WaterSortController extends ChangeNotifier {
     WaterSortSolver solver = const WaterSortSolver(),
     DateTime Function()? now,
     this.clockTick = const Duration(seconds: 1),
-    this.animationDuration = const Duration(milliseconds: 360),
+    this.animationDuration = const Duration(milliseconds: 700),
   }) : model =
            restoredProgress?.restoreModel() ??
            initialModel ??
