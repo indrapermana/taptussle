@@ -1134,6 +1134,45 @@ records, and replay, while responsive widget coverage checks compact phones and
 tablets. All 45 focused Solitaire tests and all 491 host tests pass with clean
 static analysis, and the user confirmed physical-device verification.
 
+### Solitaire child-friendly refresh
+
+- [x] SOL1 Use a portrait, board-first layout with larger cards and a compact HUD.
+- [x] SOL2 Add child-friendly card faces and focused visual assets.
+- [x] SOL3 Simplify instructions and improve selection, legal destinations, and hints.
+- [x] SOL4 Add clear deal, move, flip, foundation, and completion animations.
+- [ ] SOL5 Verify accessibility, responsive layouts, regression coverage, lifecycle,
+  performance, and physical devices.
+
+SOL1 keeps Solitaire portrait throughout play and the shared result flow. The
+separate header and bottom controls are consolidated into one shallow HUD, and
+the seven-column board uses nearly all available phone width while retaining tap,
+drag, undo, hint, score, move, and elapsed-time behavior.
+
+SOL2 adds original, optimized card-back artwork and friendly Jack, Queen, and
+King portraits. Standard rank and suit markings remain native, high-contrast UI;
+court cards add a second suit marker, while number and Ace cards use a large
+central suit watermark so every card stays recognizable at compact phone sizes.
+
+SOL3 replaces board jargon with short action-led prompts, outlines only valid
+destinations in electric blue after selection, and reserves gold for hints and
+their source/destination path. Stock, waste, tableau, and foundation hints now
+identify their relevant cards or slots visually while the existing detailed pile
+terminology remains available through accessibility semantics.
+
+SOL4 staggers the opening tableau deal, slides newly drawn waste cards from the
+deck, animates arriving tableau cards, flips newly exposed cards around their
+vertical axis, and gives foundation placements a stronger arrival pulse. A short,
+input-transparent confetti burst and `YOU DID IT!` message celebrate completion;
+all transitions remain bounded by the controller's existing input lock.
+
+SOL5 automated verification covers iPhone-sized portrait screens at 200% text
+scaling, portrait tablets, card and pile semantics, 44-point compact
+controls, animation settling, in-screen pause/resume, completed-game cleanup,
+and rematch reset behavior. Leaving for game selection discards the current deal,
+so every catalog launch starts a fresh game. The SOL5 checklist remains open until
+the refreshed Solitaire experience is verified on physical iPhone and Android
+devices.
+
 ## M21 — Cangkulan
 
 Confirmed core rules: use a standard 52-card deck without Jokers. The first card

@@ -33,6 +33,30 @@ void main() {
     expect(controller.model.tableau[0].single.card, king);
   });
 
+  test('selected cards expose only their legal destinations', () {
+    final queen = _card(SolitaireSuit.hearts, 12);
+    final controller = SolitaireController(
+      initialModel: _state(
+        waste: [queen],
+        tableau: _piles({
+          0: [_up(_card(SolitaireSuit.spades, 13))],
+          1: [_up(_card(SolitaireSuit.diamonds, 13))],
+        }),
+      ),
+      animationDuration: Duration.zero,
+    );
+    addTearDown(controller.dispose);
+
+    controller.tapWaste();
+
+    expect(controller.isLegalTableauDestination(0), isTrue);
+    expect(controller.isLegalTableauDestination(1), isFalse);
+    expect(
+      controller.isLegalFoundationDestination(SolitaireSuit.hearts),
+      isFalse,
+    );
+  });
+
   test('drag moves a face-up sequence and rejects malformed sources', () {
     final queen = _card(SolitaireSuit.hearts, 12);
     final jack = _card(SolitaireSuit.spades, 11);
@@ -132,7 +156,7 @@ void main() {
     expect(controller.model.foundations[SolitaireSuit.hearts], [ace]);
   });
 
-  testWidgets('pause saves and completion records the win and result metrics', (
+  testWidgets('pause stays in memory and completion records result metrics', (
     tester,
   ) async {
     var now = DateTime(2026);
@@ -167,10 +191,8 @@ void main() {
     now = now.add(const Duration(seconds: 12));
     session.pause();
     await repository.completed;
-    expect(
-      repository.loadActive(SolitaireDifficulty.easy)?.elapsedMilliseconds,
-      12000,
-    );
+    expect(repository.loadActive(SolitaireDifficulty.easy), isNull);
+    expect(controller.model.tableau[0].single.card, king);
     session.resume();
     now = now.add(const Duration(seconds: 8));
     controller.tapTableau(0);

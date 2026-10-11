@@ -94,12 +94,14 @@ class SolitaireController extends ChangeNotifier {
   MatchPhase _observedPhase = MatchPhase.ready;
   SolitaireSelection? _selection;
   SolitaireHint? _shownHint;
+  bool _showInvalidGuidance = false;
   bool _disposed = false;
   bool _animating = false;
   bool _completionReported = false;
 
   SolitaireSelection? get selection => _selection;
   SolitaireHint? get shownHint => _shownHint;
+  bool get showInvalidGuidance => _showInvalidGuidance;
   bool get isAnimating => _animating;
   bool get isPaused => session?.phase == MatchPhase.paused;
   bool get acceptsInput =>
@@ -107,6 +109,49 @@ class SolitaireController extends ChangeNotifier {
       !_animating &&
       !model.isComplete &&
       (session == null || session!.phase == MatchPhase.playing);
+
+  bool isLegalTableauDestination(int destination) {
+    final selected = _selection;
+    if (selected == null ||
+        destination < 0 ||
+        destination >= SolitaireModel.tableauPileCount) {
+      return false;
+    }
+    final result = switch (selected.type) {
+      SolitaireSelectionType.waste => model.moveWasteToTableau(destination),
+      SolitaireSelectionType.tableau => model.moveTableauToTableau(
+        source: selected.pile!,
+        cardIndex: selected.cardIndex!,
+        destination: destination,
+      ),
+      SolitaireSelectionType.foundation => model.moveFoundationToTableau(
+        selected.suit!,
+        destination,
+      ),
+    };
+    return result.accepted;
+  }
+
+  bool isLegalFoundationDestination(SolitaireSuit suit) {
+    final selected = _selection;
+    if (selected == null) return false;
+    final card = switch (selected.type) {
+      SolitaireSelectionType.waste => model.wasteTop,
+      SolitaireSelectionType.tableau =>
+        selected.cardIndex == model.tableau[selected.pile!].length - 1
+            ? model.tableau[selected.pile!][selected.cardIndex!].card
+            : null,
+      SolitaireSelectionType.foundation => null,
+    };
+    if (card?.suit != suit) return false;
+    return switch (selected.type) {
+      SolitaireSelectionType.waste => model.moveWasteToFoundation().accepted,
+      SolitaireSelectionType.tableau =>
+        model.moveTableauToFoundation(selected.pile!).accepted,
+      SolitaireSelectionType.foundation => false,
+    };
+  }
+
   Duration get elapsed =>
       _elapsedBeforeActive +
       (_activeStartedAt == null
@@ -142,6 +187,7 @@ class SolitaireController extends ChangeNotifier {
     }
     _selection = const SolitaireSelection.waste();
     _shownHint = null;
+    _showInvalidGuidance = false;
     notifyListeners();
     return SolitaireInteractionResult.selected;
   }
@@ -155,6 +201,7 @@ class SolitaireController extends ChangeNotifier {
       }
       _selection = SolitaireSelection.foundation(suit);
       _shownHint = null;
+      _showInvalidGuidance = false;
       notifyListeners();
       return SolitaireInteractionResult.selected;
     }
@@ -188,6 +235,7 @@ class SolitaireController extends ChangeNotifier {
     }
     _selection = SolitaireSelection.tableau(pile, index);
     _shownHint = null;
+    _showInvalidGuidance = false;
     notifyListeners();
     return SolitaireInteractionResult.selected;
   }
@@ -282,7 +330,7 @@ class SolitaireController extends ChangeNotifier {
     model = model.undo();
     _selection = null;
     _shownHint = null;
-    _saveProgress();
+    _showInvalidGuidance = false;
     SoundEffects.play(SoundEffect.uiBack);
     HapticEffects.preview();
     notifyListeners();
@@ -293,6 +341,7 @@ class SolitaireController extends ChangeNotifier {
     if (!acceptsInput) return null;
     _selection = null;
     _shownHint = model.hint;
+    _showInvalidGuidance = false;
     SoundEffects.play(
       _shownHint == null ? SoundEffect.uiInvalid : SoundEffect.collect,
     );
@@ -307,6 +356,7 @@ class SolitaireController extends ChangeNotifier {
 
   SolitaireInteractionResult _acceptMove(SolitaireMoveResult result) {
     if (!result.accepted) {
+      _showInvalidGuidance = true;
       _selection = null;
       _playInvalidEffect();
       notifyListeners();
@@ -322,18 +372,18 @@ class SolitaireController extends ChangeNotifier {
 
   void _accept(SolitaireMoveResult result) {
     model = result.model;
+    _showInvalidGuidance = false;
     _selection = null;
     _shownHint = null;
     if (model.isComplete) {
       _completeGame();
-    } else {
-      _saveProgress();
     }
     _beginAnimation();
   }
 
   SolitaireInteractionResult _clearSelection() {
     _selection = null;
+    _showInvalidGuidance = false;
     notifyListeners();
     return SolitaireInteractionResult.selectionCleared;
   }
@@ -371,7 +421,6 @@ class SolitaireController extends ChangeNotifier {
       _animationTimer = null;
       _animating = false;
       _selection = null;
-      _saveProgress();
     } else if (_observedPhase != MatchPhase.playing &&
         next == MatchPhase.playing) {
       _startClock();
@@ -386,6 +435,7 @@ class SolitaireController extends ChangeNotifier {
     _animating = false;
     _selection = null;
     _shownHint = null;
+    _showInvalidGuidance = false;
     _completionReported = false;
     _elapsedBeforeActive = Duration.zero;
     _activeStartedAt = null;
@@ -411,18 +461,6 @@ class SolitaireController extends ChangeNotifier {
     _activeStartedAt = null;
     _clockTimer?.cancel();
     _clockTimer = null;
-  }
-
-  void _saveProgress() {
-    final storage = repository;
-    if (storage == null || model.isComplete) return;
-    unawaited(
-      storage.saveActive(
-        difficulty: difficulty,
-        model: model,
-        elapsed: elapsed,
-      ),
-    );
   }
 
   void _completeGame() {
@@ -472,7 +510,6 @@ class SolitaireController extends ChangeNotifier {
     _disposed = true;
     _animationTimer?.cancel();
     _stopClock();
-    _saveProgress();
     session?.removeListener(_syncSession);
     super.dispose();
   }

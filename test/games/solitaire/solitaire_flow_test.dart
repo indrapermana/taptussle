@@ -14,7 +14,7 @@ import 'package:tap_tussle/games/solitaire/solitaire_view.dart';
 
 void main() {
   testWidgets(
-    'solo filter, favourite, restoration, lifecycle, record, and rematch integrate',
+    'solo filter, fresh launch, lifecycle, record, and rematch integrate',
     (tester) async {
       tester.view.physicalSize = const Size(430, 900);
       tester.view.devicePixelRatio = 1;
@@ -73,25 +73,34 @@ void main() {
       final controller = board.controller;
       expect(controller.difficulty, SolitaireDifficulty.easy);
       expect(controller.model.moveCount, 0);
+      expect(controller.elapsed, lessThan(const Duration(seconds: 2)));
+      expect(controller.model.stock, hasLength(24));
       expect(
-        controller.elapsed,
-        greaterThanOrEqualTo(const Duration(seconds: 17)),
+        controller.model.foundations.values.every((pile) => pile.isEmpty),
+        isTrue,
       );
-      expect(controller.model.tableau[0].single.card.rank, SolitaireRank.king);
+      expect(progress.loadActive(SolitaireDifficulty.easy), isNull);
+
+      final modelBeforePause = controller.model;
 
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       await tester.pump();
       expect(find.text('Time out'), findsOneWidget);
       expect(controller.acceptsInput, isFalse);
       await controller.repository!.completed;
-      final saved = controller.repository!.loadActive(
-        SolitaireDifficulty.easy,
-      )!;
-      expect(saved.restoreModel().tableau, controller.model.tableau);
+      expect(
+        controller.repository!.loadActive(SolitaireDifficulty.easy),
+        isNull,
+      );
+      expect(identical(controller.model, modelBeforePause), isTrue);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.tap(find.byKey(const ValueKey('resume-match')));
       await tester.pump();
       expect(controller.acceptsInput, isTrue);
+
+      controller.model = _almostCompleteModel();
+      controller.requestHint();
+      await tester.pump();
 
       await tester.tap(
         find.byKey(const ValueKey('solitaire-tableau-0-card-0')),
@@ -123,6 +132,30 @@ void main() {
       expect(controller.model.moveCount, 0);
       expect(controller.elapsed, lessThan(const Duration(seconds: 2)));
       expect(settings.isFavourite(game.id), isTrue);
+
+      controller.drawOrRecycle();
+      await tester.pump(controller.animationDuration);
+      expect(controller.model.moveCount, 1);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Time out'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('back-to-games')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('game-card-solitaire')));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -320));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('play-solo')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('start-bot-match')));
+      await _pumpUntilFound(tester, find.byType(SolitaireBoard));
+
+      final restarted = tester.widget<SolitaireBoard>(
+        find.byType(SolitaireBoard),
+      );
+      expect(restarted.controller.model.moveCount, 0);
+      expect(restarted.controller.model.stock, hasLength(24));
       expect(tester.takeException(), isNull);
     },
   );

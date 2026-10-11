@@ -22,6 +22,13 @@ void main() {
     expect(find.byKey(const ValueKey('solitaire-tableau-6')), findsOneWidget);
     expect(find.byKey(const ValueKey('solitaire-undo')), findsOneWidget);
     expect(find.byKey(const ValueKey('solitaire-hint')), findsOneWidget);
+    expect(find.byKey(const ValueKey('solitaire-card-back-art')), findsWidgets);
+    expect(find.byKey(const ValueKey('solitaire-court-queen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('solitaire-court-king')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('solitaire-center-suit-diamonds')),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('Queen of hearts'), findsOneWidget);
     expect(
       find.bySemanticsLabel(RegExp('Tableau 2, 2 cards, 1 face down')),
@@ -31,11 +38,76 @@ void main() {
       find.byWidgetPredicate((widget) => widget is LongPressDraggable),
       findsWidgets,
     );
+    expect(find.byType(AnimatedSlide), findsWidgets);
     expect(tester.takeException(), isNull);
 
     await _pumpBoard(tester, controller, const Size(1024, 768));
     expect(tester.takeException(), isNull);
     controller.dispose();
+  });
+
+  testWidgets('uses the full width on an iPhone-sized portrait screen', (
+    tester,
+  ) async {
+    final controller = _controller();
+    await _pumpBoard(tester, controller, const Size(390, 844));
+
+    final stockSize = tester.getSize(
+      find.byKey(const ValueKey('solitaire-stock')),
+    );
+    final tableauRect = tester.getRect(
+      find.byKey(const ValueKey('solitaire-tableau')),
+    );
+
+    expect(stockSize.width, greaterThan(52));
+    expect(tableauRect.left, lessThanOrEqualTo(5));
+    expect(390 - tableauRect.right, lessThanOrEqualTo(5));
+    expect(find.text('BACK'), findsOneWidget);
+    expect(find.text('HINT'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('small portrait supports 200 percent text without overflow', (
+    tester,
+  ) async {
+    final controller = _controller();
+    await _pumpBoard(
+      tester,
+      controller,
+      const Size(390, 844),
+      textScaler: const TextScaler.linear(2),
+    );
+
+    expect(find.byKey(const ValueKey('solitaire-stock')), findsOneWidget);
+    expect(find.byKey(const ValueKey('solitaire-tableau-6')), findsOneWidget);
+    expect(find.byKey(const ValueKey('solitaire-undo')), findsOneWidget);
+    expect(find.byKey(const ValueKey('solitaire-hint')), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('solitaire-hint'))).height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('portrait tablet preserves the board and accessible actions', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final controller = _controller();
+    await _pumpBoard(tester, controller, const Size(768, 1024));
+
+    expect(find.bySemanticsLabel(RegExp(r'Stock, 1 cards')), findsOneWidget);
+    expect(find.bySemanticsLabel('Queen of hearts'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'Tableau 2, 2 cards')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('solitaire-tableau-6')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+    semantics.dispose();
   });
 
   testWidgets('tap controls select, move, hint, and undo visibly', (
@@ -48,7 +120,22 @@ void main() {
       find.byKey(const ValueKey('solitaire-waste-hearts-queen')),
     );
     await tester.pump();
-    expect(find.text('CHOOSE A DESTINATION'), findsOneWidget);
+    expect(find.text('PICK A GLOWING SPOT'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        'Tableau 1, 1 cards, 0 face down, legal destination',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('solitaire-tableau-1')));
+    await tester.pump();
+    expect(find.text('TRY A GLOWING SPOT'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('solitaire-waste-hearts-queen')),
+    );
+    await tester.pump();
 
     await tester.tap(find.byKey(const ValueKey('solitaire-tableau-0')));
     await tester.pump();
@@ -63,7 +150,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('solitaire-hint')));
     await tester.pump();
-    expect(find.textContaining('HINT:'), findsOneWidget);
+    expect(find.textContaining('TRY THIS:'), findsOneWidget);
     expect(tester.takeException(), isNull);
     controller.dispose();
   });
@@ -85,6 +172,40 @@ void main() {
 
     expect(controller.model.waste, isEmpty);
     expect(controller.model.tableau[0].last.card.rank, SolitaireRank.queen);
+    controller.dispose();
+  });
+
+  testWidgets('revealed tableau cards animate from back to face', (
+    tester,
+  ) async {
+    final controller = SolitaireController(
+      initialModel: _flipModel(),
+      animationDuration: const Duration(milliseconds: 100),
+    );
+    await _pumpBoard(tester, controller, const Size(700, 390));
+
+    expect(
+      find.byKey(const ValueKey('solitaire-card-face-down')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('solitaire-tableau-0-card-1')));
+    await tester.tap(find.byKey(const ValueKey('solitaire-tableau-1')));
+    await tester.pump(const Duration(milliseconds: 20));
+
+    expect(
+      find.byKey(const ValueKey('solitaire-tableau-0-card-0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('solitaire-card-face-down')),
+      findsOneWidget,
+    );
+
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      find.byKey(const ValueKey('solitaire-card-face-down')),
+      findsNothing,
+    );
     controller.dispose();
   });
 
@@ -140,6 +261,17 @@ void main() {
     );
     expect(haptics.lightImpacts, greaterThanOrEqualTo(2));
     expect(haptics.mediumImpacts, 1);
+    expect(
+      find.byKey(const ValueKey('solitaire-completion-celebration')),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Solitaire complete celebration'),
+      findsOneWidget,
+    );
+    expect(find.text('YOU DID IT!'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(tester.takeException(), isNull);
   });
 }
 
@@ -211,6 +343,28 @@ SolitaireModel _almostCompleteModel() => SolitaireModel.fromState(
   },
 );
 
+SolitaireModel _flipModel() => SolitaireModel.fromState(
+  drawMode: SolitaireDrawMode.drawOne,
+  tableau: _piles({
+    0: const [
+      SolitaireTableauCard(
+        SolitaireCard(SolitaireSuit.clubs, SolitaireRank.five),
+        isFaceUp: false,
+      ),
+      SolitaireTableauCard(
+        SolitaireCard(SolitaireSuit.hearts, SolitaireRank.queen),
+        isFaceUp: true,
+      ),
+    ],
+    1: const [
+      SolitaireTableauCard(
+        SolitaireCard(SolitaireSuit.spades, SolitaireRank.king),
+        isFaceUp: true,
+      ),
+    ],
+  }),
+);
+
 List<List<SolitaireTableauCard>> _piles(
   Map<int, List<SolitaireTableauCard>> cards,
 ) => List.generate(7, (index) => cards[index] ?? <SolitaireTableauCard>[]);
@@ -218,8 +372,9 @@ List<List<SolitaireTableauCard>> _piles(
 Future<void> _pumpBoard(
   WidgetTester tester,
   SolitaireController controller,
-  Size size,
-) async {
+  Size size, {
+  TextScaler textScaler = TextScaler.noScaling,
+}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -227,7 +382,10 @@ Future<void> _pumpBoard(
   await tester.pumpWidget(
     MaterialApp(
       theme: buildTapTussleTheme(),
-      home: Scaffold(body: SolitaireBoard(controller: controller)),
+      home: MediaQuery(
+        data: MediaQueryData(textScaler: textScaler),
+        child: Scaffold(body: SolitaireBoard(controller: controller)),
+      ),
     ),
   );
   await tester.pump();
