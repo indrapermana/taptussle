@@ -72,6 +72,19 @@ void main() {
     await tester.pumpWidget(app(SettingsScreen(settings: settings)));
     await tester.pumpAndSettle();
 
+    expect(find.text('Grown-up Settings'), findsOneWidget);
+    expect(find.text('Game sounds'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('open-graphics-preview')),
+      300,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Picture & motion'), findsOneWidget);
+    expect(find.text('Picture quality'), findsOneWidget);
+    expect(find.text('Smoothness'), findsOneWidget);
+    expect(find.textContaining('FPS'), findsNothing);
+    expect(find.textContaining('Resolution controls'), findsNothing);
+
     await tester.scrollUntilVisible(find.text('Privacy Policy'), 400);
     await tester.ensureVisible(find.text('Privacy Policy'));
     await tester.pumpAndSettle();

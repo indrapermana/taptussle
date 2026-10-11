@@ -67,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Settings')),
+    appBar: AppBar(title: const Text('Grown-up Settings')),
     body: TapTussleBackdrop(
       child: SafeArea(
         child: Center(
@@ -76,6 +76,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
               children: [
+                const ArcadePanel(
+                  accent: TapTussleColors.gold,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.family_restroom_rounded,
+                        color: TapTussleColors.gold,
+                        size: 30,
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'For grown-ups. Choose how the games sound, look, and feel on this device.',
+                          style: TextStyle(
+                            color: TapTussleColors.mutedText,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 ArcadePanel(
                   accent: TapTussleColors.electricBlue,
                   child: Column(
@@ -83,14 +107,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const _SettingsHeading(
                         icon: Icons.volume_up_rounded,
-                        title: 'Sound',
+                        title: 'Game sounds',
                         color: TapTussleColors.electricBlue,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         volume == 0
-                            ? 'Effects are muted.'
-                            : '${(volume * 100).round()}% effects volume • 20% steps',
+                            ? 'Game sounds are off.'
+                            : 'Volume: ${(volume * 100).round()}%',
                         style: const TextStyle(
                           color: TapTussleColors.mutedText,
                         ),
@@ -114,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? null
                             : () => SoundEffects.play(SoundEffect.uiTap),
                         icon: const Icon(Icons.play_arrow_rounded),
-                        label: const Text('Preview sound'),
+                        label: const Text('Play a sound'),
                       ),
                     ],
                   ),
@@ -127,12 +151,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const _SettingsHeading(
                         icon: Icons.monitor_rounded,
-                        title: 'Graphics',
+                        title: 'Picture & motion',
                         color: TapTussleColors.gold,
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'Resolution controls rendered pixels. FPS controls how often the image refreshes; match timing stays the same.',
+                        'Choose clearer pictures or lighter performance, and how smooth movement looks.',
                         style: TextStyle(
                           color: TapTussleColors.mutedText,
                           height: 1.4,
@@ -163,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           );
                         },
                         icon: const Icon(Icons.compare_rounded),
-                        label: const Text('Compare and change graphics'),
+                        label: const Text('Choose picture and motion'),
                       ),
                     ],
                   ),
@@ -176,14 +200,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const _SettingsHeading(
                         icon: Icons.vibration_rounded,
-                        title: 'Vibration',
+                        title: 'Device vibration',
                         color: TapTussleColors.rivalRed,
                       ),
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Vibration feedback'),
+                        title: const Text('Vibrate during games'),
                         subtitle: const Text(
-                          'Feel supported impacts during games.',
+                          'Feel important taps, hits, and results.',
                           style: TextStyle(color: TapTussleColors.mutedText),
                         ),
                         value: vibrationEnabled,
@@ -218,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'Points to win in score-based games',
+                        'Games that use points end at',
                         style: TextStyle(color: TapTussleColors.mutedText),
                       ),
                       const SizedBox(height: 12),
@@ -252,7 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const _SettingsHeading(
                         icon: Icons.gavel_rounded,
-                        title: 'Legal',
+                        title: 'About & privacy',
                         color: TapTussleColors.gold,
                       ),
                       const SizedBox(height: 6),
@@ -326,8 +350,8 @@ class _GraphicsPreview extends StatelessWidget {
         children: [
           Expanded(
             child: _PreviewColumn(
-              title: 'Render target',
-              value: '${(resolution.renderScale * 100).round()}%',
+              title: 'Picture quality',
+              value: resolution.label,
               caption: switch (resolution) {
                 ResolutionPreset.economy => 'Fewer pixels; lighter GPU load',
                 ResolutionPreset.balanced => 'Three quarters of native pixels',
@@ -338,8 +362,8 @@ class _GraphicsPreview extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: _PreviewColumn(
-              title: 'Frame refresh',
-              value: '${frameRate.framesPerSecond} FPS',
+              title: 'Smoothness',
+              value: frameRate == FrameRatePreset.fps30 ? 'Standard' : 'Smooth',
               caption: frameRate == FrameRatePreset.fps30
                   ? 'One new frame about every 33 ms'
                   : 'One new frame about every 17 ms',

@@ -1655,11 +1655,11 @@ Shared-screen audit:
   participant layouts are consistent. Complex games still contain reading-heavy
   rules; add optional picture-led first-play tutorials after release rather than
   blocking the release with eighteen new onboarding flows.
-- [ ] Settings child/parent boundary: retain all current behavior, but before
-  release assess whether Settings should be labelled as a grown-up area and
-  rename technical presentation such as Resolution/FPS to child-parent friendly
-  Picture quality/Smoothness. Keep exact technical values available in the live
-  comparison screen for diagnosis.
+- [x] Settings child/parent boundary: label the page as Grown-up Settings,
+  explain its purpose, and present sound, Picture quality, Smoothness, vibration,
+  match rules, and privacy in parent-friendly language. Preserve every saved
+  value and test action, while keeping exact resolution percentages, pixel sizes,
+  frame rates, and measured FPS in the live comparison screen for diagnosis.
 - [x] Shared result screen: winner, draw, completion, standings, records, replay,
   options, and Games actions are responsive and accessible. Scoreless puzzle
   results must hide participant score cards; Nuts & Bolts, Water Sort, and Sudoku
