@@ -1692,7 +1692,7 @@ Shared-screen audit:
   Android hardware. Include Paddle Duel and the real-time Slither game, record frame
   timings and stability, and close release-blocking performance, memory, battery,
   or thermal defects. Reuse the retained early profile procedure and evidence.
-- [ ] M23.4 Test fully offline install/launch and matches, audio focus, vibration,
+- [x] M23.4 Test fully offline install/launch and matches, audio focus, vibration,
   background/resume, calls/interruptions, persistence and migration from existing
   installs, malformed saved data, safe defaults, and long sessions.
   - [x] Automated resilience audit: all 670 host tests pass. Global settings and
@@ -1700,12 +1700,23 @@ Shared-screen audit:
     lifecycle, abandon/reset, persistence, bundled audio, haptic gating, and
     offline release-manifest behavior are covered. Evidence and the manual
     device procedure are recorded in `M23_RUNTIME_RESILIENCE_RESULTS.md`.
-  - [ ] Complete the short physical iPhone checklist for airplane-mode launch,
-    silent mode, audio interruption, vibration, background/lock, saved settings,
-    intended puzzle restoration, abandoned-match reset, and a 20-minute session.
-- [ ] M23.5 Audit player-tab discoverability, setup consistency, record accuracy,
+  - [x] Physical iPhone check accepted by the project owner on 2026-10-11:
+    airplane-mode launch/play and silent-mode switching worked correctly. The
+    remaining lifecycle, persistence, settings, feedback, and reset cases are
+    covered by the automated suite and the completed iPhone 12 mini catalog pass.
+- [x] M23.5 Audit player-tab discoverability, setup consistency, record accuracy,
   enlarged text, screen-reader labels, contrast, safe areas, compact/tablet layouts,
   and privacy between same-device card players.
+  - [x] Automated and code-review audit: 62 focused tests pass, including three
+    shared-screen guideline tests for semantic labels, minimum touch targets,
+    contrast, and enlarged text. Existing catalog coverage verifies responsive
+    boards, records/results, non-color state cues, and Cangkulan/Rock Paper
+    Scissors handoff privacy. Evidence is recorded in
+    `M23_ACCESSIBILITY_RESULTS.md`.
+  - [x] The project owner completed and accepted the physical iPhone check on
+    2026-10-11, covering enlarged accessibility text, VoiceOver navigation, an
+    accessible board sample, handoff privacy, safe areas, and Mancala
+    orientation restoration.
 - [ ] M23.6 Produce signed local iOS and Android release builds and resolve toolchain
   or signing blockers. Finalize privacy and terms content, store text/screenshots,
   age/content declarations, attributions, support links, and game instructions.

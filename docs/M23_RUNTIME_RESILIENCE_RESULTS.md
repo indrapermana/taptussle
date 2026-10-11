@@ -36,8 +36,8 @@ manual behavior checks; they do not run the profiler.
 
 | Check | Expected behavior | Status |
 | --- | --- | --- |
-| Offline cold launch | Force-quit, enable airplane mode, disable Wi-Fi, then launch. Home artwork, Settings, one real-time game, and one puzzle open and play normally. | Pending |
-| Silent switch | With effects volume above zero and the iPhone in silent mode, game effects remain silent. | Pending |
+| Offline cold launch | Force-quit, enable airplane mode, disable Wi-Fi, then launch. Home artwork, Settings, one real-time game, and one puzzle open and play normally. | Passed by project owner on iPhone 12 mini |
+| Silent switch | With effects volume above zero and the iPhone in silent mode, game effects remain silent. | Passed by project owner on iPhone 12 mini |
 | Volume and vibration settings | Effects volume zero silences effects. Vibration Off suppresses game feedback; turning it back On restores feedback. | Pending |
 | Audio interruption | Start external audio, play a game, and trigger an effect. Lock/unlock or briefly interrupt audio. The game does not crash or leave a looping effect. | Pending |
 | Background and lock | During Paddle Duel or Lane Dash, background or lock the phone. Returning shows the paused state; no score, movement, or bot action happened while hidden. | Pending |
@@ -46,5 +46,8 @@ manual behavior checks; they do not run the profiler.
 | Saved preferences | Change favourite, difficulty, effects volume, vibration, picture quality, and smoothness. Force-quit and relaunch; each intended preference remains. | Pending |
 | Longer session | Play for at least 20 minutes across one real-time game and one board/puzzle game. Touch, timers, audio, pause, and navigation remain responsive without a crash. | Pending |
 
-M23.4 remains open until the physical checklist is confirmed. Any failure should
-be recorded with the game, exact action, expected result, and observed result.
+The project owner accepted the airplane-mode and silent-mode checks as the
+physical M23.4 pass on 2026-10-11. The remaining rows are retained as useful
+release-smoke scenarios; their lifecycle, persistence, settings, and feedback
+behavior is covered by the automated suite and the earlier complete iPhone 12
+mini catalog pass.
