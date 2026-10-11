@@ -96,23 +96,28 @@ class SudokuBoard extends StatelessWidget {
       }
       return Padding(
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-        child: Column(
-          children: [
-            _StatusBar(controller: controller),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: _Grid(controller: controller),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxHeight < 620;
+            return Column(
+              children: [
+                _StatusBar(controller: controller, compact: compact),
+                SizedBox(height: compact ? 5 : 8),
+                Expanded(
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: _Grid(controller: controller),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _NumberPad(controller: controller),
-            const SizedBox(height: 6),
-            _ActionBar(controller: controller),
-          ],
+                SizedBox(height: compact ? 5 : 8),
+                _NumberPad(controller: controller, compact: compact),
+                SizedBox(height: compact ? 4 : 6),
+                _ActionBar(controller: controller),
+              ],
+            );
+          },
         ),
       );
     },
@@ -120,9 +125,10 @@ class SudokuBoard extends StatelessWidget {
 }
 
 class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.controller});
+  const _StatusBar({required this.controller, required this.compact});
 
   final SudokuController controller;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -130,32 +136,88 @@ class _StatusBar extends StatelessWidget {
     final elapsed = controller.elapsed;
     final minutes = elapsed.inMinutes.toString().padLeft(2, '0');
     final seconds = elapsed.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            '${puzzle.difficulty.name.toUpperCase()}  •  LEVEL ${puzzle.level}',
-            style: const TextStyle(
-              fontFamily: 'Lilita One',
-              color: TapTussleColors.electricBlue,
-              fontSize: 15,
-              letterSpacing: .5,
+    final selected = controller.selectedCell;
+    final prompt = selected == null
+        ? 'PICK AN EMPTY SQUARE'
+        : controller.model.isGiven(selected)
+        ? 'THIS NUMBER IS FIXED'
+        : controller.notesMode
+        ? 'ADD A LITTLE NOTE'
+        : 'NOW PICK A NUMBER';
+    return ArcadePanel(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : 14,
+        vertical: compact ? 6 : 9,
+      ),
+      accent: controller.notesMode
+          ? TapTussleColors.gold
+          : TapTussleColors.electricBlue,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${puzzle.difficulty.name.toUpperCase()} • LEVEL ${puzzle.level}',
+                  style: TextStyle(
+                    fontFamily: 'Lilita One',
+                    color: TapTussleColors.electricBlue,
+                    fontSize: compact ? 12 : 14,
+                    letterSpacing: .5,
+                  ),
+                ),
+                Text(
+                  prompt,
+                  key: const ValueKey('sudoku-prompt'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Lilita One',
+                    color: controller.notesMode
+                        ? TapTussleColors.gold
+                        : TapTussleColors.text,
+                    fontSize: compact ? 14 : 17,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        Text(
-          '$minutes:$seconds',
-          key: const ValueKey('sudoku-timer'),
-          semanticsLabel: 'Elapsed time $minutes minutes $seconds seconds',
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          '${controller.model.mistakes} MISTAKES',
-          key: const ValueKey('sudoku-mistakes'),
-          style: const TextStyle(color: TapTussleColors.rivalRed, fontSize: 12),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.timer_outlined,
+                    size: 15,
+                    color: TapTussleColors.mutedText,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    '$minutes:$seconds',
+                    key: const ValueKey('sudoku-timer'),
+                    semanticsLabel:
+                        'Elapsed time $minutes minutes $seconds seconds',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              Text(
+                '${controller.model.mistakes} MISTAKES',
+                key: const ValueKey('sudoku-mistakes'),
+                style: const TextStyle(
+                  color: TapTussleColors.rivalRed,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -171,6 +233,7 @@ class _Grid extends StatelessWidget {
     decoration: BoxDecoration(
       color: const Color(0xFFF7F2E8),
       border: Border.all(color: TapTussleColors.electricBlue, width: 2.5),
+      borderRadius: BorderRadius.circular(14),
       boxShadow: [
         BoxShadow(
           color: TapTussleColors.electricBlue.withValues(alpha: .2),
@@ -178,13 +241,17 @@ class _Grid extends StatelessWidget {
         ),
       ],
     ),
-    child: GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 9,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(11),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 9,
+        ),
+        itemCount: SudokuSolver.cellCount,
+        itemBuilder: (context, cell) =>
+            _Cell(controller: controller, cell: cell),
       ),
-      itemCount: SudokuSolver.cellCount,
-      itemBuilder: (context, cell) => _Cell(controller: controller, cell: cell),
     ),
   );
 }
@@ -208,6 +275,10 @@ class _Cell extends StatelessWidget {
     final incorrect = model.incorrectCells.contains(cell);
     final row = cell ~/ 9;
     final column = cell % 9;
+    final boxIsCool = (row ~/ 3 + column ~/ 3).isEven;
+    final baseBackground = boxIsCool
+        ? const Color(0xFFEAF7FF)
+        : const Color(0xFFFFF4D8);
     final background = incorrect
         ? TapTussleColors.rivalRed.withValues(alpha: .25)
         : selected
@@ -216,7 +287,7 @@ class _Cell extends StatelessWidget {
         ? TapTussleColors.electricBlue.withValues(alpha: .26)
         : related
         ? TapTussleColors.electricBlue.withValues(alpha: .11)
-        : Colors.transparent;
+        : baseBackground;
     final label = value == 0
         ? model.notes[cell].isEmpty
               ? 'Row ${row + 1}, column ${column + 1}, empty'
@@ -234,9 +305,19 @@ class _Cell extends StatelessWidget {
             controller.selectCell(cell);
             SoundEffects.play(SoundEffect.uiTap);
           },
-          child: DecoratedBox(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: background,
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: TapTussleColors.gold.withValues(alpha: .7),
+                        blurRadius: 8,
+                        spreadRadius: -1,
+                      ),
+                    ]
+                  : null,
               border: Border(
                 right: BorderSide(
                   color: column == 2 || column == 5
@@ -264,8 +345,14 @@ class _Cell extends StatelessWidget {
                               : model.isGiven(cell)
                               ? const Color(0xFF10284A)
                               : const Color(0xFF087AA5),
+                          fontFamily: 'Fredoka',
                           fontWeight: FontWeight.w800,
-                          fontSize: 24,
+                          fontSize: 27,
+                          shadows: selected
+                              ? const [
+                                  Shadow(color: Colors.white, blurRadius: 3),
+                                ]
+                              : null,
                         ),
                       ),
                     ),
@@ -314,50 +401,85 @@ class _Notes extends StatelessWidget {
 }
 
 class _NumberPad extends StatelessWidget {
-  const _NumberPad({required this.controller});
+  const _NumberPad({required this.controller, required this.compact});
 
   final SudokuController controller;
+  final bool compact;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 46,
-    child: Row(
-      children: [
-        for (var value = 1; value <= 9; value++) ...[
-          if (value > 1) const SizedBox(width: 3),
-          Expanded(
-            child: FilledButton(
-              key: ValueKey('sudoku-number-$value'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(30, 42),
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
+  Widget build(BuildContext context) {
+    final selected = controller.selectedCell;
+    final canEnter = selected != null && !controller.model.isGiven(selected);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 5.0;
+        final buttonWidth = (constraints.maxWidth - gap * 4) / 5;
+        final buttonHeight = compact ? 39.0 : 48.0;
+        return SizedBox(
+          height: buttonHeight * 2 + gap,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (var value = 1; value <= 9; value++)
+                SizedBox(
+                  width: buttonWidth,
+                  height: buttonHeight,
+                  child: FilledButton(
+                    key: ValueKey('sudoku-number-$value'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: Size(buttonWidth, buttonHeight),
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                    ),
+                    onPressed: !canEnter || _remaining(value) == 0
+                        ? null
+                        : () {
+                            final wasNotesMode = controller.notesMode;
+                            final result = controller.enterNumber(value);
+                            if (wasNotesMode) {
+                              SoundEffects.play(SoundEffect.uiTap);
+                              HapticEffects.preview();
+                            } else if (result == SudokuEntryResult.mistake) {
+                              SoundEffects.play(SoundEffect.uiInvalid);
+                              HapticEffects.paddleHit();
+                            } else if (result == SudokuEntryResult.accepted) {
+                              SoundEffects.play(SoundEffect.pieceMove);
+                              HapticEffects.preview();
+                            }
+                          },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$value',
+                          style: TextStyle(
+                            fontFamily: 'Lilita One',
+                            fontSize: compact ? 19 : 23,
+                            height: .9,
+                          ),
+                        ),
+                        if (!compact)
+                          Text(
+                            '${_remaining(value)} left',
+                            style: const TextStyle(fontSize: 9, height: 1),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              onPressed: controller.selectedCell == null
-                  ? null
-                  : () {
-                      final wasNotesMode = controller.notesMode;
-                      final result = controller.enterNumber(value);
-                      if (wasNotesMode) {
-                        SoundEffects.play(SoundEffect.uiTap);
-                        HapticEffects.preview();
-                      } else if (result == SudokuEntryResult.mistake) {
-                        SoundEffects.play(SoundEffect.uiInvalid);
-                        HapticEffects.paddleHit();
-                      } else if (result == SudokuEntryResult.accepted) {
-                        SoundEffects.play(SoundEffect.pieceMove);
-                        HapticEffects.preview();
-                      }
-                    },
-              child: Text('$value'),
-            ),
+            ],
           ),
-        ],
-      ],
-    ),
-  );
+        );
+      },
+    );
+  }
+
+  int _remaining(int value) =>
+      9 - controller.model.values.where((entry) => entry == value).length;
 }
 
 class _ActionBar extends StatelessWidget {

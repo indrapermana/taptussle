@@ -737,6 +737,21 @@ an extra turn on six, multiple tokens may share a square without capture, and re
 
 ## M13 — Sudoku
 
+### Child-friendly visual refresh (2026-10-11)
+
+- [x] Retain the standard Sudoku rules, difficulty catalog, notes, mistakes,
+  hints, saved progress, records, and completion flow.
+- [x] Present the nine 3×3 regions as alternating soft blue and warm puzzle
+  blocks with rounded framing and clearer selected, related, matching, and
+  incorrect states.
+- [x] Add a short contextual prompt that tells young players whether to pick a
+  square, choose a number, or add a note.
+- [x] Replace the narrow single-row keypad with large two-row number tiles,
+  completed-number disabling, and remaining-number feedback.
+- [x] Cover the redesigned board and controls on a compact 320×568 phone.
+- [ ] Reconfirm tap comfort, color balance, enlarged text, and puzzle completion
+  on physical iPhone and Android devices.
+
 Confirmed design: standard 9×9 Sudoku with 60 uniquely solvable puzzles per
 difficulty. Easy puzzles use singles and straightforward scanning; Normal adds
 locked candidates and pairs; Hard may require advanced techniques. Clue count is

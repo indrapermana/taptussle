@@ -55,14 +55,22 @@ void main() {
     await _pumpBoard(tester, controller);
     final cell = puzzle.givens.indexOf(0);
 
+    expect(find.text('PICK AN EMPTY SQUARE'), findsOneWidget);
+
     await tester.tap(find.byKey(ValueKey('sudoku-cell-$cell')));
     await tester.pump();
+    expect(find.text('NOW PICK A NUMBER'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('sudoku-number-1'))).height,
+      greaterThanOrEqualTo(48),
+    );
     await tester.tap(find.byKey(const ValueKey('sudoku-notes')));
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('sudoku-number-2')));
     await tester.pump();
     expect(controller.model.notes[cell], {2});
     expect(find.text('NOTES ON'), findsOneWidget);
+    expect(find.text('ADD A LITTLE NOTE'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('sudoku-notes')));
     final wrong = puzzle.solution[cell] == 1 ? 2 : 1;
@@ -76,6 +84,28 @@ void main() {
     await tester.pump();
     expect(controller.model.values[cell], 0);
     expect(controller.model.incorrectCells, isEmpty);
+    expect(tester.takeException(), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('compact phone keeps the full board and controls visible', (
+    tester,
+  ) async {
+    final session = MatchSession(options: MatchOptions.solo())..start();
+    final controller = SudokuController(
+      session: session,
+      puzzle: SudokuCatalog.puzzle(SudokuDifficulty.hard, 1),
+      repository: SudokuProgressRepository(
+        await SharedPreferences.getInstance(),
+      ),
+    );
+    addTearDown(controller.dispose);
+    addTearDown(session.dispose);
+    await _pumpBoard(tester, controller, size: const Size(320, 568));
+
+    expect(find.byKey(const ValueKey('sudoku-board')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sudoku-number-9')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sudoku-hint')), findsOneWidget);
     expect(tester.takeException(), isNull);
     controller.dispose();
   });
@@ -168,9 +198,10 @@ void main() {
 
 Future<void> _pumpBoard(
   WidgetTester tester,
-  SudokuController controller,
-) async {
-  tester.view.physicalSize = const Size(430, 800);
+  SudokuController controller, {
+  Size size = const Size(430, 800),
+}) async {
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
